@@ -1,5 +1,5 @@
 using System;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
 namespace PickyParking.Settings
 {

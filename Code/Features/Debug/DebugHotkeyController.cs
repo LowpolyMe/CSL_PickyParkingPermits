@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Integration;
-using PickyParking.Infrastructure.Persistence;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Settings;
 using PickyParking.Features.ParkingPolicing;
+using PickyParking.GameAdapters;
 
 namespace PickyParking.Features.Debug
 {
@@ -15,10 +15,9 @@ namespace PickyParking.Features.Debug
     
     public sealed class DebugHotkeyController
     {
-        private const ushort DefaultRadiusMeters = 200;
+        private const ushort DefaultRadiusMeters = ParkingRulesLimits.DefaultRadiusMeters;
 
         private readonly GameAccess _gameAccess;
-        private readonly PrefabIdentity _prefabIdentity;
         private readonly SupportedParkingLotRegistry _supportedParkingLotRegistry;
         private readonly ModSettingsController _settingsController;
         private readonly ParkingRulesConfigRegistry _parkingRulesRepository;
@@ -26,14 +25,12 @@ namespace PickyParking.Features.Debug
 
         public DebugHotkeyController(
             GameAccess gameAccess,
-            PrefabIdentity prefabIdentity,
             SupportedParkingLotRegistry supportedParkingLotRegistry,
             ModSettingsController settingsController,
             ParkingRulesConfigRegistry parkingRulesRepository,
             ParkedVehicleReevaluation parkedVehicleReevaluation)
         {
             _gameAccess = gameAccess;
-            _prefabIdentity = prefabIdentity;
             _supportedParkingLotRegistry = supportedParkingLotRegistry;
             _settingsController = settingsController;
             _parkingRulesRepository = parkingRulesRepository;
@@ -45,7 +42,7 @@ namespace PickyParking.Features.Debug
             if (!TryGetSelectedBuilding(out _, out BuildingInfo info))
                 return false;
 
-            PrefabKey key = _prefabIdentity.CreateKey(info);
+            PrefabKey key = ParkingLotPrefabKeyFactory.CreateKey(info);
             bool enabled = _supportedParkingLotRegistry.Toggle(key);
 
             if (_settingsController == null)
@@ -180,7 +177,7 @@ namespace PickyParking.Features.Debug
             if (!TryGetSelectedBuilding(out ushort buildingId, out BuildingInfo info))
                 return false;
 
-            PrefabKey key = _prefabIdentity.CreateKey(info);
+            PrefabKey key = ParkingLotPrefabKeyFactory.CreateKey(info);
             bool supported = _supportedParkingLotRegistry.Contains(key);
 
             string ruleText = _parkingRulesRepository.TryGet(buildingId, out var rule)

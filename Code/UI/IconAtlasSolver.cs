@@ -1,6 +1,7 @@
 using ColossalFramework.UI;
 using UnityEngine;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.UI.ModResources;
 
 namespace PickyParking.UI
 {

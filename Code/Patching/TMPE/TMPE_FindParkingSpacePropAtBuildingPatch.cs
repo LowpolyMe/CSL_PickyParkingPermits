@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 using PickyParking.Patching;
 
 namespace PickyParking.Patching.TMPE
@@ -44,7 +44,7 @@ namespace PickyParking.Patching.TMPE
 
         private static bool Prefix(ref bool __result, object[] __args)
         {
-            return ParkingCandidateBlockerAdapter.HandleFindParkingSpacePropAtBuildingPrefix(ref __result, __args);
+            return ParkingCandidateBlockerPatchHandler.HandleFindParkingSpacePropAtBuildingPrefix(ref __result, __args);
         }
     }
 }

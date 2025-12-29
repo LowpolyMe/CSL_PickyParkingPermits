@@ -1,4 +1,6 @@
-namespace PickyParking.Infrastructure
+using PickyParking.Logging;
+
+namespace PickyParking.ModLifecycle
 {
     public sealed class FeatureGate
     {

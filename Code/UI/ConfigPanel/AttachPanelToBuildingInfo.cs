@@ -1,7 +1,9 @@
 using UnityEngine;
 using ColossalFramework.UI;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.ModEntry;
+using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.UI
 {
@@ -275,10 +277,10 @@ namespace PickyParking.UI
             if (runtime == null || info == null)
                 return false;
 
-            if (runtime.PrefabIdentity == null || runtime.SupportedParkingLotRegistry == null)
+            if (runtime.SupportedParkingLotRegistry == null)
                 return false;
 
-            var key = runtime.PrefabIdentity.CreateKey(info);
+            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
             return runtime.SupportedParkingLotRegistry.Contains(key);
         }
 

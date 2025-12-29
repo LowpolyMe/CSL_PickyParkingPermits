@@ -1,10 +1,10 @@
 using System;
 using System.Reflection;
 using ICities;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Patching;
-using PickyParking.Infrastructure.Persistence;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.ParkingRulesSaving;
 using PickyParking.Settings;
 using PickyParking.UI;
 using PickyParking.Features.Debug;
@@ -50,7 +50,6 @@ namespace PickyParking.ModEntry
                 runtime.SupportedParkingLotRegistry,
                 runtime.ParkingRulesConfigRegistry,
                 runtime.GameAccess,
-                runtime.PrefabIdentity,
                 runtime.TmpeIntegration,
                 runtime.ParkingPermissionEvaluator,
                 runtime.ParkedVehicleReevaluation));
@@ -117,7 +116,7 @@ namespace PickyParking.ModEntry
                 if (Log.IsVerboseEnabled)
                     Log.Info("[Runtime] Sim-thread cleanup complete.");
             });
-            ParkingSearchContextSetupAdapter.ClearCaches();
+            ParkingSearchContextPatchHandler.ClearCaches();
             if (clearLevelContext)
             {
                 LevelBootstrap.Context.Clear();

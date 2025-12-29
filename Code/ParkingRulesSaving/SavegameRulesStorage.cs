@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using ColossalFramework;
 using ICities;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 using PickyParking.Features.ParkingRules;
 
-namespace PickyParking.Infrastructure.Persistence
+namespace PickyParking.ParkingRulesSaving
 {
     
     
@@ -106,7 +106,7 @@ namespace PickyParking.Infrastructure.Persistence
                         }
 
                         bool normalized;
-                        rule = NormalizeRule(rule, out normalized);
+                        rule = ParkingRulesLimits.ClampRule(rule, out normalized);
                         if (normalized)
                             normalizedCount++;
                         repository.Set(buildingId, rule);
@@ -162,31 +162,6 @@ namespace PickyParking.Infrastructure.Persistence
                 Log.Info("[Persistence] Pruned invalid rules: " + toRemove.Count);
         }
 
-        private static ParkingRulesConfigDefinition NormalizeRule(ParkingRulesConfigDefinition rule, out bool normalized)
-        {
-            ushort resRadius = ClampRadius(rule.ResidentsRadiusMeters);
-            ushort workRadius = ClampRadius(rule.WorkSchoolRadiusMeters);
-
-            normalized = resRadius != rule.ResidentsRadiusMeters
-                         || workRadius != rule.WorkSchoolRadiusMeters;
-
-            return new ParkingRulesConfigDefinition(
-                rule.ResidentsWithinRadiusOnly,
-                resRadius,
-                rule.WorkSchoolWithinRadiusOnly,
-                workRadius,
-                rule.VisitorsAllowed);
-        }
-
-        private static ushort ClampRadius(ushort value)
-        {
-            const ushort min = 25;
-            const ushort max = 2000;
-
-            if (value < min) return min;
-            if (value > max) return max;
-            return value;
-        }
     }
 }
 

@@ -3,8 +3,9 @@ using System.IO;
 using System.Reflection;
 using ColossalFramework.Plugins;
 using UnityEngine;
+using PickyParking.Logging;
 
-namespace PickyParking.Infrastructure
+namespace PickyParking.UI.ModResources
 {
     
     

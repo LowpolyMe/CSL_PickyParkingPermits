@@ -1,9 +1,9 @@
 using System;
 using ColossalFramework;
 using UnityEngine;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
-namespace PickyParking.Infrastructure.Integration
+namespace PickyParking.Features.ParkingPolicing
 {
     internal sealed class ParkingSearchEpisodeDebugHelper
     {

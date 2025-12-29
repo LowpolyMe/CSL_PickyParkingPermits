@@ -2,7 +2,7 @@ using System.Diagnostics;
 using ColossalFramework.Plugins;
 using Debug = UnityEngine.Debug;
 
-namespace PickyParking.Infrastructure
+namespace PickyParking.Logging
 {
     public static class Log
     {

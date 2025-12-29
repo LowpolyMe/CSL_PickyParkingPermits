@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using PickyParking.Features.ParkingRules;
 
-namespace PickyParking.Infrastructure.Persistence
+namespace PickyParking.Features.ParkingRules
 {
     public sealed class ParkingRulesConfigRegistry
     {

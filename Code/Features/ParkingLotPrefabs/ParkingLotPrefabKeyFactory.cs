@@ -1,14 +1,11 @@
 using ColossalFramework.Packaging;
 using PickyParking.Features.ParkingLotPrefabs;
 
-namespace PickyParking.Infrastructure.Integration
+namespace PickyParking.Features.ParkingLotPrefabs
 {
-    
-    
-    
-    public sealed class PrefabIdentity
+    public static class ParkingLotPrefabKeyFactory
     {
-        public PrefabKey CreateKey(global::BuildingInfo prefab)
+        public static PrefabKey CreateKey(global::BuildingInfo prefab)
         {
             string prefabName = (prefab != null) ? prefab.name : string.Empty;
 
@@ -21,14 +18,5 @@ namespace PickyParking.Infrastructure.Integration
 
             return new PrefabKey(packageName, prefabName);
         }
-
-        public global::BuildingInfo Resolve(PrefabKey key)
-        {
-            
-            return null;
-        }
     }
 }
-
-
-

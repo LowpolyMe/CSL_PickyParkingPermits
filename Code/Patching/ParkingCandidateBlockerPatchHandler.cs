@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 using PickyParking.Features.ParkingPolicing;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
 namespace PickyParking.Patching
 {
-    internal static class ParkingCandidateBlockerAdapter
+    internal static class ParkingCandidateBlockerPatchHandler
     {
         public static bool HandleFindParkingSpacePropAtBuildingPrefix(ref bool result, object[] args)
         {

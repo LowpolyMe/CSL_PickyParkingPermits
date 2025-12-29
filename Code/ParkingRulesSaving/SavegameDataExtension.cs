@@ -1,8 +1,9 @@
 using ICities;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.ModEntry;
 
-namespace PickyParking.Infrastructure.Persistence
+namespace PickyParking.ParkingRulesSaving
 {
     
     

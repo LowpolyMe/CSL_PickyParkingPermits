@@ -1,7 +1,7 @@
 using System;
 using ColossalFramework;
 
-namespace PickyParking.Infrastructure
+namespace PickyParking.ModLifecycle
 {
     
     

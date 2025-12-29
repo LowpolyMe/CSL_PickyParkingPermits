@@ -1,6 +1,5 @@
-using UnityEngine;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Persistence;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.UI;
 
@@ -8,13 +7,9 @@ namespace PickyParking.Features.ParkingRules
 {
     public sealed class ParkingRulesConfigEditor
     {
-        private const ushort AllRadiusMeters = ushort.MaxValue;
-
         private readonly ParkingRulesConfigRegistry _parkingRulesRepository;
         private readonly ParkingRulePreviewState _previewState;
         private readonly ParkedVehicleReevaluation _reevaluation;
-        private readonly float _defaultSliderValue;
-
         private bool _hasPendingReevaluation;
         private ushort _pendingReevaluationBuildingId;
 
@@ -29,12 +24,6 @@ namespace PickyParking.Features.ParkingRules
             _previewState = previewState;
             _reevaluation = reevaluation;
             UiConfig = ParkingRulesConfigUiConfig.Default;
-            _defaultSliderValue = ConvertRadiusToSliderValue(UiConfig.DefaultRadiusMeters);
-        }
-
-        public float GetDefaultSliderValue()
-        {
-            return _defaultSliderValue;
         }
 
         public ParkingRulesConfigDefinition GetRuleForBuilding(ushort buildingId)
@@ -68,12 +57,12 @@ namespace PickyParking.Features.ParkingRules
             SimThread.Dispatch(() => _parkingRulesRepository.Remove(buildingId));
         }
 
-        public void CommitPendingChanges(ushort buildingId, ParkingRulesConfigUiState state)
+        public void CommitPendingChanges(ushort buildingId, ParkingRulesConfigInput input)
         {
-            if (buildingId == 0 || state == null || _parkingRulesRepository == null)
+            if (buildingId == 0 || input == null || _parkingRulesRepository == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = BuildRuleFromUi(state);
+            ParkingRulesConfigDefinition rule = BuildRuleFromInput(input);
             if (Log.IsVerboseEnabled)
                 Log.Info("[ParkingRules] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
 
@@ -88,21 +77,21 @@ namespace PickyParking.Features.ParkingRules
             _previewState.Clear(buildingId);
         }
 
-        public void UpdatePreview(ushort buildingId, ParkingRulesConfigUiState state)
+        public void UpdatePreview(ushort buildingId, ParkingRulesConfigInput input)
         {
-            if (buildingId == 0 || state == null || _previewState == null)
+            if (buildingId == 0 || input == null || _previewState == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = BuildRuleFromUi(state);
+            ParkingRulesConfigDefinition rule = BuildRuleFromInput(input);
             _previewState.SetPreview(buildingId, rule);
         }
 
-        public void ApplyRuleNow(ushort buildingId, ParkingRulesConfigUiState state, string reason)
+        public void ApplyRuleNow(ushort buildingId, ParkingRulesConfigInput input, string reason)
         {
-            if (buildingId == 0 || state == null || _parkingRulesRepository == null)
+            if (buildingId == 0 || input == null || _parkingRulesRepository == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = BuildRuleFromUi(state);
+            ParkingRulesConfigDefinition rule = BuildRuleFromInput(input);
             _hasPendingReevaluation = true;
             _pendingReevaluationBuildingId = buildingId;
 
@@ -143,30 +132,6 @@ namespace PickyParking.Features.ParkingRules
             SimThread.Dispatch(() => _reevaluation.RequestForBuilding(buildingId));
         }
 
-        public float ConvertRadiusToSliderValue(ushort radiusMeters)
-        {
-            if (radiusMeters == 0)
-                return 0f;
-
-            if (radiusMeters >= AllRadiusMeters)
-                return 1f;
-
-            float clamped = Mathf.Clamp(radiusMeters, UiConfig.MinDistanceMeters, UiConfig.MaxDistanceMeters);
-            if (clamped <= UiConfig.MinDistanceMeters)
-                return UiConfig.DistanceSliderMinValue;
-            if (clamped >= UiConfig.MaxDistanceMeters)
-                return UiConfig.DistanceSliderMaxValue;
-
-            return DistanceSliderMapping.DistanceMetersToSlider(
-                clamped,
-                UiConfig.DistanceSliderMinValue,
-                UiConfig.DistanceSliderMaxValue,
-                UiConfig.MinDistanceMeters,
-                UiConfig.MidDistanceMeters,
-                UiConfig.MaxDistanceMeters,
-                UiConfig.DistanceMidpointT);
-        }
-
         public string FormatRule(ParkingRulesConfigDefinition rule)
         {
             return "ResidentsOnly=" + rule.ResidentsWithinRadiusOnly + " (" + rule.ResidentsRadiusMeters + "m), "
@@ -174,55 +139,14 @@ namespace PickyParking.Features.ParkingRules
                    + "VisitorsAllowed=" + rule.VisitorsAllowed;
         }
 
-        public ParkingRulesConfigDefinition BuildRuleFromUi(ParkingRulesConfigUiState state)
+        public ParkingRulesConfigDefinition BuildRuleFromInput(ParkingRulesConfigInput input)
         {
-            bool residentsEnabled = state.ResidentsEnabled;
-            bool workEnabled = state.WorkSchoolEnabled;
-
-            float resValue = residentsEnabled ? state.ResidentsSliderValue : GetStoredSliderValue(state.ResidentsStoredValue);
-            float workValue = workEnabled ? state.WorkSchoolSliderValue : GetStoredSliderValue(state.WorkSchoolStoredValue);
-
-            ushort residentsRadius = ConvertSliderValueToRadius(resValue);
-            ushort workRadius = ConvertSliderValueToRadius(workValue);
-
             return new ParkingRulesConfigDefinition(
-                residentsEnabled,
-                residentsRadius,
-                workEnabled,
-                workRadius,
-                state.VisitorsAllowed);
-        }
-
-        private float GetStoredSliderValue(float stored)
-        {
-            return stored > 0f ? stored : _defaultSliderValue;
-        }
-
-        private ushort ConvertSliderValueToRadius(float normalizedSliderValue)
-        {
-            if (normalizedSliderValue <= 0f)
-                return 0;
-
-            if (normalizedSliderValue >= 1f)
-                return AllRadiusMeters;
-
-            if (normalizedSliderValue <= UiConfig.DistanceSliderMinValue)
-                return UiConfig.MinDistanceMeters;
-            if (normalizedSliderValue >= UiConfig.DistanceSliderMaxValue)
-                return UiConfig.MaxDistanceMeters;
-
-            float meters = DistanceSliderMapping.SliderToDistanceMeters(
-                normalizedSliderValue,
-                UiConfig.DistanceSliderMinValue,
-                UiConfig.DistanceSliderMaxValue,
-                UiConfig.MinDistanceMeters,
-                UiConfig.MidDistanceMeters,
-                UiConfig.MaxDistanceMeters,
-                UiConfig.DistanceMidpointT);
-            int rounded = Mathf.RoundToInt(meters);
-            if (rounded < UiConfig.MinDistanceMeters) rounded = UiConfig.MinDistanceMeters;
-            if (rounded > UiConfig.MaxDistanceMeters) rounded = UiConfig.MaxDistanceMeters;
-            return (ushort)rounded;
+                input.ResidentsEnabled,
+                input.ResidentsRadiusMeters,
+                input.WorkSchoolEnabled,
+                input.WorkSchoolRadiusMeters,
+                input.VisitorsAllowed);
         }
     }
 }

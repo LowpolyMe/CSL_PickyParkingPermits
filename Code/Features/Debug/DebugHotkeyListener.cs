@@ -1,5 +1,5 @@
 using UnityEngine;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 using PickyParking.ModEntry;
 
 namespace PickyParking.Features.Debug

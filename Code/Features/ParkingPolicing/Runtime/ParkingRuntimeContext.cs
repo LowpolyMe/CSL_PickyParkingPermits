@@ -1,8 +1,9 @@
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingLotPrefabs;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Integration;
-using PickyParking.Infrastructure.Persistence;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
+using PickyParking.GameAdapters;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.Features.ParkingPolicing.Runtime
 {
@@ -12,7 +13,6 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
         public SupportedParkingLotRegistry SupportedParkingLotRegistry { get; private set; }
         public ParkingRulesConfigRegistry ParkingRulesConfigRegistry { get; private set; }
         public GameAccess GameAccess { get; private set; }
-        public PrefabIdentity PrefabIdentity { get; private set; }
         public TmpeIntegration TmpeIntegration { get; private set; }
         public ParkingPermissionEvaluator ParkingPermissionEvaluator { get; private set; }
         public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; private set; }
@@ -26,7 +26,6 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
             SupportedParkingLotRegistry supportedParkingLotRegistry,
             ParkingRulesConfigRegistry parkingRulesRepository,
             GameAccess gameAccess,
-            PrefabIdentity prefabIdentity,
             TmpeIntegration tmpeIntegration,
             ParkingPermissionEvaluator parkingPermitEvaluator,
             ParkedVehicleReevaluation parkedVehicleReevaluation)
@@ -35,7 +34,6 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
             SupportedParkingLotRegistry = supportedParkingLotRegistry;
             ParkingRulesConfigRegistry = parkingRulesRepository;
             GameAccess = gameAccess;
-            PrefabIdentity = prefabIdentity;
             TmpeIntegration = tmpeIntegration;
             ParkingPermissionEvaluator = parkingPermitEvaluator;
             ParkedVehicleReevaluation = parkedVehicleReevaluation;

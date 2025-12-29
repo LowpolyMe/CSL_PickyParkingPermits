@@ -2,7 +2,7 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
 using PickyParking.ModEntry;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
 namespace PickyParking.UI
 {
@@ -90,7 +90,7 @@ namespace PickyParking.UI
             if (!_restrictionsEnabled)
                 return;
 
-            _editor.CommitPendingChanges(_buildingId, BuildUiState());
+            _editor.CommitPendingChanges(_buildingId, BuildInput());
         }
 
         public void DiscardUnappliedChangesIfAny()
@@ -291,7 +291,7 @@ namespace PickyParking.UI
                 row,
                 enabled,
                 radiusMeters,
-                _editor.ConvertRadiusToSliderValue,
+                ConvertRadiusToSliderValue,
                 SetSliderValue);
         }
 
@@ -303,7 +303,7 @@ namespace PickyParking.UI
             if (!_restrictionsEnabled)
                 return;
 
-            _editor.UpdatePreview(_buildingId, BuildUiState());
+            _editor.UpdatePreview(_buildingId, BuildInput());
         }
 
         private void ApplyChangesInternal(string reason)
@@ -312,7 +312,7 @@ namespace PickyParking.UI
                 return;
 
             _isDirty = false;
-            _editor.ApplyRuleNow(_buildingId, BuildUiState(), reason);
+            _editor.ApplyRuleNow(_buildingId, BuildInput(), reason);
         }
 
         private void ApplyChangesFromButton()
@@ -323,8 +323,8 @@ namespace PickyParking.UI
             if (!_restrictionsEnabled)
                 return;
 
-            _editor.ApplyRuleNow(_buildingId, BuildUiState(), "ApplyButton");
-            _baselineRule = _editor.BuildRuleFromUi(BuildUiState());
+            _editor.ApplyRuleNow(_buildingId, BuildInput(), "ApplyButton");
+            _baselineRule = _editor.BuildRuleFromInput(BuildInput());
             _hasStoredRule = true;
             _isDirty = false;
             _hasUnappliedChanges = false;
@@ -343,7 +343,7 @@ namespace PickyParking.UI
             if (_editor == null)
                 return ParkingRulesConfigUiConfig.Default.DistanceSliderMaxValue * 0.2f;
 
-            return _editor.GetDefaultSliderValue();
+            return ConvertRadiusToSliderValue(ParkingRulesLimits.DefaultRadiusMeters);
         }
 
         private void ToggleRestrictions()
@@ -373,7 +373,7 @@ namespace PickyParking.UI
                     workSchoolRadiusMeters: DefaultNewRuleRadiusMeters,
                     visitorsAllowed: true);
                 ApplyRuleToUi(_baselineRule);
-                _editor.ApplyRuleNow(_buildingId, BuildUiState(), "DefaultsOnEnable");
+            _editor.ApplyRuleNow(_buildingId, BuildInput(), "DefaultsOnEnable");
                 _hasStoredRule = true;
                 _isDirty = false;
                 _hasUnappliedChanges = false;
@@ -394,19 +394,82 @@ namespace PickyParking.UI
             _visuals.UpdateRestrictionsToggleVisuals(_restrictionsEnabled);
         }
 
-        private ParkingRulesConfigUiState BuildUiState()
+        private ParkingRulesConfigInput BuildInput()
         {
             float residentsValue = _residentsRow != null && _residentsRow.Slider != null ? _residentsRow.Slider.value : 0f;
             float workValue = _workSchoolRow != null && _workSchoolRow.Slider != null ? _workSchoolRow.Slider.value : 0f;
 
-            return new ParkingRulesConfigUiState(
-                _residentsRow != null && _residentsRow.IsEnabled,
-                residentsValue,
-                _residentsRow != null ? _residentsRow.LastNonZeroValue : 0f,
-                _workSchoolRow != null && _workSchoolRow.IsEnabled,
-                workValue,
-                _workSchoolRow != null ? _workSchoolRow.LastNonZeroValue : 0f,
+            bool residentsEnabled = _residentsRow != null && _residentsRow.IsEnabled;
+            bool workEnabled = _workSchoolRow != null && _workSchoolRow.IsEnabled;
+
+            float storedResidents = _residentsRow != null ? _residentsRow.LastNonZeroValue : 0f;
+            float storedWork = _workSchoolRow != null ? _workSchoolRow.LastNonZeroValue : 0f;
+
+            float residentsSliderValue = residentsEnabled ? residentsValue : GetStoredSliderValue(storedResidents);
+            float workSliderValue = workEnabled ? workValue : GetStoredSliderValue(storedWork);
+
+            return new ParkingRulesConfigInput(
+                residentsEnabled,
+                ConvertSliderValueToRadius(residentsSliderValue),
+                workEnabled,
+                ConvertSliderValueToRadius(workSliderValue),
                 _visitorsRow != null && _visitorsRow.IsEnabled);
+        }
+
+        private float GetStoredSliderValue(float stored)
+        {
+            return stored > 0f ? stored : ConvertRadiusToSliderValue(ParkingRulesLimits.DefaultRadiusMeters);
+        }
+
+        private float ConvertRadiusToSliderValue(ushort radiusMeters)
+        {
+            if (radiusMeters == 0)
+                return 0f;
+
+            if (radiusMeters >= ParkingRulesLimits.AllRadiusMeters)
+                return 1f;
+
+            float clamped = Mathf.Clamp(radiusMeters, _uiConfig.MinDistanceMeters, _uiConfig.MaxDistanceMeters);
+            if (clamped <= _uiConfig.MinDistanceMeters)
+                return _uiConfig.DistanceSliderMinValue;
+            if (clamped >= _uiConfig.MaxDistanceMeters)
+                return _uiConfig.DistanceSliderMaxValue;
+
+            return DistanceSliderMapping.DistanceMetersToSlider(
+                clamped,
+                _uiConfig.DistanceSliderMinValue,
+                _uiConfig.DistanceSliderMaxValue,
+                _uiConfig.MinDistanceMeters,
+                _uiConfig.MidDistanceMeters,
+                _uiConfig.MaxDistanceMeters,
+                _uiConfig.DistanceMidpointT);
+        }
+
+        private ushort ConvertSliderValueToRadius(float normalizedSliderValue)
+        {
+            if (normalizedSliderValue <= 0f)
+                return 0;
+
+            if (normalizedSliderValue >= 1f)
+                return ParkingRulesLimits.AllRadiusMeters;
+
+            if (normalizedSliderValue <= _uiConfig.DistanceSliderMinValue)
+                return _uiConfig.MinDistanceMeters;
+            if (normalizedSliderValue >= _uiConfig.DistanceSliderMaxValue)
+                return _uiConfig.MaxDistanceMeters;
+
+            float meters = DistanceSliderMapping.SliderToDistanceMeters(
+                normalizedSliderValue,
+                _uiConfig.DistanceSliderMinValue,
+                _uiConfig.DistanceSliderMaxValue,
+                _uiConfig.MinDistanceMeters,
+                _uiConfig.MidDistanceMeters,
+                _uiConfig.MaxDistanceMeters,
+                _uiConfig.DistanceMidpointT);
+            int rounded = Mathf.RoundToInt(meters);
+            if (rounded < _uiConfig.MinDistanceMeters) rounded = _uiConfig.MinDistanceMeters;
+            if (rounded > _uiConfig.MaxDistanceMeters) rounded = _uiConfig.MaxDistanceMeters;
+            return (ushort)rounded;
         }
     }
 }

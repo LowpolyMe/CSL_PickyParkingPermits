@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using ColossalFramework;
 using UnityEngine;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Persistence;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
+using PickyParking.Features.ParkingRules;
+using PickyParking.GameAdapters;
 
 namespace PickyParking.Features.ParkingPolicing
 {

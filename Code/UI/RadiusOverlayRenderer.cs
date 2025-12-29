@@ -1,6 +1,6 @@
 using ColossalFramework;
 using ColossalFramework.Math;
-using PickyParking.Infrastructure;
+using PickyParking.ModLifecycle;
 using UnityEngine;
 using PickyParking.ModEntry;
 using PickyParking.Features.ParkingRules;

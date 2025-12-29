@@ -3,7 +3,7 @@ using ColossalFramework;
 using ColossalFramework.Math;
 using UnityEngine;
 
-namespace PickyParking.Infrastructure.Integration
+namespace PickyParking.GameAdapters
 {
     
     

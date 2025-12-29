@@ -1,12 +1,13 @@
 using System;
 using System.Reflection;
 using ColossalFramework;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingRules;
 using UnityEngine;
 
-namespace PickyParking.Infrastructure.Integration
+namespace PickyParking.Features.ParkingPolicing
 {
     
     

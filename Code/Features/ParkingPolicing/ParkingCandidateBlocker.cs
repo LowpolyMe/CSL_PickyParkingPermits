@@ -4,8 +4,8 @@ using ColossalFramework;
 using UnityEngine;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing.Runtime;
 
 namespace PickyParking.Features.ParkingPolicing
@@ -143,7 +143,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (services == null) return false;
             if (!services.GameAccess.TryGetBuildingInfo(buildingId, out var info)) return false;
 
-            var key = services.PrefabIdentity.CreateKey(info);
+            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
             return services.SupportedParkingLotRegistry.Contains(key);
         }
 
@@ -152,7 +152,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (services == null) return false;
             if (!services.GameAccess.TryGetBuildingInfo(buildingId, out var info)) return false;
 
-            var key = services.PrefabIdentity.CreateKey(info);
+            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
             return services.SupportedParkingLotRegistry.Contains(key);
         }
 

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PickyParking.Infrastructure.Integration
+namespace PickyParking.Features.ParkingPolicing
 {
     
     

@@ -4,7 +4,7 @@ using System.IO;
 using System.Xml.Serialization;
 using ColossalFramework.IO;
 using PickyParking.Features.ParkingLotPrefabs;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
 namespace PickyParking.Settings
 {

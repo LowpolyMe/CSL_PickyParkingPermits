@@ -1,7 +1,6 @@
 using UnityEngine;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Persistence;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.ModLifecycle;
+using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.Features.ParkingPolicing

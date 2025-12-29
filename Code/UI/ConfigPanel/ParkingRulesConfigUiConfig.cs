@@ -1,3 +1,5 @@
+using PickyParking.Features.ParkingRules;
+
 namespace PickyParking.UI
 {
     public sealed class ParkingRulesConfigUiConfig
@@ -9,11 +11,11 @@ namespace PickyParking.UI
                 sliderStep: 0.005f,
                 distanceSliderMinValue: 0.01f,
                 distanceSliderMaxValue: 0.95f,
-                minDistanceMeters: 50,
-                midDistanceMeters: 2000,
-                maxDistanceMeters: 17000,
+                minDistanceMeters: ParkingRulesLimits.MinRadiusMeters,
+                midDistanceMeters: ParkingRulesLimits.MidRadiusMeters,
+                maxDistanceMeters: ParkingRulesLimits.MaxRadiusMeters,
                 distanceMidpointT: 0.74f,
-                defaultRadiusMeters: 200);
+                defaultRadiusMeters: ParkingRulesLimits.DefaultRadiusMeters);
 
         public float SliderMinValue { get; private set; }
         public float SliderMaxValue { get; private set; }

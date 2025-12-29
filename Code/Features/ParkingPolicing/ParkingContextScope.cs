@@ -1,6 +1,6 @@
 using System;
 
-namespace PickyParking.Infrastructure.Integration
+namespace PickyParking.Features.ParkingPolicing
 {
     
     

@@ -1,4 +1,4 @@
-namespace PickyParking.Infrastructure.Persistence
+namespace PickyParking.ModLifecycle
 {
     
     

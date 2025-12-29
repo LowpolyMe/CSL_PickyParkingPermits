@@ -1,12 +1,12 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
-using PickyParking.Infrastructure;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.Logging;
+using PickyParking.Features.ParkingPolicing;
 
 namespace PickyParking.Patching.TMPE
 {
-    internal static class ParkingSearchContextSetupAdapter
+    internal static class ParkingSearchContextPatchHandler
     {
         private static readonly object _cacheLock = new object();
         private static readonly Dictionary<MethodBase, ParkPassengerCarIndices> _parkPassengerCarCache =

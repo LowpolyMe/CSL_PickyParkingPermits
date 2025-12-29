@@ -1,8 +1,9 @@
 using System;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Settings;
-using PickyParking.Infrastructure.Persistence;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.ParkingRulesSaving;
+using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Features.ParkingPolicing;
@@ -22,7 +23,6 @@ namespace PickyParking.ModEntry
         public ModSettingsController SettingsController { get; private set; }
 
         public GameAccess GameAccess { get; private set; }
-        public PrefabIdentity PrefabIdentity { get; private set; }
         public TmpeIntegration TmpeIntegration { get; private set; }
 
         public ParkingRuleEvaluator ParkingRuleEvaluator { get; private set; }
@@ -41,7 +41,6 @@ namespace PickyParking.ModEntry
             ParkingRulesConfigRegistry parkingRulesRepository,
             ModSettingsController settingsController,
             GameAccess gameAccess,
-            PrefabIdentity prefabIdentity,
             TmpeIntegration tmpeIntegration,
             ParkingRuleEvaluator parkingRuleEvaluator,
             ParkingPermissionEvaluator parkingPermitEvaluator,
@@ -55,7 +54,6 @@ namespace PickyParking.ModEntry
             ParkingRulesConfigRegistry = parkingRulesRepository;
             SettingsController = settingsController;
             GameAccess = gameAccess;
-            PrefabIdentity = prefabIdentity;
             TmpeIntegration = tmpeIntegration;
             ParkingRuleEvaluator = parkingRuleEvaluator;
             ParkingPermissionEvaluator = parkingPermitEvaluator;
@@ -108,7 +106,6 @@ namespace PickyParking.ModEntry
             }
 
             var gameAccess = new GameAccess();
-            var prefabIdentity = new PrefabIdentity();
 
             var policy = new ParkingRuleEvaluator();
             var evaluator = new ParkingPermissionEvaluator(
@@ -122,7 +119,6 @@ namespace PickyParking.ModEntry
             var previewState = new ParkingRulePreviewState();
             var debugHotkeys = new DebugHotkeyController(
                 gameAccess,
-                prefabIdentity,
                 registry,
                 settingsController,
                 rulesRepo,
@@ -138,7 +134,6 @@ namespace PickyParking.ModEntry
                 rulesRepo,
                 settingsController,
                 gameAccess,
-                prefabIdentity,
                 tmpe,
                 policy,
                 evaluator,

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
 namespace PickyParking.UI
 {
