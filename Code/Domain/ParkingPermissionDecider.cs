@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace PickyParking.Domain
 {
     
@@ -22,9 +20,9 @@ namespace PickyParking.Domain
         public Result Evaluate(
             ParkingRulesConfigDefinition rule,
             bool isVisitor,
-            Vector3 parkingLotPosition,
-            Vector3? homePosition,
-            Vector3? workPosition)
+            ParkingPosition parkingLotPosition,
+            ParkingPosition? homePosition,
+            ParkingPosition? workPosition)
         {  
             if (rule.IsUnrestricted)
                 return new Result(true, DecisionReason.Allowed_Unrestricted);
@@ -45,7 +43,7 @@ namespace PickyParking.Domain
                     return new Result(true, DecisionReason.Allowed_MatchedResidentRadius);
 
                 float r2 = rule.ResidentsRadiusMeters * rule.ResidentsRadiusMeters;
-                if ((homePosition.Value - parkingLotPosition).sqrMagnitude <= r2)
+                if (ParkingPosition.SqrDistance(homePosition.Value, parkingLotPosition) <= r2)
                     return new Result(true, DecisionReason.Allowed_MatchedResidentRadius);
             }
 
@@ -56,7 +54,7 @@ namespace PickyParking.Domain
 
                 float r2 = rule.WorkSchoolRadiusMeters * rule.WorkSchoolRadiusMeters;
 
-                if (workPosition.HasValue && (workPosition.Value - parkingLotPosition).sqrMagnitude <= r2)
+                if (workPosition.HasValue && ParkingPosition.SqrDistance(workPosition.Value, parkingLotPosition) <= r2)
                     return new Result(true, DecisionReason.Allowed_MatchedWorkSchoolRadius);
             }
 

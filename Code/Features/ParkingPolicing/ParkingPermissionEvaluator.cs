@@ -117,8 +117,26 @@ namespace PickyParking.Features.ParkingPolicing
             Vector3? workPos)
         {
             ParkingSearchContext.SetEpisodeVisitorFlag(isVisitorFromCitizen);
-            ParkingPermissionDecider.Result r = _policy.Evaluate(rule, isVisitorFromCitizen, lotPos, homePos, workPos);
+            ParkingPermissionDecider.Result r = _policy.Evaluate(
+                rule,
+                isVisitorFromCitizen,
+                ToParkingPosition(lotPos),
+                ToParkingPosition(homePos),
+                ToParkingPosition(workPos));
             return new Result(r.Allowed, r.Reason);
+        }
+
+        private static ParkingPosition ToParkingPosition(Vector3 pos)
+        {
+            return new ParkingPosition(pos.x, pos.z);
+        }
+
+        private static ParkingPosition? ToParkingPosition(Vector3? pos)
+        {
+            if (!pos.HasValue)
+                return null;
+            Vector3 v = pos.Value;
+            return new ParkingPosition(v.x, v.z);
         }
     }
 }
