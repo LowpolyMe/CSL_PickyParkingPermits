@@ -16,114 +16,73 @@ namespace PickyParking.App
         private const float MaxSnapDistanceSqr = 4f; 
         [ThreadStatic] private static List<Vector3> _spacePositions;
 
-        public static bool HandleFindParkingSpacePropAtBuildingPrefix(ref bool result, object[] args)
+        public static bool TryGetCandidateDecision(ushort buildingId, out bool denied)
         {
-            try
+            denied = false;
+
+            var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetCandidateDecision");
+            if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
+                return false;
+
+            if (!IsInScope(context, buildingId))
+                return false;
+
+            string prefabName = GetBuildingPrefabName(buildingId);
+
+            DecisionReason reason;
+            denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
+
+            if (Log.IsVerboseEnabled &&
+                context.ParkingRestrictionsConfigRegistry.TryGet(buildingId, out var rule) &&
+                rule.WorkSchoolWithinRadiusOnly)
             {
-                if (args == null || args.Length < 12)
-                    return true;
-
-                
-                if (!(args[3] is ushort))
-                    return true;
-
-                ushort buildingId = (ushort)args[3];
-
-                var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.HandleFindParkingSpacePropAtBuildingPrefix");
-                if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
-                    return true;
-
-                
-                if (!IsInScope(context, buildingId))
-                    return true;
-
-                string prefabName = GetBuildingPrefabName(buildingId);
-
-                bool denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out DecisionReason reason);
-
-                if (Log.IsVerboseEnabled &&
-                    context.ParkingRestrictionsConfigRegistry.TryGet(buildingId, out var rule) &&
-                    rule.WorkSchoolWithinRadiusOnly)
-                {
-                    Log.Info(
-                        "[Parking] WorkerOnlyCandidateDecision " +
-                        $"buildingId={buildingId} denied={denied} reason={reason} " +
-                        $"isVisitor={ParkingSearchContext.IsVisitor} " +
-                        $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
-                        $"source={ParkingSearchContext.Source ?? "NULL"} " +
-                        $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
-                        $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
-                        $"VisitorsAllowed={rule.VisitorsAllowed}"
-                    );
-                }
-
-                ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName);
-                if (!denied) return true;
-
-                
-                args[9] = Vector3.zero;
-                args[10] = Quaternion.identity;
-                args[11] = -1f;
-
-                result = false;
-                return false; 
+                Log.Info(
+                    "[Parking] WorkerOnlyCandidateDecision " +
+                    $"buildingId={buildingId} denied={denied} reason={reason} " +
+                    $"isVisitor={ParkingSearchContext.IsVisitor} " +
+                    $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
+                    $"source={ParkingSearchContext.Source ?? "NULL"} " +
+                    $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
+                    $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
+                    $"VisitorsAllowed={rule.VisitorsAllowed}"
+                );
             }
-            catch (Exception ex)
-            {
-                Log.Error("[Parking] Exception\n" + ex);
-                return true; 
-            }
+
+            ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName);
+            return true;
         }
 
-        public static bool HandleCreateParkedVehiclePrefix(
-            ref ushort parked,
-            ref ColossalFramework.Math.Randomizer r,
-            VehicleInfo info,
-            Vector3 position,
-            Quaternion rotation,
-            uint ownerCitizen,
-            ref bool result)
+        public static bool ShouldBlockCreateParkedVehicle(uint ownerCitizenId, Vector3 position)
         {
-            try
-            {
-                var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.HandleCreateParkedVehiclePrefix");
-                if (context == null || !context.FeatureGate.IsActive)
-                    return true;
-
-                if (!ParkingSearchContext.HasContext)
-                    return true;
-
-                if (ownerCitizen == 0u)
-                    return true;
-
-                if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRestrictionsConfigDefinition rule))
-                    return true;
-
-                var eval = context.ParkingPermissionEvaluator.EvaluateCitizen(ownerCitizen, buildingId);
-                if (eval.Allowed)
-                    return true;
-
-                if (Log.IsVerboseEnabled && rule.WorkSchoolWithinRadiusOnly)
-                {
-                    Log.Info(
-                        "[Parking] WorkerOnlyCreateDenied " +
-                        $"buildingId={buildingId} reason={eval.Reason} " +
-                        $"isVisitor={ParkingSearchContext.IsVisitor} " +
-                        $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
-                        $"source={ParkingSearchContext.Source ?? "NULL"} " +
-                        $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
-                        $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
-                        $"VisitorsAllowed={rule.VisitorsAllowed}"
-                    );
-                }
-
-                parked = 0;
-                result = false;
+            var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.ShouldBlockCreateParkedVehicle");
+            if (context == null || !context.FeatureGate.IsActive)
                 return false;
-            }
-            catch (Exception ex)
+
+            if (!ParkingSearchContext.HasContext)
+                return false;
+
+            if (ownerCitizenId == 0u)
+                return false;
+
+            if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRestrictionsConfigDefinition rule))
+                return false;
+
+            var eval = context.ParkingPermissionEvaluator.EvaluateCitizen(ownerCitizenId, buildingId);
+            if (eval.Allowed)
+                return false;
+
+            if (Log.IsVerboseEnabled && rule.WorkSchoolWithinRadiusOnly)
             {
-                Log.Error("[Parking] Prefix exception\n" + ex);
+                Log.Info(
+                    "[Parking] WorkerOnlyCreateDenied " +
+                    $"buildingId={buildingId} reason={eval.Reason} " +
+                    $"isVisitor={ParkingSearchContext.IsVisitor} " +
+                    $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
+                    $"source={ParkingSearchContext.Source ?? "NULL"} " +
+                    $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
+                    $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
+                    $"VisitorsAllowed={rule.VisitorsAllowed}"
+                );
             }
 
             return true;

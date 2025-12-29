@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
-using PickyParking.App;
 using PickyParking.Infrastructure;
 
 namespace PickyParking.Patching.TMPE
@@ -46,12 +45,12 @@ namespace PickyParking.Patching.TMPE
 
         private static void Prefix(MethodBase __originalMethod, object[] __args, ref bool __state)
         {
-            ParkingSearchContextSetup.BeginTryMoveParkedVehicle(__originalMethod, __args, ref __state);
+            ParkingSearchContextSetupAdapter.BeginTryMoveParkedVehicle(__originalMethod, __args, ref __state);
         }
 
         private static Exception Finalizer(Exception __exception, bool __state)
         {
-            return ParkingSearchContextSetup.EndTryMoveParkedVehicle(__exception, __state);
+            return ParkingSearchContextSetupAdapter.EndTryMoveParkedVehicle(__exception, __state);
         }
     }
 }

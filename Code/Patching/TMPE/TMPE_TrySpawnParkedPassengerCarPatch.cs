@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
-using PickyParking.App;
 using PickyParking.Infrastructure;
 
 
@@ -75,13 +74,13 @@ namespace PickyParking.Patching.TMPE
 
         private static void Prefix([HarmonyArgument(0)] uint citizenId, ref bool __state)
         {
-            ParkingSearchContextSetup.BeginTrySpawnParkedCar(citizenId, ref __state);
+            ParkingSearchContextSetupAdapter.BeginTrySpawnParkedCar(citizenId, ref __state);
         }
 
 
         private static Exception Finalizer(Exception __exception, bool __state)
         {
-            return ParkingSearchContextSetup.EndTrySpawnParkedCar(__exception, __state);
+            return ParkingSearchContextSetupAdapter.EndTrySpawnParkedCar(__exception, __state);
         }
     }
 }

@@ -4,12 +4,9 @@ using System.Collections.Generic;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Integration;
 
-namespace PickyParking.App
+namespace PickyParking.Patching.TMPE
 {
-    
-    
-    
-    public static class ParkingSearchContextSetup
+    internal static class ParkingSearchContextSetupAdapter
     {
         private static readonly object _cacheLock = new object();
         private static readonly Dictionary<MethodBase, ParkPassengerCarIndices> _parkPassengerCarCache =
@@ -80,7 +77,7 @@ namespace PickyParking.App
 
             try
             {
-                
+
                 if (ParkingSearchContext.HasCitizenId)
                     return;
 
@@ -145,7 +142,7 @@ namespace PickyParking.App
 
             try
             {
-                
+
                 if (ParkingSearchContext.HasCitizenId)
                     return;
 
@@ -249,7 +246,7 @@ namespace PickyParking.App
             {
                 Type pt = ps[i].ParameterType;
 
-                
+
                 if (driverCitizenIdIndex < 0 && pt == typeof(uint))
                 {
                     string n = ps[i].Name ?? "";
@@ -260,7 +257,7 @@ namespace PickyParking.App
                     }
                 }
 
-                
+
                 if (vehicleIdIndex < 0 && pt == typeof(ushort))
                 {
                     string n = ps[i].Name ?? "";
@@ -272,10 +269,10 @@ namespace PickyParking.App
                 }
             }
 
-            
+
             if (driverCitizenIdIndex < 0)
             {
-                
+
                 for (int i = 0; i < ps.Length; i++)
                 {
                     if (ps[i].ParameterType == typeof(uint))
@@ -288,7 +285,7 @@ namespace PickyParking.App
 
             if (vehicleIdIndex < 0)
             {
-                
+
                 for (int i = 0; i < ps.Length; i++)
                 {
                     if (ps[i].ParameterType == typeof(ushort))

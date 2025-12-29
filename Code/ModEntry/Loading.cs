@@ -9,6 +9,7 @@ using PickyParking.Settings;
 using PickyParking.UI;
 using PickyParking.Features.Debug;
 using PickyParking.App;
+using PickyParking.Patching.TMPE;
 using UnityEngine;
 
 namespace PickyParking.ModEntry
@@ -115,7 +116,7 @@ namespace PickyParking.ModEntry
                 if (Log.IsVerboseEnabled)
                     Log.Info("[Runtime] Sim-thread cleanup complete.");
             });
-            ParkingSearchContextSetup.ClearCaches();
+            ParkingSearchContextSetupAdapter.ClearCaches();
             if (clearLevelContext)
             {
                 LevelBootstrap.Context.Clear();

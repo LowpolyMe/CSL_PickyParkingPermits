@@ -1,6 +1,4 @@
 using HarmonyLib;
-using PickyParking.App;
-
 namespace PickyParking.Patching.Game
 {
     
@@ -20,7 +18,7 @@ namespace PickyParking.Patching.Game
 
         private static void Prefix(ushort building)
         {
-            BuildingReleaseCleanup.HandleReleaseBuilding(building);
+            BuildingReleaseCleanupAdapter.HandleReleaseBuilding(building);
         }
     }
 }
