@@ -1,5 +1,3 @@
-using PickyParking.Domain;
-
 namespace PickyParking.Features.ParkingRules
 {
     public sealed class ParkingRulePreviewState

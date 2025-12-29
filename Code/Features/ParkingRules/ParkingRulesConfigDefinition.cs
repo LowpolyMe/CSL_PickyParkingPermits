@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace PickyParking.Domain
+namespace PickyParking.Features.ParkingRules
 {
     [Serializable]
     public struct ParkingRulesConfigDefinition

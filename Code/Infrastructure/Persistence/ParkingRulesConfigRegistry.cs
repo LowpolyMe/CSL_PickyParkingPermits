@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.Infrastructure.Persistence
 {

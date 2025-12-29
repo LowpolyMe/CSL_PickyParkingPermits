@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using ColossalFramework.IO;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Infrastructure;
 
 namespace PickyParking.Settings

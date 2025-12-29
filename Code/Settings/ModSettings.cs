@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.Settings
 {

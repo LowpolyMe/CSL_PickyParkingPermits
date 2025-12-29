@@ -2,8 +2,8 @@ using System;
 using PickyParking.Infrastructure;
 using PickyParking.Settings;
 using PickyParking.Infrastructure.Persistence;
-using PickyParking.Domain;
 using PickyParking.Infrastructure.Integration;
+using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.Debug;
@@ -25,7 +25,7 @@ namespace PickyParking.ModEntry
         public PrefabIdentity PrefabIdentity { get; private set; }
         public TmpeIntegration TmpeIntegration { get; private set; }
 
-        public ParkingPermissionDecider ParkingPermissionDecider { get; private set; }
+        public ParkingRuleEvaluator ParkingRuleEvaluator { get; private set; }
         public ParkingPermissionEvaluator ParkingPermissionEvaluator { get; private set; }
 
         public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; private set; }
@@ -43,7 +43,7 @@ namespace PickyParking.ModEntry
             GameAccess gameAccess,
             PrefabIdentity prefabIdentity,
             TmpeIntegration tmpeIntegration,
-            ParkingPermissionDecider parkingPermissionPolicy,
+            ParkingRuleEvaluator parkingRuleEvaluator,
             ParkingPermissionEvaluator parkingPermitEvaluator,
             ParkedVehicleReevaluation parkedVehicleReevaluation,
             ParkingRulePreviewState parkingRulePreviewState,
@@ -57,7 +57,7 @@ namespace PickyParking.ModEntry
             GameAccess = gameAccess;
             PrefabIdentity = prefabIdentity;
             TmpeIntegration = tmpeIntegration;
-            ParkingPermissionDecider = parkingPermissionPolicy;
+            ParkingRuleEvaluator = parkingRuleEvaluator;
             ParkingPermissionEvaluator = parkingPermitEvaluator;
             ParkedVehicleReevaluation = parkedVehicleReevaluation;
             ParkingRulePreviewState = parkingRulePreviewState;
@@ -110,7 +110,7 @@ namespace PickyParking.ModEntry
             var gameAccess = new GameAccess();
             var prefabIdentity = new PrefabIdentity();
 
-            var policy = new ParkingPermissionDecider();
+            var policy = new ParkingRuleEvaluator();
             var evaluator = new ParkingPermissionEvaluator(
                 featureGate,
                 rulesRepo,

@@ -1,5 +1,4 @@
 using UnityEngine;
-using PickyParking.Domain;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Persistence;
 using PickyParking.Features.ParkingPolicing;

@@ -3,7 +3,7 @@ using ColossalFramework.Math;
 using PickyParking.Infrastructure;
 using UnityEngine;
 using PickyParking.ModEntry;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.UI
 {

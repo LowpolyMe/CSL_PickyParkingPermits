@@ -4,7 +4,7 @@ using System.IO;
 using ColossalFramework;
 using ICities;
 using PickyParking.Infrastructure;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.Infrastructure.Persistence
 {

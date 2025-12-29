@@ -1,9 +1,9 @@
-namespace PickyParking.Domain
+namespace PickyParking.Features.ParkingRules
 {
     
     
     
-    public sealed class ParkingPermissionDecider
+    public sealed class ParkingRuleEvaluator
     {
         public struct Result
         {

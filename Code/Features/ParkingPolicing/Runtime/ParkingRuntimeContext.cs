@@ -1,5 +1,5 @@
-using PickyParking.Domain;
 using PickyParking.Features.ParkingPolicing;
+using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Integration;
 using PickyParking.Infrastructure.Persistence;

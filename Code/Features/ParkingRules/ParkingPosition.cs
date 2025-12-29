@@ -1,4 +1,4 @@
-namespace PickyParking.Domain
+namespace PickyParking.Features.ParkingRules
 {
     public struct ParkingPosition
     {

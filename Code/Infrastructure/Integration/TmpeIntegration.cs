@@ -3,7 +3,7 @@ using System.Reflection;
 using ColossalFramework;
 using PickyParking.Infrastructure;
 using PickyParking.Features.ParkingPolicing;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingRules;
 using UnityEngine;
 
 namespace PickyParking.Infrastructure.Integration

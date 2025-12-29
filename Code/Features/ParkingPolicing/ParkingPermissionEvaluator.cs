@@ -2,7 +2,7 @@ using UnityEngine;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Persistence;
 using PickyParking.Infrastructure.Integration;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -11,18 +11,18 @@ namespace PickyParking.Features.ParkingPolicing
         private readonly FeatureGate _isFeatureActive;
         private readonly ParkingRulesConfigRegistry _rules;
         private readonly GameAccess _game;
-        private readonly ParkingPermissionDecider _policy;
+        private readonly ParkingRuleEvaluator _ruleEvaluator;
 
         public ParkingPermissionEvaluator(
             FeatureGate featureGate,
             ParkingRulesConfigRegistry rules,
             GameAccess game,
-            ParkingPermissionDecider policy)
+            ParkingRuleEvaluator ruleEvaluator)
         {
             _isFeatureActive = featureGate;
             _rules = rules;
             _game = game;
-            _policy = policy;
+            _ruleEvaluator = ruleEvaluator;
         }
 
         public struct Result
@@ -117,7 +117,7 @@ namespace PickyParking.Features.ParkingPolicing
             Vector3? workPos)
         {
             ParkingSearchContext.SetEpisodeVisitorFlag(isVisitorFromCitizen);
-            ParkingPermissionDecider.Result r = _policy.Evaluate(
+            ParkingRuleEvaluator.Result r = _ruleEvaluator.Evaluate(
                 rule,
                 isVisitorFromCitizen,
                 ToParkingPosition(lotPos),

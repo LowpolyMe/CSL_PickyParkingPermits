@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PickyParking.Domain
+namespace PickyParking.Features.ParkingLotPrefabs
 {
     
     

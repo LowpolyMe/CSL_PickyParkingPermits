@@ -1,5 +1,5 @@
 using ColossalFramework.Packaging;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.Infrastructure.Integration
 {

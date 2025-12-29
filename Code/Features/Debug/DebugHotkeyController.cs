@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingLotPrefabs;
+using PickyParking.Features.ParkingRules;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Integration;
 using PickyParking.Infrastructure.Persistence;

@@ -1,6 +1,6 @@
 using UnityEngine;
 using ColossalFramework.UI;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Infrastructure;
 using PickyParking.ModEntry;
 
