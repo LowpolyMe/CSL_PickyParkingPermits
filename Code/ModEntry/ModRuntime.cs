@@ -2,10 +2,10 @@ using System;
 using PickyParking.Infrastructure;
 using PickyParking.Settings;
 using PickyParking.Infrastructure.Persistence;
-using PickyParking.App;
 using PickyParking.Domain;
 using PickyParking.Infrastructure.Integration;
-using PickyParking.Features.ParkingPermits;
+using PickyParking.Features.ParkingRules;
+using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.Debug;
 
 namespace PickyParking.ModEntry
@@ -18,7 +18,7 @@ namespace PickyParking.ModEntry
     {
         public FeatureGate FeatureGate { get; private set; }
         public SupportedParkingLotRegistry SupportedParkingLotRegistry { get; private set; }
-        public ParkingRestrictionsConfigRegistry ParkingRestrictionsConfigRegistry { get; private set; }
+        public ParkingRulesConfigRegistry ParkingRulesConfigRegistry { get; private set; }
         public ModSettingsController SettingsController { get; private set; }
 
         public GameAccess GameAccess { get; private set; }
@@ -31,14 +31,14 @@ namespace PickyParking.ModEntry
         public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; private set; }
         public ParkingRulePreviewState ParkingRulePreviewState { get; private set; }
         public DebugHotkeyController DebugHotkeyController { get; private set; }
-        public ParkingRestrictionsConfigEditor ParkingRestrictionsConfigEditor { get; private set; }
+        public ParkingRulesConfigEditor ParkingRulesConfigEditor { get; private set; }
 
         private bool _disposed;
 
         private ModRuntime(
             FeatureGate featureGate,
             SupportedParkingLotRegistry supportedParkingLotRegistry,
-            ParkingRestrictionsConfigRegistry parkingRulesRepository,
+            ParkingRulesConfigRegistry parkingRulesRepository,
             ModSettingsController settingsController,
             GameAccess gameAccess,
             PrefabIdentity prefabIdentity,
@@ -48,11 +48,11 @@ namespace PickyParking.ModEntry
             ParkedVehicleReevaluation parkedVehicleReevaluation,
             ParkingRulePreviewState parkingRulePreviewState,
             DebugHotkeyController debugHotkeyController,
-            ParkingRestrictionsConfigEditor parkingPermitsRuleController)
+            ParkingRulesConfigEditor parkingRulesController)
         {
             FeatureGate = featureGate;
             SupportedParkingLotRegistry = supportedParkingLotRegistry;
-            ParkingRestrictionsConfigRegistry = parkingRulesRepository;
+            ParkingRulesConfigRegistry = parkingRulesRepository;
             SettingsController = settingsController;
             GameAccess = gameAccess;
             PrefabIdentity = prefabIdentity;
@@ -62,7 +62,7 @@ namespace PickyParking.ModEntry
             ParkedVehicleReevaluation = parkedVehicleReevaluation;
             ParkingRulePreviewState = parkingRulePreviewState;
             DebugHotkeyController = debugHotkeyController;
-            ParkingRestrictionsConfigEditor = parkingPermitsRuleController;
+            ParkingRulesConfigEditor = parkingRulesController;
         }
 
         
@@ -80,7 +80,7 @@ namespace PickyParking.ModEntry
             var featureGate = new FeatureGate();
             var registry = new SupportedParkingLotRegistry(settings.SupportedParkingLotPrefabs);
 
-            var rulesRepo = new ParkingRestrictionsConfigRegistry();
+            var rulesRepo = new ParkingRulesConfigRegistry();
 
             
             
@@ -127,7 +127,7 @@ namespace PickyParking.ModEntry
                 settingsController,
                 rulesRepo,
                 reevaluation);
-            var permitsController = new ParkingRestrictionsConfigEditor(
+            var rulesController = new ParkingRulesConfigEditor(
                 rulesRepo,
                 previewState,
                 reevaluation);
@@ -145,7 +145,7 @@ namespace PickyParking.ModEntry
                 reevaluation,
                 previewState,
                 debugHotkeys,
-                permitsController);
+                rulesController);
         }
 
         public static void SetCurrent(ModRuntime runtime)

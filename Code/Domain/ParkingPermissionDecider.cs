@@ -20,7 +20,7 @@ namespace PickyParking.Domain
         }
 
         public Result Evaluate(
-            ParkingRestrictionsConfigDefinition rule,
+            ParkingRulesConfigDefinition rule,
             bool isVisitor,
             Vector3 parkingLotPosition,
             Vector3? homePosition,

@@ -2,19 +2,16 @@ using UnityEngine;
 using PickyParking.Domain;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Persistence;
-using PickyParking.App;
+using PickyParking.Features.ParkingPolicing;
 using PickyParking.UI;
 
-namespace PickyParking.Features.ParkingPermits
+namespace PickyParking.Features.ParkingRules
 {
-    
-    
-    
-    public sealed class ParkingRestrictionsConfigEditor
+    public sealed class ParkingRulesConfigEditor
     {
         private const ushort AllRadiusMeters = ushort.MaxValue;
 
-        private readonly ParkingRestrictionsConfigRegistry _parkingRulesRepository;
+        private readonly ParkingRulesConfigRegistry _parkingRulesRepository;
         private readonly ParkingRulePreviewState _previewState;
         private readonly ParkedVehicleReevaluation _reevaluation;
         private readonly float _defaultSliderValue;
@@ -22,17 +19,17 @@ namespace PickyParking.Features.ParkingPermits
         private bool _hasPendingReevaluation;
         private ushort _pendingReevaluationBuildingId;
 
-        public ParkingRestrictionsConfigUiConfig UiConfig { get; private set; }
+        public ParkingRulesConfigUiConfig UiConfig { get; private set; }
 
-        public ParkingRestrictionsConfigEditor(
-            ParkingRestrictionsConfigRegistry parkingRulesRepository,
+        public ParkingRulesConfigEditor(
+            ParkingRulesConfigRegistry parkingRulesRepository,
             ParkingRulePreviewState previewState,
             ParkedVehicleReevaluation reevaluation)
         {
             _parkingRulesRepository = parkingRulesRepository;
             _previewState = previewState;
             _reevaluation = reevaluation;
-            UiConfig = ParkingRestrictionsConfigUiConfig.Default;
+            UiConfig = ParkingRulesConfigUiConfig.Default;
             _defaultSliderValue = ConvertRadiusToSliderValue(UiConfig.DefaultRadiusMeters);
         }
 
@@ -41,18 +38,18 @@ namespace PickyParking.Features.ParkingPermits
             return _defaultSliderValue;
         }
 
-        public ParkingRestrictionsConfigDefinition GetRuleForBuilding(ushort buildingId)
+        public ParkingRulesConfigDefinition GetRuleForBuilding(ushort buildingId)
         {
             if (_parkingRulesRepository == null || buildingId == 0)
-                return new ParkingRestrictionsConfigDefinition(false, UiConfig.DefaultRadiusMeters, false, UiConfig.DefaultRadiusMeters, false);
+                return new ParkingRulesConfigDefinition(false, UiConfig.DefaultRadiusMeters, false, UiConfig.DefaultRadiusMeters, false);
 
             if (_parkingRulesRepository.TryGet(buildingId, out var rule))
                 return rule;
 
-            return new ParkingRestrictionsConfigDefinition(false, UiConfig.DefaultRadiusMeters, false, UiConfig.DefaultRadiusMeters, false);
+            return new ParkingRulesConfigDefinition(false, UiConfig.DefaultRadiusMeters, false, UiConfig.DefaultRadiusMeters, false);
         }
 
-        public bool TryGetStoredRule(ushort buildingId, out ParkingRestrictionsConfigDefinition rule)
+        public bool TryGetStoredRule(ushort buildingId, out ParkingRulesConfigDefinition rule)
         {
             rule = default;
             if (_parkingRulesRepository == null || buildingId == 0)
@@ -67,19 +64,19 @@ namespace PickyParking.Features.ParkingPermits
                 return;
 
             if (Log.IsVerboseEnabled)
-                Log.Info("[ParkingPermits] RemoveRule (" + reason + ") building=" + buildingId);
+                Log.Info("[ParkingRules] RemoveRule (" + reason + ") building=" + buildingId);
 
             SimThread.Dispatch(() => _parkingRulesRepository.Remove(buildingId));
         }
 
-        public void CommitPendingChanges(ushort buildingId, ParkingRestrictionsConfigUiState state)
+        public void CommitPendingChanges(ushort buildingId, ParkingRulesConfigUiState state)
         {
             if (buildingId == 0 || state == null || _parkingRulesRepository == null)
                 return;
 
-            ParkingRestrictionsConfigDefinition rule = BuildRuleFromUi(state);
+            ParkingRulesConfigDefinition rule = BuildRuleFromUi(state);
             if (Log.IsVerboseEnabled)
-                Log.Info("[ParkingPermits] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
+                Log.Info("[ParkingRules] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
 
             SimThread.Dispatch(() => _parkingRulesRepository.Set(buildingId, rule));
         }
@@ -92,26 +89,26 @@ namespace PickyParking.Features.ParkingPermits
             _previewState.Clear(buildingId);
         }
 
-        public void UpdatePreview(ushort buildingId, ParkingRestrictionsConfigUiState state)
+        public void UpdatePreview(ushort buildingId, ParkingRulesConfigUiState state)
         {
             if (buildingId == 0 || state == null || _previewState == null)
                 return;
 
-            ParkingRestrictionsConfigDefinition rule = BuildRuleFromUi(state);
+            ParkingRulesConfigDefinition rule = BuildRuleFromUi(state);
             _previewState.SetPreview(buildingId, rule);
         }
 
-        public void ApplyRuleNow(ushort buildingId, ParkingRestrictionsConfigUiState state, string reason)
+        public void ApplyRuleNow(ushort buildingId, ParkingRulesConfigUiState state, string reason)
         {
             if (buildingId == 0 || state == null || _parkingRulesRepository == null)
                 return;
 
-            ParkingRestrictionsConfigDefinition rule = BuildRuleFromUi(state);
+            ParkingRulesConfigDefinition rule = BuildRuleFromUi(state);
             _hasPendingReevaluation = true;
             _pendingReevaluationBuildingId = buildingId;
 
             if (Log.IsVerboseEnabled)
-                Log.Info("[ParkingPermits] ApplyNow (" + reason + ") building=" + buildingId + " rule=" + FormatRule(rule) + " reevaluate=deferred");
+                Log.Info("[ParkingRules] ApplyNow (" + reason + ") building=" + buildingId + " rule=" + FormatRule(rule) + " reevaluate=deferred");
 
             SimThread.Dispatch(() => _parkingRulesRepository.Set(buildingId, rule));
         }
@@ -121,28 +118,28 @@ namespace PickyParking.Features.ParkingPermits
             if (!_hasPendingReevaluation)
             {
                 if (Log.IsVerboseEnabled)
-                    Log.Info("[ParkingPermits] Reevaluation skipped (none pending) for building " + buildingId);
+                    Log.Info("[ParkingRules] Reevaluation skipped (none pending) for building " + buildingId);
                 return;
             }
 
             if (_pendingReevaluationBuildingId != buildingId)
             {
                 if (Log.IsVerboseEnabled)
-                    Log.Info("[ParkingPermits] Reevaluation skipped (pending for " + _pendingReevaluationBuildingId + ") for building " + buildingId);
+                    Log.Info("[ParkingRules] Reevaluation skipped (pending for " + _pendingReevaluationBuildingId + ") for building " + buildingId);
                 return;
             }
 
             if (_reevaluation == null)
             {
                 if (Log.IsVerboseEnabled)
-                    Log.Info("[ParkingPermits] Reevaluation skipped (service missing) for building " + buildingId);
+                    Log.Info("[ParkingRules] Reevaluation skipped (service missing) for building " + buildingId);
                 return;
             }
 
             _hasPendingReevaluation = false;
 
             if (Log.IsVerboseEnabled)
-                Log.Info("[ParkingPermits] Reevaluation requested for building " + buildingId);
+                Log.Info("[ParkingRules] Reevaluation requested for building " + buildingId);
 
             SimThread.Dispatch(() => _reevaluation.RequestForBuilding(buildingId));
         }
@@ -171,14 +168,14 @@ namespace PickyParking.Features.ParkingPermits
                 UiConfig.DistanceMidpointT);
         }
 
-        public string FormatRule(ParkingRestrictionsConfigDefinition rule)
+        public string FormatRule(ParkingRulesConfigDefinition rule)
         {
             return "ResidentsOnly=" + rule.ResidentsWithinRadiusOnly + " (" + rule.ResidentsRadiusMeters + "m), "
                    + "WorkSchoolOnly=" + rule.WorkSchoolWithinRadiusOnly + " (" + rule.WorkSchoolRadiusMeters + "m), "
                    + "VisitorsAllowed=" + rule.VisitorsAllowed;
         }
 
-        public ParkingRestrictionsConfigDefinition BuildRuleFromUi(ParkingRestrictionsConfigUiState state)
+        public ParkingRulesConfigDefinition BuildRuleFromUi(ParkingRulesConfigUiState state)
         {
             bool residentsEnabled = state.ResidentsEnabled;
             bool workEnabled = state.WorkSchoolEnabled;
@@ -189,7 +186,7 @@ namespace PickyParking.Features.ParkingPermits
             ushort residentsRadius = ConvertSliderValueToRadius(resValue);
             ushort workRadius = ConvertSliderValueToRadius(workValue);
 
-            return new ParkingRestrictionsConfigDefinition(
+            return new ParkingRulesConfigDefinition(
                 residentsEnabled,
                 residentsRadius,
                 workEnabled,

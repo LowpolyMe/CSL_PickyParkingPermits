@@ -29,7 +29,7 @@ namespace PickyParking.Infrastructure.Persistence
                 return;
             }
 
-            _storage.Save(runtime.ParkingRestrictionsConfigRegistry, serializableDataManager);
+            _storage.Save(runtime.ParkingRulesConfigRegistry, serializableDataManager);
         }
     }
 }

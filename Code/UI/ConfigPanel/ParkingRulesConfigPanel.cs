@@ -3,7 +3,7 @@ using ColossalFramework.UI;
 using PickyParking.Domain;
 using PickyParking.ModEntry;
 using PickyParking.Infrastructure;
-using PickyParking.Features.ParkingPermits;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.UI
 {
@@ -11,7 +11,7 @@ namespace PickyParking.UI
     
     
     
-    public sealed class ParkingRestrictionsConfigPanel : UIPanel
+    public sealed class ParkingRulesConfigPanel : UIPanel
     {
         private const float SliderAllThreshold = 0.99f;
         private const ushort DefaultNewRuleRadiusMeters = 500;
@@ -22,14 +22,14 @@ namespace PickyParking.UI
         private bool _hasUnappliedChanges;
         private bool _restrictionsEnabled;
         private bool _hasStoredRule;
-        private ParkingRestrictionsConfigDefinition _baselineRule;
+        private ParkingRulesConfigDefinition _baselineRule;
 
         private PickyParkingPanelVisuals _visuals;
-        private ParkingPermitsSliderRow _residentsRow;
-        private ParkingPermitsSliderRow _workSchoolRow;
-        private ParkingPermitsToggleRow _visitorsRow;
-        private ParkingRestrictionsConfigEditor _editor;
-        private ParkingRestrictionsConfigUiConfig _uiConfig;
+        private ParkingRulesSliderRow _residentsRow;
+        private ParkingRulesSliderRow _workSchoolRow;
+        private ParkingRulesToggleRow _visitorsRow;
+        private ParkingRulesConfigEditor _editor;
+        private ParkingRulesConfigUiConfig _uiConfig;
         private ParkingPanelTheme _theme;
 
         public override void Start()
@@ -37,8 +37,8 @@ namespace PickyParking.UI
             base.Start();
 
             ModRuntime runtime = ModRuntime.Current;
-            _editor = runtime != null ? runtime.ParkingRestrictionsConfigEditor : null;
-            _uiConfig = _editor != null ? _editor.UiConfig : ParkingRestrictionsConfigUiConfig.Default;
+            _editor = runtime != null ? runtime.ParkingRulesConfigEditor : null;
+            _uiConfig = _editor != null ? _editor.UiConfig : ParkingRulesConfigUiConfig.Default;
             _theme = new ParkingPanelTheme();
 
             _visuals = new PickyParkingPanelVisuals(
@@ -112,7 +112,7 @@ namespace PickyParking.UI
             RequestPendingReevaluationIfAny(_buildingId);
         }
 
-        private void ToggleSliderRow(ParkingPermitsSliderRow row)
+        private void ToggleSliderRow(ParkingRulesSliderRow row)
         {
             if (!_restrictionsEnabled)
                 return;
@@ -141,7 +141,7 @@ namespace PickyParking.UI
             UpdatePreviewRule();
         }
 
-        private void HandleSliderValueChanged(ParkingPermitsSliderRow row, float value)
+        private void HandleSliderValueChanged(ParkingRulesSliderRow row, float value)
         {
             if (!_restrictionsEnabled)
                 return;
@@ -177,7 +177,7 @@ namespace PickyParking.UI
             UpdatePreviewRule();
         }
 
-        private void EnableSliderRow(ParkingPermitsSliderRow row)
+        private void EnableSliderRow(ParkingRulesSliderRow row)
         {
             row.IsEnabled = true;
             if (row.Slider.value <= 0f)
@@ -188,7 +188,7 @@ namespace PickyParking.UI
             _visuals.UpdateSliderRowVisuals(row);
         }
 
-        private void DisableSliderRow(ParkingPermitsSliderRow row)
+        private void DisableSliderRow(ParkingRulesSliderRow row)
         {
             row.IsEnabled = false;
 
@@ -198,7 +198,7 @@ namespace PickyParking.UI
             _visuals.UpdateSliderRowVisuals(row);
         }
 
-        private void SetSliderValue(ParkingPermitsSliderRow row, float value)
+        private void SetSliderValue(ParkingRulesSliderRow row, float value)
         {
             value = SnapSliderValue(value);
             _isUpdatingUi = true;
@@ -256,7 +256,7 @@ namespace PickyParking.UI
             if (_editor == null)
                 return;
 
-            ParkingRestrictionsConfigDefinition rule = _editor.GetRuleForBuilding(_buildingId);
+            ParkingRulesConfigDefinition rule = _editor.GetRuleForBuilding(_buildingId);
             bool hasStoredRule = _editor.TryGetStoredRule(_buildingId, out var storedRule);
             if (hasStoredRule)
                 rule = storedRule;
@@ -274,7 +274,7 @@ namespace PickyParking.UI
                 Log.Info("[UI] Refreshed panel for building " + _buildingId + ": " + _editor.FormatRule(rule));
         }
 
-        private void ApplyRuleToUi(ParkingRestrictionsConfigDefinition rule)
+        private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)
         {
             ApplySliderRowFromRule(_residentsRow, rule.ResidentsWithinRadiusOnly, rule.ResidentsRadiusMeters);
             ApplySliderRowFromRule(_workSchoolRow, rule.WorkSchoolWithinRadiusOnly, rule.WorkSchoolRadiusMeters);
@@ -283,7 +283,7 @@ namespace PickyParking.UI
             _visuals.UpdateToggleRowVisuals(_visitorsRow);
         }
 
-        private void ApplySliderRowFromRule(ParkingPermitsSliderRow row, bool enabled, ushort radiusMeters)
+        private void ApplySliderRowFromRule(ParkingRulesSliderRow row, bool enabled, ushort radiusMeters)
         {
             if (_editor == null)
                 return;
@@ -342,7 +342,7 @@ namespace PickyParking.UI
         private float GetDefaultSliderValue()
         {
             if (_editor == null)
-                return ParkingRestrictionsConfigUiConfig.Default.DistanceSliderMaxValue * 0.2f;
+                return ParkingRulesConfigUiConfig.Default.DistanceSliderMaxValue * 0.2f;
 
             return _editor.GetDefaultSliderValue();
         }
@@ -367,7 +367,7 @@ namespace PickyParking.UI
 
             if (!_hasStoredRule)
             {
-                _baselineRule = new ParkingRestrictionsConfigDefinition(
+                _baselineRule = new ParkingRulesConfigDefinition(
                     residentsWithinRadiusOnly: true,
                     residentsRadiusMeters: DefaultNewRuleRadiusMeters,
                     workSchoolWithinRadiusOnly: true,
@@ -395,12 +395,12 @@ namespace PickyParking.UI
             _visuals.UpdateRestrictionsToggleVisuals(_restrictionsEnabled);
         }
 
-        private ParkingRestrictionsConfigUiState BuildUiState()
+        private ParkingRulesConfigUiState BuildUiState()
         {
             float residentsValue = _residentsRow != null && _residentsRow.Slider != null ? _residentsRow.Slider.value : 0f;
             float workValue = _workSchoolRow != null && _workSchoolRow.Slider != null ? _workSchoolRow.Slider.value : 0f;
 
-            return new ParkingRestrictionsConfigUiState(
+            return new ParkingRulesConfigUiState(
                 _residentsRow != null && _residentsRow.IsEnabled,
                 residentsValue,
                 _residentsRow != null ? _residentsRow.LastNonZeroValue : 0f,

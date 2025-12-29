@@ -1,9 +1,9 @@
 namespace PickyParking.UI
 {
-    public sealed class ParkingRestrictionsConfigUiConfig
+    public sealed class ParkingRulesConfigUiConfig
     {
-        public static readonly ParkingRestrictionsConfigUiConfig Default =
-            new ParkingRestrictionsConfigUiConfig(
+        public static readonly ParkingRulesConfigUiConfig Default =
+            new ParkingRulesConfigUiConfig(
                 sliderMinValue: 0f,
                 sliderMaxValue: 1f,
                 sliderStep: 0.005f,
@@ -26,7 +26,7 @@ namespace PickyParking.UI
         public float DistanceMidpointT { get; private set; }
         public ushort DefaultRadiusMeters { get; private set; }
 
-        public ParkingRestrictionsConfigUiConfig(
+        public ParkingRulesConfigUiConfig(
             float sliderMinValue,
             float sliderMaxValue,
             float sliderStep,

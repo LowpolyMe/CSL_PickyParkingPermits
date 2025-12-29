@@ -8,7 +8,8 @@ using PickyParking.Infrastructure.Integration;
 using PickyParking.Settings;
 using PickyParking.UI;
 using PickyParking.Features.Debug;
-using PickyParking.App;
+using PickyParking.Features.ParkingPolicing;
+using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
 
@@ -47,7 +48,7 @@ namespace PickyParking.ModEntry
             ParkingRuntimeContext.SetCurrent(new ParkingRuntimeContext(
                 runtime.FeatureGate,
                 runtime.SupportedParkingLotRegistry,
-                runtime.ParkingRestrictionsConfigRegistry,
+                runtime.ParkingRulesConfigRegistry,
                 runtime.GameAccess,
                 runtime.PrefabIdentity,
                 runtime.TmpeIntegration,

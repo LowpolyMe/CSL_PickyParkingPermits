@@ -4,7 +4,7 @@ using PickyParking.Infrastructure;
 
 namespace PickyParking.UI
 {
-    internal static class ParkingPermitsIconAtlas
+    internal static class ParkingRulesIconAtlas
     {
         public const string ResidentsSpriteName = "ResidentsIcon";
         public const string WorkSchoolSpriteName = "WorkSchoolIcon";

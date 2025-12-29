@@ -5,7 +5,7 @@ using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Integration;
 using PickyParking.Infrastructure.Persistence;
 using PickyParking.Settings;
-using PickyParking.App;
+using PickyParking.Features.ParkingPolicing;
 
 namespace PickyParking.Features.Debug
 {
@@ -20,7 +20,7 @@ namespace PickyParking.Features.Debug
         private readonly PrefabIdentity _prefabIdentity;
         private readonly SupportedParkingLotRegistry _supportedParkingLotRegistry;
         private readonly ModSettingsController _settingsController;
-        private readonly ParkingRestrictionsConfigRegistry _parkingRulesRepository;
+        private readonly ParkingRulesConfigRegistry _parkingRulesRepository;
         private readonly ParkedVehicleReevaluation _parkedVehicleReevaluation;
 
         public DebugHotkeyController(
@@ -28,7 +28,7 @@ namespace PickyParking.Features.Debug
             PrefabIdentity prefabIdentity,
             SupportedParkingLotRegistry supportedParkingLotRegistry,
             ModSettingsController settingsController,
-            ParkingRestrictionsConfigRegistry parkingRulesRepository,
+            ParkingRulesConfigRegistry parkingRulesRepository,
             ParkedVehicleReevaluation parkedVehicleReevaluation)
         {
             _gameAccess = gameAccess;
@@ -96,7 +96,7 @@ namespace PickyParking.Features.Debug
                     return;
                 }
 
-                ParkingRestrictionsConfigDefinition rule = CreateDefaultRule();
+                ParkingRulesConfigDefinition rule = CreateDefaultRule();
                 _parkingRulesRepository.Set(buildingId, rule);
                 if (Log.IsVerboseEnabled)
                     Log.Info($"[DebugHotkeys] Created default rule for building {buildingId}: {FormatRule(rule)}");
@@ -112,8 +112,8 @@ namespace PickyParking.Features.Debug
 
             SimThread.Dispatch(() =>
             {
-                ParkingRestrictionsConfigDefinition current = GetOrCreateRule(buildingId);
-                ParkingRestrictionsConfigDefinition updated = new ParkingRestrictionsConfigDefinition(
+                ParkingRulesConfigDefinition current = GetOrCreateRule(buildingId);
+                ParkingRulesConfigDefinition updated = new ParkingRulesConfigDefinition(
                     !current.ResidentsWithinRadiusOnly,
                     current.ResidentsRadiusMeters,
                     current.WorkSchoolWithinRadiusOnly,
@@ -135,8 +135,8 @@ namespace PickyParking.Features.Debug
 
             SimThread.Dispatch(() =>
             {
-                ParkingRestrictionsConfigDefinition current = GetOrCreateRule(buildingId);
-                ParkingRestrictionsConfigDefinition updated = new ParkingRestrictionsConfigDefinition(
+                ParkingRulesConfigDefinition current = GetOrCreateRule(buildingId);
+                ParkingRulesConfigDefinition updated = new ParkingRulesConfigDefinition(
                     current.ResidentsWithinRadiusOnly,
                     current.ResidentsRadiusMeters,
                     !current.WorkSchoolWithinRadiusOnly,
@@ -158,8 +158,8 @@ namespace PickyParking.Features.Debug
 
             SimThread.Dispatch(() =>
             {
-                ParkingRestrictionsConfigDefinition current = GetOrCreateRule(buildingId);
-                ParkingRestrictionsConfigDefinition updated = new ParkingRestrictionsConfigDefinition(
+                ParkingRulesConfigDefinition current = GetOrCreateRule(buildingId);
+                ParkingRulesConfigDefinition updated = new ParkingRulesConfigDefinition(
                     current.ResidentsWithinRadiusOnly,
                     current.ResidentsRadiusMeters,
                     current.WorkSchoolWithinRadiusOnly,
@@ -217,12 +217,12 @@ namespace PickyParking.Features.Debug
             return true;
         }
 
-        private ParkingRestrictionsConfigDefinition GetOrCreateRule(ushort buildingId)
+        private ParkingRulesConfigDefinition GetOrCreateRule(ushort buildingId)
         {
             if (_parkingRulesRepository.TryGet(buildingId, out var existing))
                 return existing;
 
-            return new ParkingRestrictionsConfigDefinition(
+            return new ParkingRulesConfigDefinition(
                 residentsWithinRadiusOnly: false,
                 residentsRadiusMeters: DefaultRadiusMeters,
                 workSchoolWithinRadiusOnly: false,
@@ -230,7 +230,7 @@ namespace PickyParking.Features.Debug
                 visitorsAllowed: false);
         }
 
-        private void SetOrRemove(ushort buildingId, ParkingRestrictionsConfigDefinition rule)
+        private void SetOrRemove(ushort buildingId, ParkingRulesConfigDefinition rule)
         {
             if (rule.IsUnrestricted)
                 _parkingRulesRepository.Remove(buildingId);
@@ -238,15 +238,15 @@ namespace PickyParking.Features.Debug
                 _parkingRulesRepository.Set(buildingId, rule);
         }
 
-        private static ParkingRestrictionsConfigDefinition CreateDefaultRule()
-            => new ParkingRestrictionsConfigDefinition(
+        private static ParkingRulesConfigDefinition CreateDefaultRule()
+            => new ParkingRulesConfigDefinition(
                 residentsWithinRadiusOnly: true,
                 residentsRadiusMeters: DefaultRadiusMeters,
                 workSchoolWithinRadiusOnly: true,
                 workSchoolRadiusMeters: DefaultRadiusMeters,
                 false);
 
-        private static string FormatRule(ParkingRestrictionsConfigDefinition rule)
+        private static string FormatRule(ParkingRulesConfigDefinition rule)
             => $"ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), "
                + $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), "
                + $"VisitorsAllowed={rule.VisitorsAllowed}";

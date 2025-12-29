@@ -1,24 +1,21 @@
 using PickyParking.Domain;
 
-namespace PickyParking.App
+namespace PickyParking.Features.ParkingRules
 {
-    
-    
-    
     public sealed class ParkingRulePreviewState
     {
         private ushort _buildingId;
-        private ParkingRestrictionsConfigDefinition _rule;
+        private ParkingRulesConfigDefinition _rule;
         private bool _hasPreview;
 
-        public void SetPreview(ushort buildingId, ParkingRestrictionsConfigDefinition rule)
+        public void SetPreview(ushort buildingId, ParkingRulesConfigDefinition rule)
         {
             _buildingId = buildingId;
             _rule = rule;
             _hasPreview = true;
         }
 
-        public bool TryGetPreview(ushort buildingId, out ParkingRestrictionsConfigDefinition rule)
+        public bool TryGetPreview(ushort buildingId, out ParkingRulesConfigDefinition rule)
         {
             if (_hasPreview && _buildingId == buildingId)
             {

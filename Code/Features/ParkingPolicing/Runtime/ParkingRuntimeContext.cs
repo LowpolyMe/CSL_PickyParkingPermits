@@ -1,19 +1,16 @@
 using PickyParking.Domain;
+using PickyParking.Features.ParkingPolicing;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Integration;
 using PickyParking.Infrastructure.Persistence;
 
-namespace PickyParking.App
+namespace PickyParking.Features.ParkingPolicing.Runtime
 {
-    
-    
-    
-    
     public sealed class ParkingRuntimeContext
     {
         public FeatureGate FeatureGate { get; private set; }
         public SupportedParkingLotRegistry SupportedParkingLotRegistry { get; private set; }
-        public ParkingRestrictionsConfigRegistry ParkingRestrictionsConfigRegistry { get; private set; }
+        public ParkingRulesConfigRegistry ParkingRulesConfigRegistry { get; private set; }
         public GameAccess GameAccess { get; private set; }
         public PrefabIdentity PrefabIdentity { get; private set; }
         public TmpeIntegration TmpeIntegration { get; private set; }
@@ -27,7 +24,7 @@ namespace PickyParking.App
         public ParkingRuntimeContext(
             FeatureGate featureGate,
             SupportedParkingLotRegistry supportedParkingLotRegistry,
-            ParkingRestrictionsConfigRegistry parkingRulesRepository,
+            ParkingRulesConfigRegistry parkingRulesRepository,
             GameAccess gameAccess,
             PrefabIdentity prefabIdentity,
             TmpeIntegration tmpeIntegration,
@@ -36,7 +33,7 @@ namespace PickyParking.App
         {
             FeatureGate = featureGate;
             SupportedParkingLotRegistry = supportedParkingLotRegistry;
-            ParkingRestrictionsConfigRegistry = parkingRulesRepository;
+            ParkingRulesConfigRegistry = parkingRulesRepository;
             GameAccess = gameAccess;
             PrefabIdentity = prefabIdentity;
             TmpeIntegration = tmpeIntegration;

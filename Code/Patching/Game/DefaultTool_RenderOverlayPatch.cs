@@ -2,7 +2,7 @@ using System.Reflection;
 using ColossalFramework;
 using HarmonyLib;
 using PickyParking.Infrastructure;
-using PickyParking.App;
+using PickyParking.UI;
 
 namespace PickyParking.Patching.Game
 {

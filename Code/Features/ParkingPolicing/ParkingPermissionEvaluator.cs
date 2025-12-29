@@ -4,22 +4,18 @@ using PickyParking.Infrastructure.Persistence;
 using PickyParking.Infrastructure.Integration;
 using PickyParking.Domain;
 
-namespace PickyParking.App
+namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
-    
     public sealed class ParkingPermissionEvaluator
     {
         private readonly FeatureGate _isFeatureActive;
-        private readonly ParkingRestrictionsConfigRegistry _rules;
+        private readonly ParkingRulesConfigRegistry _rules;
         private readonly GameAccess _game;
         private readonly ParkingPermissionDecider _policy;
 
         public ParkingPermissionEvaluator(
             FeatureGate featureGate,
-            ParkingRestrictionsConfigRegistry rules,
+            ParkingRulesConfigRegistry rules,
             GameAccess game,
             ParkingPermissionDecider policy)
         {
@@ -49,7 +45,7 @@ namespace PickyParking.App
             if (!_game.IsPrivatePassengerCar(vehicleId))
                 return new Result(true, DecisionReason.Allowed_FailOpen_NotPassengerCar);
 
-            if (!TryGetRuleAndLotPosition(candidateBuildingId, out ParkingRestrictionsConfigDefinition rule, out Vector3 lotPos, out DecisionReason failOpenReason))
+            if (!TryGetRuleAndLotPosition(candidateBuildingId, out ParkingRulesConfigDefinition rule, out Vector3 lotPos, out DecisionReason failOpenReason))
                 return new Result(true, failOpenReason);
 
             if (!_game.TryGetDriverInfo(vehicleId, out var driverContext))
@@ -66,7 +62,7 @@ namespace PickyParking.App
             if (!_isFeatureActive.IsActive)
                 return new Result(true, DecisionReason.Allowed_FailOpen_NotActive);
 
-            if (!TryGetRuleAndLotPosition(candidateBuildingId, out ParkingRestrictionsConfigDefinition rule, out Vector3 lotPos, out DecisionReason failOpenReason))
+            if (!TryGetRuleAndLotPosition(candidateBuildingId, out ParkingRulesConfigDefinition rule, out Vector3 lotPos, out DecisionReason failOpenReason))
                 return new Result(true, failOpenReason);
 
             if (!_game.TryGetCitizenInfo(citizenId, out var citizenContext))
@@ -80,7 +76,7 @@ namespace PickyParking.App
 
         private bool TryGetRuleAndLotPosition(
             ushort candidateBuildingId,
-            out ParkingRestrictionsConfigDefinition rule,
+            out ParkingRulesConfigDefinition rule,
             out Vector3 lotPos,
             out DecisionReason failOpenReason)
         {
@@ -114,7 +110,7 @@ namespace PickyParking.App
         }
 
         private Result EvaluateWithSearchContext(
-            ParkingRestrictionsConfigDefinition rule,
+            ParkingRulesConfigDefinition rule,
             bool isVisitorFromCitizen,
             Vector3 lotPos,
             Vector3? homePos,
@@ -126,6 +122,3 @@ namespace PickyParking.App
         }
     }
 }
-
-
-

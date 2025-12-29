@@ -5,15 +5,13 @@ using UnityEngine;
 using PickyParking.Domain;
 using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Integration;
+using PickyParking.Features.ParkingPolicing.Runtime;
 
-namespace PickyParking.App
+namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
     public static class ParkingCandidateBlocker
     {
-        private const float MaxSnapDistanceSqr = 4f; 
+        private const float MaxSnapDistanceSqr = 4f;
         [ThreadStatic] private static List<Vector3> _spacePositions;
 
         public static bool TryGetCandidateDecision(ushort buildingId, out bool denied)
@@ -33,7 +31,7 @@ namespace PickyParking.App
             denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
 
             if (Log.IsVerboseEnabled &&
-                context.ParkingRestrictionsConfigRegistry.TryGet(buildingId, out var rule) &&
+                context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule) &&
                 rule.WorkSchoolWithinRadiusOnly)
             {
                 Log.Info(
@@ -64,7 +62,7 @@ namespace PickyParking.App
             if (ownerCitizenId == 0u)
                 return false;
 
-            if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRestrictionsConfigDefinition rule))
+            if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRulesConfigDefinition rule))
                 return false;
 
             var eval = context.ParkingPermissionEvaluator.EvaluateCitizen(ownerCitizenId, buildingId);
@@ -92,14 +90,14 @@ namespace PickyParking.App
             ParkingRuntimeContext context,
             Vector3 position,
             out ushort buildingId,
-            out ParkingRestrictionsConfigDefinition rule)
+            out ParkingRulesConfigDefinition rule)
         {
             buildingId = 0;
             rule = default;
 
             var spacePositions = GetSpacePositionsBuffer();
 
-            foreach (var kvp in context.ParkingRestrictionsConfigRegistry.Enumerate())
+            foreach (var kvp in context.ParkingRulesConfigRegistry.Enumerate())
             {
                 if (!IsSupportedParkingLot(context, kvp.Key))
                     continue;

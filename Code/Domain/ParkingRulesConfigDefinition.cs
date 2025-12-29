@@ -3,11 +3,8 @@ using System.IO;
 
 namespace PickyParking.Domain
 {
-    
-    
-    
     [Serializable]
-    public struct ParkingRestrictionsConfigDefinition
+    public struct ParkingRulesConfigDefinition
     {
         public readonly bool ResidentsWithinRadiusOnly;
         public readonly ushort ResidentsRadiusMeters;
@@ -17,7 +14,7 @@ namespace PickyParking.Domain
 
         public readonly bool VisitorsAllowed;
 
-        public ParkingRestrictionsConfigDefinition(
+        public ParkingRulesConfigDefinition(
             bool residentsWithinRadiusOnly,
             ushort residentsRadiusMeters,
             bool workSchoolWithinRadiusOnly,
@@ -30,7 +27,7 @@ namespace PickyParking.Domain
             VisitorsAllowed = false;
         }
 
-        public ParkingRestrictionsConfigDefinition(
+        public ParkingRulesConfigDefinition(
             bool residentsWithinRadiusOnly,
             ushort residentsRadiusMeters,
             bool workSchoolWithinRadiusOnly,
@@ -55,26 +52,23 @@ namespace PickyParking.Domain
             writer.Write(VisitorsAllowed);
         }
 
-        public static ParkingRestrictionsConfigDefinition ReadV1(BinaryReader reader)
+        public static ParkingRulesConfigDefinition ReadV1(BinaryReader reader)
         {
             bool res = reader.ReadBoolean();
             ushort resRad = reader.ReadUInt16();
             bool ws = reader.ReadBoolean();
             ushort wsRad = reader.ReadUInt16();
-            return new ParkingRestrictionsConfigDefinition(res, resRad, ws, wsRad, visitorsAllowed: false);
+            return new ParkingRulesConfigDefinition(res, resRad, ws, wsRad, visitorsAllowed: false);
         }
 
-        public static ParkingRestrictionsConfigDefinition ReadV2(BinaryReader reader)
+        public static ParkingRulesConfigDefinition ReadV2(BinaryReader reader)
         {
             bool res = reader.ReadBoolean();
             ushort resRad = reader.ReadUInt16();
             bool ws = reader.ReadBoolean();
             ushort wsRad = reader.ReadUInt16();
             bool visitorsAllowed = reader.ReadBoolean();
-            return new ParkingRestrictionsConfigDefinition(res, resRad, ws, wsRad, visitorsAllowed);
+            return new ParkingRulesConfigDefinition(res, resRad, ws, wsRad, visitorsAllowed);
         }
     }
 }
-
-
-

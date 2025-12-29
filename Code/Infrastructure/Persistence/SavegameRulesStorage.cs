@@ -19,7 +19,7 @@ namespace PickyParking.Infrastructure.Persistence
 
         private const int CurrentVersion = 2;
 
-        public void Save(ParkingRestrictionsConfigRegistry repository, ISerializableData serializableDataManager)
+        public void Save(ParkingRulesConfigRegistry repository, ISerializableData serializableDataManager)
         {
             try
             {
@@ -29,12 +29,12 @@ namespace PickyParking.Infrastructure.Persistence
                     {
                         writer.Write(CurrentVersion);
 
-                        var entries = new List<KeyValuePair<ushort, ParkingRestrictionsConfigDefinition>>(repository.Enumerate());
+                        var entries = new List<KeyValuePair<ushort, ParkingRulesConfigDefinition>>(repository.Enumerate());
                         writer.Write(entries.Count);
 
                         for (int i = 0; i < entries.Count; i++)
                         {
-                            KeyValuePair<ushort, ParkingRestrictionsConfigDefinition> kv = entries[i];
+                            KeyValuePair<ushort, ParkingRulesConfigDefinition> kv = entries[i];
                             writer.Write(kv.Key);
                             kv.Value.Write(writer);
                         }
@@ -49,7 +49,7 @@ namespace PickyParking.Infrastructure.Persistence
             }
         }
 
-        public void LoadInto(ParkingRestrictionsConfigRegistry repository, ISerializableData serializableDataManager)
+        public void LoadInto(ParkingRulesConfigRegistry repository, ISerializableData serializableDataManager)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace PickyParking.Infrastructure.Persistence
         
         
         
-        public void LoadIntoFromBytes(ParkingRestrictionsConfigRegistry repository, byte[] data)
+        public void LoadIntoFromBytes(ParkingRulesConfigRegistry repository, byte[] data)
         {
             try
             {
@@ -89,15 +89,15 @@ namespace PickyParking.Infrastructure.Persistence
                     {
                         ushort buildingId = reader.ReadUInt16();
 
-                        ParkingRestrictionsConfigDefinition rule;
+                        ParkingRulesConfigDefinition rule;
                         switch (version)
                         {
                             case 1:
-                                rule = ParkingRestrictionsConfigDefinition.ReadV1(reader);
+                                rule = ParkingRulesConfigDefinition.ReadV1(reader);
                                 break;
 
                             case 2:
-                                rule = ParkingRestrictionsConfigDefinition.ReadV2(reader);
+                                rule = ParkingRulesConfigDefinition.ReadV2(reader);
                                 break;
 
                             default:
@@ -124,7 +124,7 @@ namespace PickyParking.Infrastructure.Persistence
             }
         }
 
-        public void PruneInvalidEntries(ParkingRestrictionsConfigRegistry repository)
+        public void PruneInvalidEntries(ParkingRulesConfigRegistry repository)
         {
             if (repository == null) return;
 
@@ -162,7 +162,7 @@ namespace PickyParking.Infrastructure.Persistence
                 Log.Info("[Persistence] Pruned invalid rules: " + toRemove.Count);
         }
 
-        private static ParkingRestrictionsConfigDefinition NormalizeRule(ParkingRestrictionsConfigDefinition rule, out bool normalized)
+        private static ParkingRulesConfigDefinition NormalizeRule(ParkingRulesConfigDefinition rule, out bool normalized)
         {
             ushort resRadius = ClampRadius(rule.ResidentsRadiusMeters);
             ushort workRadius = ClampRadius(rule.WorkSchoolRadiusMeters);
@@ -170,7 +170,7 @@ namespace PickyParking.Infrastructure.Persistence
             normalized = resRadius != rule.ResidentsRadiusMeters
                          || workRadius != rule.WorkSchoolRadiusMeters;
 
-            return new ParkingRestrictionsConfigDefinition(
+            return new ParkingRulesConfigDefinition(
                 rule.ResidentsWithinRadiusOnly,
                 resRadius,
                 rule.WorkSchoolWithinRadiusOnly,

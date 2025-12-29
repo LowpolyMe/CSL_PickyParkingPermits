@@ -5,20 +5,14 @@ using PickyParking.Infrastructure;
 using PickyParking.Infrastructure.Persistence;
 using PickyParking.Infrastructure.Integration;
 
-namespace PickyParking.App
+namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
-    
-    
-    
     public sealed class ParkedVehicleReevaluation
     {
         private const int MaxMovesPerTick = 64;
 
         private readonly FeatureGate _isFeatureActive;
-        private readonly ParkingRestrictionsConfigRegistry _rules;
+        private readonly ParkingRulesConfigRegistry _rules;
         private readonly ParkingPermissionEvaluator _evaluator;
         private readonly GameAccess _game;
         private readonly TmpeIntegration _tmpe;
@@ -41,7 +35,7 @@ namespace PickyParking.App
 
         public ParkedVehicleReevaluation(
             FeatureGate featureGate,
-            ParkingRestrictionsConfigRegistry rules,
+            ParkingRulesConfigRegistry rules,
             ParkingPermissionEvaluator evaluator,
             GameAccess game,
             TmpeIntegration tmpe)
@@ -53,11 +47,6 @@ namespace PickyParking.App
             _tmpe = tmpe;
         }
 
-        
-        
-        
-        
-        
         public void RequestForBuilding(ushort buildingId)
         {
             if (buildingId == 0) return;
@@ -102,13 +91,12 @@ namespace PickyParking.App
 
             while (movedThisTick < MaxMovesPerTick)
             {
-                
                 if (_activeBuilding == 0 || _activeIndex >= _parkedBuffer.Count)
                 {
                     FinishActiveBuilding();
 
                     if (!TryBeginNextBuilding())
-                        return; 
+                        return;
                 }
 
                 if (_activeIndex >= _parkedBuffer.Count)
@@ -118,7 +106,6 @@ namespace PickyParking.App
                 if (!_game.TryGetParkedVehicleInfo(parkedId, out uint ownerCitizenId, out ushort homeId, out Vector3 parkedPos))
                     continue;
 
-                
                 var eval = _evaluator.EvaluateCitizen(ownerCitizenId, _activeBuilding);
                 if (eval.Allowed)
                 {
@@ -135,7 +122,6 @@ namespace PickyParking.App
                              + " reason=" + eval.Reason);
                 }
 
-                
                 bool moved = _tmpe.TryMoveParkedVehicleWithConfigDistance(
                     parkedVehicleId: parkedId,
                     ownerCitizenId: ownerCitizenId,
@@ -145,7 +131,6 @@ namespace PickyParking.App
 
                 if (!moved)
                 {
-                    
                     Singleton<VehicleManager>.instance.ReleaseParkedVehicle(parkedId);
                     _activeReleasedCount++;
                 }
@@ -157,7 +142,6 @@ namespace PickyParking.App
                 movedThisTick++;
             }
 
-            
             if (Log.IsVerboseEnabled)
                 Log.Info("[Parking] Reevaluation tick moved=" + movedThisTick + " buildingId=" + _activeBuilding);
             Schedule();
@@ -169,7 +153,6 @@ namespace PickyParking.App
             {
                 ushort next = _pendingBuildings.Dequeue();
 
-                
                 if (!_rules.TryGet(next, out _))
                 {
                     if (Log.IsVerboseEnabled)
@@ -187,11 +170,9 @@ namespace PickyParking.App
                 _activeReleasedCount = 0;
                 _activeLoggedDenied = 0;
 
-                
                 _game.CollectParkedVehiclesOnLot(next, _parkedBuffer);
                 _activeParkedCount = _parkedBuffer.Count;
 
-                
                 if (_parkedBuffer.Count == 0)
                 {
                     if (Log.IsVerboseEnabled)
@@ -255,6 +236,3 @@ namespace PickyParking.App
         }
     }
 }
-
-
-

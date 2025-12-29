@@ -1,6 +1,6 @@
 namespace PickyParking.UI
 {
-    public sealed class ParkingRestrictionsConfigUiState
+    public sealed class ParkingRulesConfigUiState
     {
         public bool ResidentsEnabled { get; private set; }
         public float ResidentsSliderValue { get; private set; }
@@ -10,7 +10,7 @@ namespace PickyParking.UI
         public float WorkSchoolStoredValue { get; private set; }
         public bool VisitorsAllowed { get; private set; }
 
-        public ParkingRestrictionsConfigUiState(
+        public ParkingRulesConfigUiState(
             bool residentsEnabled,
             float residentsSliderValue,
             float residentsStoredValue,

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PickyParking.Features.ParkingPermits
+namespace PickyParking.Features.ParkingRules
 {
     internal static class DistanceSliderMapping
     {
