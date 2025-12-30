@@ -34,6 +34,7 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             string prefabName = GetBuildingPrefabName(buildingId);
+            string buildingName = GetBuildingCustomName(buildingId);
 
             DecisionReason reason;
             denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
@@ -55,7 +56,7 @@ namespace PickyParking.Features.ParkingPolicing
                 );
             }
 
-            ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName);
+            ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName, buildingName);
             return true;
         }
 
@@ -80,6 +81,22 @@ namespace PickyParking.Features.ParkingPolicing
             var eval = context.ParkingPermissionEvaluator.EvaluateCitizen(ownerCitizenId, buildingId);
             if (eval.Allowed)
                 return false;
+
+            if (Log.IsVerboseEnabled)
+            {
+                string prefabName = GetBuildingPrefabName(buildingId);
+                string buildingName = GetBuildingCustomName(buildingId);
+                Log.Warn(
+                    "[Parking] CreateParkedVehicle denied " +
+                    $"buildingId={buildingId} reason={eval.Reason} " +
+                    $"prefab={prefabName} name={buildingName} " +
+                    $"isVisitor={ParkingSearchContext.IsVisitor} " +
+                    $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
+                    $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
+                    $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
+                    $"VisitorsAllowed={rule.VisitorsAllowed}"
+                );
+            }
 
             if (EnableCandidateBlockerLogs &&
                 Log.IsVerboseEnabled &&
@@ -190,6 +207,20 @@ namespace PickyParking.Features.ParkingPolicing
                 BuildingInfo info = b.Info;
                 if (info == null) return "NULL_INFO";
                 return info.name != null ? info.name : "NULL_PREFAB_NAME";
+            }
+            catch
+            {
+                return "NAME_LOOKUP_FAILED";
+            }
+        }
+
+        private static string GetBuildingCustomName(ushort buildingId)
+        {
+            try
+            {
+                var bm = Singleton<BuildingManager>.instance;
+                string name = bm.GetBuildingName(buildingId, default(InstanceID));
+                return !string.IsNullOrEmpty(name) ? name : "NONE";
             }
             catch
             {
