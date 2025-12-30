@@ -18,6 +18,7 @@ namespace PickyParking.UI
         private ParkingRulesConfigPanel _panel;
         private ParkingPrefabSupportPanel _supportPanel;
         private ushort _lastSelectedBuildingId;
+        private bool _lastPrefabSupported;
         private float _nextInjectionAttemptTime;
         private UIComponent _hostPanel;
         private UIComponent _wrapperContainer;
@@ -63,9 +64,25 @@ namespace PickyParking.UI
                 return;
             }
 
-            bool prefabSupported = IsSupportedParkingLot(runtime, info);
+            int totalSpaces;
+            bool hasParkingSpaces = runtime.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces) && totalSpaces > 0;
+            if (!hasParkingSpaces)
+            {
+                _lastSelectedBuildingId = buildingId;
+                _lastPrefabSupported = false;
+                if (_panel != null)
+                    _panel.SetPrefabSupported(false);
+                SetMainVisible(false);
+                SetSupportVisible(false);
+                return;
+            }
 
-            BindPanelsForSelection(buildingId, info, prefabSupported);
+            bool prefabSupported = IsSupportedParkingLot(runtime, info);
+            if (_panel != null)
+                _panel.SetPrefabSupported(prefabSupported);
+
+            bool supportChanged = _lastSelectedBuildingId == buildingId && _lastPrefabSupported != prefabSupported;
+            BindPanelsForSelection(buildingId, info, prefabSupported, supportChanged);
 
             UpdatePanels(prefabSupported);
         }
@@ -256,20 +273,27 @@ namespace PickyParking.UI
             _supportPanel.isVisible = visible;
         }
 
-        private void BindPanelsForSelection(ushort buildingId, BuildingInfo info, bool prefabSupported)
+        private void BindPanelsForSelection(ushort buildingId, BuildingInfo info, bool prefabSupported, bool supportChanged)
         {
             if (_lastSelectedBuildingId != buildingId)
             {
                 _lastSelectedBuildingId = buildingId;
-                if (_panel != null)
+                _lastPrefabSupported = prefabSupported;
+                if (_panel != null && prefabSupported)
                     _panel.Bind(buildingId);
                 if (_supportPanel != null && !prefabSupported)
                     _supportPanel.Bind(buildingId, info);
                 return;
             }
 
-            if (_supportPanel != null && !prefabSupported)
-                _supportPanel.Bind(buildingId, info);
+            if (supportChanged)
+            {
+                if (_panel != null && prefabSupported)
+                    _panel.Bind(buildingId);
+                if (_supportPanel != null && !prefabSupported)
+                    _supportPanel.Bind(buildingId, info);
+                _lastPrefabSupported = prefabSupported;
+            }
         }
 
         private static bool IsSupportedParkingLot(ModRuntime runtime, BuildingInfo info)

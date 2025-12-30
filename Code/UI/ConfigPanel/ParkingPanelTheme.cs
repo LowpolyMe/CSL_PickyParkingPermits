@@ -17,11 +17,12 @@ namespace PickyParking.UI
         public float ValueLabelWidth { get; } = 44f;
         public float ValueLabelHeight { get; } = 15f;
         public float HeaderTextScale { get; } = 1f;
+        public float ParkingStatsTextScale { get; } = 0.75f;
         public float ToggleTextScale { get; } = 0.7f;
         public float ValueLabelTextScale { get; } = 0.7f;
         public float RestrictionsToggleTextScale { get; } = 0.85f;
         public float ApplyButtonTextScale { get; } = 1f;
-        public float PanelRowCount { get; } = 6f;
+        public float PanelRowCount { get; } = 7f;
         public float PanelExtraHeight { get; } = 30f;
         public float EnabledOpacity { get; } = 1f;
         public float DisabledOpacity { get; } = 0.7f;

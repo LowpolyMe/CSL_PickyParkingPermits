@@ -1,6 +1,7 @@
 using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
+using PickyParking.GameAdapters;
 using PickyParking.ModEntry;
 using PickyParking.Logging;
 
@@ -14,6 +15,7 @@ namespace PickyParking.UI
     {
         private const float SliderAllThreshold = 0.99f;
         private const ushort DefaultNewRuleRadiusMeters = 500;
+        private const float ParkingStatsUpdateIntervalSeconds = 0.5f;
 
         private ushort _buildingId;
         private bool _isDirty;
@@ -30,6 +32,9 @@ namespace PickyParking.UI
         private ParkingRulesConfigEditor _editor;
         private ParkingRulesConfigUiConfig _uiConfig;
         private ParkingPanelTheme _theme;
+        private GameAccess _game;
+        private float _nextParkingStatsUpdateTime;
+        private bool _isPrefabSupported;
 
         public override void Start()
         {
@@ -39,6 +44,8 @@ namespace PickyParking.UI
             _editor = runtime != null ? runtime.ParkingRulesConfigEditor : null;
             _uiConfig = _editor != null ? _editor.UiConfig : ParkingRulesConfigUiConfig.Default;
             _theme = new ParkingPanelTheme();
+            _game = runtime != null ? runtime.GameAccess : null;
+            _isPrefabSupported = false;
 
             _visuals = new PickyParkingPanelVisuals(
                 this,
@@ -65,6 +72,22 @@ namespace PickyParking.UI
             _visitorsRow = _visuals.VisitorsRow;
         }
 
+        public override void Update()
+        {
+            base.Update();
+            if (_visuals == null || !IsPanelVisibleForStats())
+                return;
+
+            if (_buildingId == 0)
+                return;
+
+            if (Time.unscaledTime < _nextParkingStatsUpdateTime)
+                return;
+
+            _nextParkingStatsUpdateTime = Time.unscaledTime + ParkingStatsUpdateIntervalSeconds;
+            UpdateParkingSpaceStats();
+        }
+
         public void Bind(ushort buildingId)
         {
             if (_buildingId != 0 && _buildingId != buildingId)
@@ -74,6 +97,11 @@ namespace PickyParking.UI
 
             _buildingId = buildingId;
             Refresh();
+        }
+
+        public void SetPrefabSupported(bool supported)
+        {
+            _isPrefabSupported = supported;
         }
 
         public void CommitPendingChanges()
@@ -241,12 +269,12 @@ namespace PickyParking.UI
 
         private bool CanOperateOnBuilding()
         {
-            return _buildingId != 0 && _editor != null;
+            return _buildingId != 0 && _editor != null && _isPrefabSupported;
         }
 
         private bool CanOperateOnBuilding(ushort buildingId)
         {
-            return buildingId != 0 && _editor != null;
+            return buildingId != 0 && _editor != null && _isPrefabSupported;
         }
 
         private void Refresh()
@@ -254,22 +282,34 @@ namespace PickyParking.UI
             if (_editor == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = _editor.GetRuleForBuilding(_buildingId);
             bool hasStoredRule = _editor.TryGetStoredRule(_buildingId, out var storedRule);
-            if (hasStoredRule)
-                rule = storedRule;
 
-            _baselineRule = rule;
             _restrictionsEnabled = hasStoredRule;
             _hasStoredRule = hasStoredRule;
-            ApplyRuleToUi(rule);
+
+            if (hasStoredRule)
+            {
+                _baselineRule = storedRule;
+                ApplyRuleToUi(storedRule);
+            }
+            else
+            {
+                _baselineRule = new ParkingRulesConfigDefinition(
+                    residentsWithinRadiusOnly: false,
+                    residentsRadiusMeters: ParkingRulesLimits.DefaultRadiusMeters,
+                    workSchoolWithinRadiusOnly: false,
+                    workSchoolRadiusMeters: ParkingRulesLimits.DefaultRadiusMeters,
+                    visitorsAllowed: false);
+            }
+
             _isDirty = false;
             _hasUnappliedChanges = false;
             UpdateRestrictionsVisibility();
             UpdatePreviewRule();
+            UpdateParkingSpaceStats();
 
-            if (Log.IsVerboseEnabled)
-                Log.Info("[UI] Refreshed panel for building " + _buildingId + ": " + _editor.FormatRule(rule));
+            if (hasStoredRule && Log.IsVerboseEnabled)
+                Log.Info("[UI] Refreshed panel for building " + _buildingId + ": " + _editor.FormatRule(storedRule));
         }
 
         private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)
@@ -392,6 +432,31 @@ namespace PickyParking.UI
 
             _visuals.SetRestrictionsContentVisible(_restrictionsEnabled);
             _visuals.UpdateRestrictionsToggleVisuals(_restrictionsEnabled);
+        }
+
+        private bool IsPanelVisibleForStats()
+        {
+            return isVisible;
+        }
+
+        private void UpdateParkingSpaceStats()
+        {
+            if (_visuals == null || _game == null)
+                return;
+
+            int totalSpaces;
+            int occupiedSpaces;
+            if (!_game.TryGetParkingSpaceStats(_buildingId, out totalSpaces, out occupiedSpaces))
+            {
+                _visuals.UpdateParkingSpacesUnavailable();
+                return;
+            }
+
+            int freeSpaces = totalSpaces - occupiedSpaces;
+            if (freeSpaces < 0)
+                freeSpaces = 0;
+
+            _visuals.UpdateParkingSpacesText(totalSpaces, freeSpaces);
         }
 
         private ParkingRulesConfigInput BuildInput()
