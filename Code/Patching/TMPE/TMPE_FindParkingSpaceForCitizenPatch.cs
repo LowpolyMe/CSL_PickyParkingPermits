@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using ColossalFramework;
 using HarmonyLib;
 using UnityEngine;
 using PickyParking.Logging;
@@ -10,6 +11,8 @@ namespace PickyParking.Patching.TMPE
     {
         private const string TargetTypeName = "TrafficManager.Manager.Impl.AdvancedParkingManager, TrafficManager";
         private const string TargetMethodName = "FindParkingSpaceForCitizen";
+        private static int _overrideTouristAllow;
+        private static bool _touristOverrideWarned;
 
         public static void Apply(Harmony harmony)
         {
@@ -84,8 +87,23 @@ namespace PickyParking.Patching.TMPE
         private static void Prefix(
             [HarmonyArgument(2)] ref CitizenInstance driverInstance,
             [HarmonyArgument(6)] ushort vehicleId,
+            [HarmonyArgument(7)] ref bool allowTourists,
             ref bool __state)
         {
+            if (TryGetDriverTourist(ref driverInstance, out bool isTourist) && isTourist)
+            {
+                if (!allowTourists)
+                {
+                    allowTourists = true;
+                    _overrideTouristAllow++;
+                    if (!_touristOverrideWarned)
+                    {
+                        _touristOverrideWarned = true;
+                        Log.Warn("[TMPE] Tourist allow override active (debug). Remove after investigation to restore default TM:PE behavior.");
+                    }
+                }
+            }
+
             ParkingSearchContextPatchHandler.BeginFindParkingForCitizen(ref driverInstance, vehicleId, ref __state);
         }
 
