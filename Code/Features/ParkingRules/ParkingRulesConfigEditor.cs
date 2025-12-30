@@ -29,12 +29,12 @@ namespace PickyParking.Features.ParkingRules
         public ParkingRulesConfigDefinition GetRuleForBuilding(ushort buildingId)
         {
             if (_parkingRulesRepository == null || buildingId == 0)
-                return new ParkingRulesConfigDefinition(false, UiConfig.DefaultRadiusMeters, false, UiConfig.DefaultRadiusMeters, false);
+                return new ParkingRulesConfigDefinition(false, ParkingRulesLimits.DefaultRadiusMeters, false, ParkingRulesLimits.DefaultRadiusMeters, false);
 
             if (_parkingRulesRepository.TryGet(buildingId, out var rule))
                 return rule;
 
-            return new ParkingRulesConfigDefinition(false, UiConfig.DefaultRadiusMeters, false, UiConfig.DefaultRadiusMeters, false);
+            return new ParkingRulesConfigDefinition(false, ParkingRulesLimits.DefaultRadiusMeters, false, ParkingRulesLimits.DefaultRadiusMeters, false);
         }
 
         public bool TryGetStoredRule(ushort buildingId, out ParkingRulesConfigDefinition rule)

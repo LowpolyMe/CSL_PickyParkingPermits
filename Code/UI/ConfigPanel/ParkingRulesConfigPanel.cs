@@ -49,9 +49,9 @@ namespace PickyParking.UI
                 GetDefaultSliderValue,
                 _uiConfig.DistanceSliderMinValue,
                 _uiConfig.DistanceSliderMaxValue,
-                _uiConfig.MinDistanceMeters,
-                _uiConfig.MidDistanceMeters,
-                _uiConfig.MaxDistanceMeters,
+                ParkingRulesLimits.MinRadiusMeters,
+                ParkingRulesLimits.MidRadiusMeters,
+                ParkingRulesLimits.MaxRadiusMeters,
                 _uiConfig.DistanceMidpointT,
                 ToggleRestrictions,
                 ToggleSliderRow,
@@ -429,19 +429,19 @@ namespace PickyParking.UI
             if (radiusMeters >= ParkingRulesLimits.AllRadiusMeters)
                 return 1f;
 
-            float clamped = Mathf.Clamp(radiusMeters, _uiConfig.MinDistanceMeters, _uiConfig.MaxDistanceMeters);
-            if (clamped <= _uiConfig.MinDistanceMeters)
+            float clamped = Mathf.Clamp(radiusMeters, ParkingRulesLimits.MinRadiusMeters, ParkingRulesLimits.MaxRadiusMeters);
+            if (clamped <= ParkingRulesLimits.MinRadiusMeters)
                 return _uiConfig.DistanceSliderMinValue;
-            if (clamped >= _uiConfig.MaxDistanceMeters)
+            if (clamped >= ParkingRulesLimits.MaxRadiusMeters)
                 return _uiConfig.DistanceSliderMaxValue;
 
             return DistanceSliderMapping.DistanceMetersToSlider(
                 clamped,
                 _uiConfig.DistanceSliderMinValue,
                 _uiConfig.DistanceSliderMaxValue,
-                _uiConfig.MinDistanceMeters,
-                _uiConfig.MidDistanceMeters,
-                _uiConfig.MaxDistanceMeters,
+                ParkingRulesLimits.MinRadiusMeters,
+                ParkingRulesLimits.MidRadiusMeters,
+                ParkingRulesLimits.MaxRadiusMeters,
                 _uiConfig.DistanceMidpointT);
         }
 
@@ -454,21 +454,21 @@ namespace PickyParking.UI
                 return ParkingRulesLimits.AllRadiusMeters;
 
             if (normalizedSliderValue <= _uiConfig.DistanceSliderMinValue)
-                return _uiConfig.MinDistanceMeters;
+                return ParkingRulesLimits.MinRadiusMeters;
             if (normalizedSliderValue >= _uiConfig.DistanceSliderMaxValue)
-                return _uiConfig.MaxDistanceMeters;
+                return ParkingRulesLimits.MaxRadiusMeters;
 
             float meters = DistanceSliderMapping.SliderToDistanceMeters(
                 normalizedSliderValue,
                 _uiConfig.DistanceSliderMinValue,
                 _uiConfig.DistanceSliderMaxValue,
-                _uiConfig.MinDistanceMeters,
-                _uiConfig.MidDistanceMeters,
-                _uiConfig.MaxDistanceMeters,
+                ParkingRulesLimits.MinRadiusMeters,
+                ParkingRulesLimits.MidRadiusMeters,
+                ParkingRulesLimits.MaxRadiusMeters,
                 _uiConfig.DistanceMidpointT);
             int rounded = Mathf.RoundToInt(meters);
-            if (rounded < _uiConfig.MinDistanceMeters) rounded = _uiConfig.MinDistanceMeters;
-            if (rounded > _uiConfig.MaxDistanceMeters) rounded = _uiConfig.MaxDistanceMeters;
+            if (rounded < ParkingRulesLimits.MinRadiusMeters) rounded = ParkingRulesLimits.MinRadiusMeters;
+            if (rounded > ParkingRulesLimits.MaxRadiusMeters) rounded = ParkingRulesLimits.MaxRadiusMeters;
             return (ushort)rounded;
         }
     }
