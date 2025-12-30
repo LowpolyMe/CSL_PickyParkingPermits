@@ -48,6 +48,8 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
         public static void ClearCurrent()
         {
             Current = null;
+            _missingLogged = false;
+            Log.Info("[Runtime] Parking runtime context cleared.");
         }
 
         public static ParkingRuntimeContext GetCurrentOrLog(string caller)
