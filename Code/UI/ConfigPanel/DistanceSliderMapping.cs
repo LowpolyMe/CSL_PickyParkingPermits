@@ -10,8 +10,7 @@ namespace PickyParking.UI
             float sliderMaxValue,
             float minDistanceMeters,
             float midDistanceMeters,
-            float maxDistanceMeters,
-            float distanceMidpointT)
+            float maxDistanceMeters)
         {
             if (sliderMaxValue <= sliderMinValue)
                 return minDistanceMeters;
@@ -19,7 +18,6 @@ namespace PickyParking.UI
             float min = Mathf.Max(minDistanceMeters, 0.0001f);
             float max = Mathf.Max(maxDistanceMeters, min + 0.0001f);
             float mid = Mathf.Clamp(midDistanceMeters, min + 0.0001f, max - 0.0001f);
-            float tMid = Mathf.Clamp(distanceMidpointT, 0.0001f, 0.9999f);
 
             if (sliderValue <= sliderMinValue)
                 return min;
@@ -27,7 +25,7 @@ namespace PickyParking.UI
                 return max;
 
             float t = Mathf.InverseLerp(sliderMinValue, sliderMaxValue, sliderValue);
-            float curvePower = ComputeCurvePower(min, mid, max, tMid);
+            float curvePower = ComputeCurvePower(min, mid, max);
             float distanceRatio = max / min;
             float exponent = Mathf.Pow(t, curvePower);
             return min * Mathf.Pow(distanceRatio, exponent);
@@ -39,8 +37,7 @@ namespace PickyParking.UI
             float sliderMaxValue,
             float minDistanceMeters,
             float midDistanceMeters,
-            float maxDistanceMeters,
-            float distanceMidpointT)
+            float maxDistanceMeters)
         {
             if (sliderMaxValue <= sliderMinValue)
                 return sliderMinValue;
@@ -48,7 +45,6 @@ namespace PickyParking.UI
             float min = Mathf.Max(minDistanceMeters, 0.0001f);
             float max = Mathf.Max(maxDistanceMeters, min + 0.0001f);
             float mid = Mathf.Clamp(midDistanceMeters, min + 0.0001f, max - 0.0001f);
-            float tMid = Mathf.Clamp(distanceMidpointT, 0.0001f, 0.9999f);
 
             if (distanceMeters <= min)
                 return sliderMinValue;
@@ -59,7 +55,7 @@ namespace PickyParking.UI
             if (distanceRatio <= 1.0001f)
                 return Mathf.Lerp(sliderMinValue, sliderMaxValue, Mathf.InverseLerp(min, max, distanceMeters));
 
-            float curvePower = Mathf.Max(0.0001f, ComputeCurvePower(min, mid, max, tMid));
+            float curvePower = Mathf.Max(0.0001f, ComputeCurvePower(min, mid, max));
             float targetExponent = Mathf.Log(distanceMeters / min) / Mathf.Log(distanceRatio);
             targetExponent = Mathf.Clamp01(targetExponent);
             float t = Mathf.Pow(targetExponent, 1f / curvePower);
@@ -69,17 +65,15 @@ namespace PickyParking.UI
         private static float ComputeCurvePower(
             float minDistanceMeters,
             float midDistanceMeters,
-            float maxDistanceMeters,
-            float distanceMidpointT)
+            float maxDistanceMeters)
         {
             float distanceRatio = maxDistanceMeters / minDistanceMeters;
             if (distanceRatio <= 1.0001f)
                 return 1f;
-
-            float tMid = Mathf.Clamp(distanceMidpointT, 0.0001f, 0.9999f);
+            const float midPoint = 0.5f;
             float targetExponent = Mathf.Log(midDistanceMeters / minDistanceMeters) / Mathf.Log(distanceRatio);
             targetExponent = Mathf.Clamp(targetExponent, 0.0001f, 0.9999f);
-            return Mathf.Log(targetExponent) / Mathf.Log(tMid);
+            return Mathf.Log(targetExponent) / Mathf.Log(midPoint);
         }
     }
 }

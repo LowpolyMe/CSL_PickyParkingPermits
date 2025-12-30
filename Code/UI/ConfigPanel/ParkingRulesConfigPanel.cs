@@ -52,7 +52,6 @@ namespace PickyParking.UI
                 ParkingRulesLimits.MinRadiusMeters,
                 ParkingRulesLimits.MidRadiusMeters,
                 ParkingRulesLimits.MaxRadiusMeters,
-                _uiConfig.DistanceMidpointT,
                 ToggleRestrictions,
                 ToggleSliderRow,
                 HandleSliderValueChanged,
@@ -441,8 +440,7 @@ namespace PickyParking.UI
                 _uiConfig.DistanceSliderMaxValue,
                 ParkingRulesLimits.MinRadiusMeters,
                 ParkingRulesLimits.MidRadiusMeters,
-                ParkingRulesLimits.MaxRadiusMeters,
-                _uiConfig.DistanceMidpointT);
+                ParkingRulesLimits.MaxRadiusMeters);
         }
 
         private ushort ConvertSliderValueToRadius(float normalizedSliderValue)
@@ -464,8 +462,7 @@ namespace PickyParking.UI
                 _uiConfig.DistanceSliderMaxValue,
                 ParkingRulesLimits.MinRadiusMeters,
                 ParkingRulesLimits.MidRadiusMeters,
-                ParkingRulesLimits.MaxRadiusMeters,
-                _uiConfig.DistanceMidpointT);
+                ParkingRulesLimits.MaxRadiusMeters);
             int rounded = Mathf.RoundToInt(meters);
             if (rounded < ParkingRulesLimits.MinRadiusMeters) rounded = ParkingRulesLimits.MinRadiusMeters;
             if (rounded > ParkingRulesLimits.MaxRadiusMeters) rounded = ParkingRulesLimits.MaxRadiusMeters;

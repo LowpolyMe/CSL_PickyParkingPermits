@@ -20,7 +20,6 @@ namespace PickyParking.UI
         private readonly ushort _minDistanceMeters;
         private readonly ushort _midDistanceMeters;
         private readonly ushort _maxDistanceMeters;
-        private readonly float _distanceMidpointT;
         private readonly Action _onToggleRestrictions;
         private readonly Action<ParkingRulesSliderRow> _onToggleSlider;
         private readonly Action<ParkingRulesSliderRow, float> _onSliderValueChanged;
@@ -46,7 +45,6 @@ namespace PickyParking.UI
             ushort minDistanceMeters,
             ushort midDistanceMeters,
             ushort maxDistanceMeters,
-            float distanceMidpointT,
             Action onToggleRestrictions,
             Action<ParkingRulesSliderRow> onToggleSlider,
             Action<ParkingRulesSliderRow, float> onSliderValueChanged,
@@ -64,7 +62,6 @@ namespace PickyParking.UI
             _minDistanceMeters = minDistanceMeters;
             _midDistanceMeters = midDistanceMeters;
             _maxDistanceMeters = maxDistanceMeters;
-            _distanceMidpointT = distanceMidpointT;
             _onToggleRestrictions = onToggleRestrictions;
             _onToggleSlider = onToggleSlider;
             _onSliderValueChanged = onSliderValueChanged;
@@ -576,8 +573,7 @@ namespace PickyParking.UI
                     _distanceSliderMaxValue,
                     _minDistanceMeters,
                     _midDistanceMeters,
-                    _maxDistanceMeters,
-                    _distanceMidpointT);
+                    _maxDistanceMeters);
             }
             else if (t >= _distanceSliderMaxValue)
             {
