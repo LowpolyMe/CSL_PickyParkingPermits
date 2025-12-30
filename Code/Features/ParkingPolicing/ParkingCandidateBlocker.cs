@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using ColossalFramework;
 using UnityEngine;
 using PickyParking.Features.ParkingLotPrefabs;
@@ -13,11 +14,17 @@ namespace PickyParking.Features.ParkingPolicing
     public static class ParkingCandidateBlocker
     {
         private const float MaxSnapDistanceSqr = 4f;
+        // Toggle to reduce log noise between episode logs.
+        private const bool EnableCandidateBlockerLogs = false;
         [ThreadStatic] private static List<Vector3> _spacePositions;
+        private static int _wrongThreadLogged;
 
         public static bool TryGetCandidateDecision(ushort buildingId, out bool denied)
         {
             denied = false;
+
+            if (!EnsureSimulationThread("TryGetCandidateDecision"))
+                return false;
 
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetCandidateDecision");
             if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
@@ -31,7 +38,8 @@ namespace PickyParking.Features.ParkingPolicing
             DecisionReason reason;
             denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
 
-            if (Log.IsVerboseEnabled &&
+            if (EnableCandidateBlockerLogs &&
+                Log.IsVerboseEnabled &&
                 context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule) &&
                 rule.WorkSchoolWithinRadiusOnly)
             {
@@ -53,6 +61,9 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static bool ShouldBlockCreateParkedVehicle(uint ownerCitizenId, Vector3 position)
         {
+            if (!EnsureSimulationThread("ShouldBlockCreateParkedVehicle"))
+                return false;
+
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.ShouldBlockCreateParkedVehicle");
             if (context == null || !context.FeatureGate.IsActive)
                 return false;
@@ -70,7 +81,9 @@ namespace PickyParking.Features.ParkingPolicing
             if (eval.Allowed)
                 return false;
 
-            if (Log.IsVerboseEnabled && rule.WorkSchoolWithinRadiusOnly)
+            if (EnableCandidateBlockerLogs &&
+                Log.IsVerboseEnabled &&
+                rule.WorkSchoolWithinRadiusOnly)
             {
                 Log.Info(
                     "[Parking] WorkerOnlyCreateDenied " +
@@ -136,6 +149,19 @@ namespace PickyParking.Features.ParkingPolicing
         public static void ClearThreadStatic()
         {
             _spacePositions = null;
+        }
+
+        private static bool EnsureSimulationThread(string caller)
+        {
+            if (SimThread.IsSimulationThread())
+                return true;
+
+            if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
+            {
+                Log.Warn("[Runtime] ParkingCandidateBlocker accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+            }
+
+            return false;
         }
 
         private static bool IsSupportedParkingLot(ParkingRuntimeContext services, ushort buildingId)
