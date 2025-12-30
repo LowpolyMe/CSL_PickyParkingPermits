@@ -8,7 +8,6 @@ namespace PickyParking.Features.ParkingPolicing
     internal sealed class ParkingSearchEpisodeDebugHelper
     {
         private readonly int _startMs;
-        private bool _visitorLogged;
 
         public readonly ushort VehicleId;
         public readonly uint CitizenId;
@@ -40,19 +39,6 @@ namespace PickyParking.Features.ParkingPolicing
             if (IsVisitor == isVisitor) return;
 
             IsVisitor = isVisitor;
-
-            
-            if (IsVisitor && !_visitorLogged)
-            {
-                _visitorLogged = true;
-                if (Log.IsVerboseEnabled)
-                {
-                    Log.Info(
-                        $"[Parking] IsVisitorDetected " +
-                        $"src={Source ?? "NULL"} depth={StartDepth} vehicleId={VehicleId} citizenId={CitizenId}"
-                    );
-                }
-            }
         }
 
         public void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName)
