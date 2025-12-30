@@ -109,6 +109,7 @@ namespace PickyParking.ModEntry
         private void Unload(bool clearLevelContext)
         {
             DestroyRuntimeObjects();
+            ParkingRulesIconAtlas.ClearCache();
             ParkingSearchContext.ClearAll();
             int unloadId = ++_unloadSequence;
             Log.Info("[Runtime] Unload started id=" + unloadId);
