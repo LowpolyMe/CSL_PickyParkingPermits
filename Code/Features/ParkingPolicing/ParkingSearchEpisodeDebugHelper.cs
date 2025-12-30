@@ -60,6 +60,9 @@ namespace PickyParking.Features.ParkingPolicing
             if (!enabled) return;
 
             int duration = Math.Max(0, NowMs() - _startMs);
+            if (CandidateChecks == 0)
+                return;
+
             if (CandidateChecks < minCandidates && duration < minDurationMs)
                 return;
 

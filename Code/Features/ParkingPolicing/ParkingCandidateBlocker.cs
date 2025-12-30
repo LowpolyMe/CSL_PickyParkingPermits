@@ -82,22 +82,6 @@ namespace PickyParking.Features.ParkingPolicing
             if (eval.Allowed)
                 return false;
 
-            if (Log.IsVerboseEnabled)
-            {
-                string prefabName = GetBuildingPrefabName(buildingId);
-                string buildingName = GetBuildingCustomName(buildingId);
-                Log.Warn(
-                    "[Parking] CreateParkedVehicle denied " +
-                    $"buildingId={buildingId} reason={eval.Reason} " +
-                    $"prefab={prefabName} name={buildingName} " +
-                    $"isVisitor={ParkingSearchContext.IsVisitor} " +
-                    $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
-                    $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
-                    $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
-                    $"VisitorsAllowed={rule.VisitorsAllowed}"
-                );
-            }
-
             if (EnableCandidateBlockerLogs &&
                 Log.IsVerboseEnabled &&
                 rule.WorkSchoolWithinRadiusOnly)

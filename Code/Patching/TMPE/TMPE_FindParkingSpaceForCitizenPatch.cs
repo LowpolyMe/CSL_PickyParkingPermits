@@ -15,8 +15,6 @@ namespace PickyParking.Patching.TMPE
         private const string TargetTypeName = "TrafficManager.Manager.Impl.AdvancedParkingManager, TrafficManager";
         private const string TargetMethodName = "FindParkingSpaceForCitizen";
         private const float SummaryIntervalSeconds = 10f;
-        private const float AllowedFailureLogIntervalSeconds = 5f;
-
         private static int _failCount;
         private static int _failCandidatesZero;
         private static int _failAllDenied;
@@ -25,7 +23,6 @@ namespace PickyParking.Patching.TMPE
         private static int _failNonTouristAllDenied;
         private static int _overrideTouristAllow;
         private static float _nextSummaryTime;
-        private static float _nextAllowedFailureLogTime;
         private static bool _touristOverrideWarned;
 
         public static void Apply(Harmony harmony)
@@ -164,7 +161,6 @@ namespace PickyParking.Patching.TMPE
                             ? $" endPos=({endPos.x:F1},{endPos.y:F1},{endPos.z:F1}) homeId={homeId} goingHome={goingHome} vehicleArg={vehicleId} allowTourists={allowTourists}{FormatDriverInfo(ref driverInstance)}"
                         : string.Empty));
                 }
-                MaybeLogAllowedFailure(snapshot, driverIsTourist);
                 MaybeLogSummary();
                 return;
             }
@@ -256,30 +252,6 @@ namespace PickyParking.Patching.TMPE
             _failNonTouristAllDenied = 0;
             _overrideTouristAllow = 0;
             _nextSummaryTime = now + SummaryIntervalSeconds;
-        }
-
-        private static void MaybeLogAllowedFailure(ParkingSearchContext.EpisodeSnapshot snapshot, bool driverIsTourist)
-        {
-            if (driverIsTourist)
-                return;
-
-            if (snapshot.AllowedCount <= 0)
-                return;
-
-            float now = Time.realtimeSinceStartup;
-            if (_nextAllowedFailureLogTime <= 0f)
-                _nextAllowedFailureLogTime = now + AllowedFailureLogIntervalSeconds;
-
-            if (now < _nextAllowedFailureLogTime)
-                return;
-
-            Log.Info(
-                "[TMPE] Allowed candidates but search failed. " +
-                $"candidates={snapshot.CandidateChecks} denied={snapshot.DeniedCount} allowed={snapshot.AllowedCount} " +
-                $"last=({snapshot.LastReason ?? "NULL"} bld={snapshot.LastBuildingId} prefab={snapshot.LastPrefab ?? "NULL"} name={snapshot.LastBuildingName ?? "NULL"}) " +
-                $"{FormatRuleInfo(snapshot.LastBuildingId)}citizenId={snapshot.CitizenId} vehicleId={snapshot.VehicleId}");
-
-            _nextAllowedFailureLogTime = now + AllowedFailureLogIntervalSeconds;
         }
 
         private static string FormatRuleInfo(ushort buildingId)
