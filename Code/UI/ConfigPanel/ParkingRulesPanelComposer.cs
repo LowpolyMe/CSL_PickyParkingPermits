@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using UnityEngine;
 using ColossalFramework.UI;
-using PickyParking.Features.ParkingPermits;
-using PickyParking.Infrastructure;
+using PickyParking.Features.ParkingRules;
+using PickyParking.Logging;
 
 namespace PickyParking.UI
 {
     internal sealed class PickyParkingPanelVisuals
     {
         #region readonly
-        private readonly ParkingRestrictionsConfigPanel _panel;
+        private readonly ParkingRulesConfigPanel _panel;
         private readonly ParkingPanelTheme _theme;
         private readonly float _sliderMinValue;
         private readonly float _sliderMaxValue;
@@ -22,20 +22,20 @@ namespace PickyParking.UI
         private readonly ushort _maxDistanceMeters;
         private readonly float _distanceMidpointT;
         private readonly Action _onToggleRestrictions;
-        private readonly Action<ParkingPermitsSliderRow> _onToggleSlider;
-        private readonly Action<ParkingPermitsSliderRow, float> _onSliderValueChanged;
+        private readonly Action<ParkingRulesSliderRow> _onToggleSlider;
+        private readonly Action<ParkingRulesSliderRow, float> _onSliderValueChanged;
         private readonly Action _onToggleVisitors;
         private readonly Action _onApplyChanges;
 #endregion
 
         public UIButton RestrictionsToggleButton { get; private set; }
-        public ParkingPermitsSliderRow ResidentsRow { get; private set; }
-        public ParkingPermitsSliderRow WorkSchoolRow { get; private set; }
-        public ParkingPermitsToggleRow VisitorsRow { get; private set; }
+        public ParkingRulesSliderRow ResidentsRow { get; private set; }
+        public ParkingRulesSliderRow WorkSchoolRow { get; private set; }
+        public ParkingRulesToggleRow VisitorsRow { get; private set; }
         public UIPanel FooterRow { get; private set; }
 
         public PickyParkingPanelVisuals(
-            ParkingRestrictionsConfigPanel panel,
+            ParkingRulesConfigPanel panel,
             ParkingPanelTheme theme,
             float sliderMinValue,
             float sliderMaxValue,
@@ -48,8 +48,8 @@ namespace PickyParking.UI
             ushort maxDistanceMeters,
             float distanceMidpointT,
             Action onToggleRestrictions,
-            Action<ParkingPermitsSliderRow> onToggleSlider,
-            Action<ParkingPermitsSliderRow, float> onSliderValueChanged,
+            Action<ParkingRulesSliderRow> onToggleSlider,
+            Action<ParkingRulesSliderRow, float> onSliderValueChanged,
             Action onToggleVisitors,
             Action onApplyChanges)
         {
@@ -113,14 +113,14 @@ namespace PickyParking.UI
             _panel.backgroundSprite = string.Empty;
         }
 
-        public void UpdateSliderRowLabel(ParkingPermitsSliderRow row)
+        public void UpdateSliderRowLabel(ParkingRulesSliderRow row)
         {
             float displayValue = row.IsEnabled ? row.Slider.value : GetRowDisplayValue(row);
             if (row.ValueLabel != null)
                 row.ValueLabel.text = FormatDistanceDisplay(displayValue);
         }
 
-        public void UpdateSliderRowVisuals(ParkingPermitsSliderRow row)
+        public void UpdateSliderRowVisuals(ParkingRulesSliderRow row)
         {
             if (row == ResidentsRow)
                 row.FillColor = _theme.ResidentsFillColor;
@@ -146,7 +146,7 @@ namespace PickyParking.UI
                 row.ValueLabel.textColor = _theme.ValueLabelColor;
         }
 
-        public void UpdateToggleRowVisuals(ParkingPermitsToggleRow row)
+        public void UpdateToggleRowVisuals(ParkingRulesToggleRow row)
         {
             Color32 color = row.IsEnabled ? _theme.EnabledColor : _theme.DisabledColor;
             row.ToggleButton.color = color;
@@ -165,11 +165,11 @@ namespace PickyParking.UI
         }
 
         public void ApplySliderRowFromRule(
-            ParkingPermitsSliderRow row,
+            ParkingRulesSliderRow row,
             bool enabled,
             ushort radiusMeters,
             Func<ushort, float> convertRadiusToSliderValue,
-            Action<ParkingPermitsSliderRow, float> setSliderValue)
+            Action<ParkingRulesSliderRow, float> setSliderValue)
         {
             float storedValue = convertRadiusToSliderValue(radiusMeters);
             if (storedValue <= 0f)
@@ -239,7 +239,7 @@ namespace PickyParking.UI
         {
             ResidentsRow = CreateSliderRow(
                 CreateRowContainer("ResidentsRow", rowPanelHeight),
-                ParkingPermitsIconAtlas.ResidentsSpriteName,
+                ParkingRulesIconAtlas.ResidentsSpriteName,
                 "R",
                 rowHeight,
                 horizontalPadding,
@@ -250,7 +250,7 @@ namespace PickyParking.UI
                 residentsFillColor);
             WorkSchoolRow = CreateSliderRow(
                 CreateRowContainer("WorkSchoolRow", rowPanelHeight),
-                ParkingPermitsIconAtlas.WorkSchoolSpriteName,
+                ParkingRulesIconAtlas.WorkSchoolSpriteName,
                 "W",
                 rowHeight,
                 horizontalPadding,
@@ -261,7 +261,7 @@ namespace PickyParking.UI
                 workSchoolFillColor);
             VisitorsRow = CreateToggleRow(
                 CreateRowContainer("VisitorsRow", rowPanelHeight),
-                ParkingPermitsIconAtlas.VisitorsSpriteName,
+                ParkingRulesIconAtlas.VisitorsSpriteName,
                 "V",
                 rowHeight,
                 horizontalPadding,
@@ -275,7 +275,7 @@ namespace PickyParking.UI
             CreateApplyButton(FooterRow, horizontalPadding, verticalPadding);
         }
 
-        private ParkingPermitsSliderRow CreateSliderRow(
+        private ParkingRulesSliderRow CreateSliderRow(
             UIPanel rowPanel,
             string iconSpriteName,
             string fallbackText,
@@ -288,7 +288,7 @@ namespace PickyParking.UI
             Color32 fillColor
              )
         {
-            var row = new ParkingPermitsSliderRow();
+            var row = new ParkingRulesSliderRow();
             row.RowPanel = rowPanel;
 
             UISprite icon;
@@ -334,7 +334,7 @@ namespace PickyParking.UI
             return row;
         }
 
-        private ParkingPermitsToggleRow CreateToggleRow(
+        private ParkingRulesToggleRow CreateToggleRow(
             UIPanel rowPanel,
             string iconSpriteName,
             string fallbackText,
@@ -343,7 +343,7 @@ namespace PickyParking.UI
             float verticalPadding,
             float iconSize)
         {
-            var row = new ParkingPermitsToggleRow();
+            var row = new ParkingRulesToggleRow();
             row.RowPanel = rowPanel;
 
             UISprite icon;
@@ -560,7 +560,7 @@ namespace PickyParking.UI
 
         
 
-        private float GetRowDisplayValue(ParkingPermitsSliderRow row)
+        private float GetRowDisplayValue(ParkingRulesSliderRow row)
         {
             return row.LastNonZeroValue > 0f ? row.LastNonZeroValue : _getDefaultSliderValue();
         }
@@ -594,7 +594,7 @@ namespace PickyParking.UI
 
         private UISprite TryAttachIcon(UIButton button, string spriteName, string fallbackText)
         {
-            var atlas = ParkingPermitsIconAtlas.GetOrCreate();
+            var atlas = ParkingRulesIconAtlas.GetOrCreate();
             if (atlas == null)
                 return null;
 
@@ -614,13 +614,13 @@ namespace PickyParking.UI
 
         private UISprite TryAttachDisabledOverlay(UIComponent parent)
         {
-            var atlas = ParkingPermitsIconAtlas.GetOrCreate();
+            var atlas = ParkingRulesIconAtlas.GetOrCreate();
             if (atlas == null)
                 return null;
 
             var overlay = parent.AddUIComponent<UISprite>();
             overlay.atlas = atlas;
-            overlay.spriteName = ParkingPermitsIconAtlas.CrossedOutSpriteName;
+            overlay.spriteName = ParkingRulesIconAtlas.CrossedOutSpriteName;
             overlay.size = new Vector2(parent.width, parent.height);
             overlay.relativePosition = new Vector3(0f, 0f);
             overlay.isInteractive = false;
@@ -630,7 +630,7 @@ namespace PickyParking.UI
             return overlay;
         }
 
-        private void UpdateSliderFill(ParkingPermitsSliderRow row)
+        private void UpdateSliderFill(ParkingRulesSliderRow row)
         {
             if (row == null || row.Slider == null || row.FillSprite == null)
                 return;
@@ -642,7 +642,7 @@ namespace PickyParking.UI
         }
     }
 
-    internal sealed class ParkingPermitsSliderRow
+    internal sealed class ParkingRulesSliderRow
     {
         public UIPanel RowPanel;
         public UIButton ToggleButton;
@@ -657,7 +657,7 @@ namespace PickyParking.UI
         public bool IsEnabled;
     }
 
-    internal sealed class ParkingPermitsToggleRow
+    internal sealed class ParkingRulesToggleRow
     {
         public UIPanel RowPanel;
         public UIButton ToggleButton;

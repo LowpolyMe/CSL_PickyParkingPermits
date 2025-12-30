@@ -1,10 +1,11 @@
 using ColossalFramework.UI;
 using UnityEngine;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.UI.ModResources;
 
 namespace PickyParking.UI
 {
-    internal static class ParkingPermitsIconAtlas
+    internal static class ParkingRulesIconAtlas
     {
         public const string ResidentsSpriteName = "ResidentsIcon";
         public const string WorkSchoolSpriteName = "WorkSchoolIcon";
@@ -46,6 +47,36 @@ namespace PickyParking.UI
             AddSprite(atlas, CrossedOutSpriteName, iconWidth * 3, 0, iconWidth, iconHeight, texture);
             _atlas = atlas;
             return _atlas;
+        }
+
+        public static void ClearCache()
+        {
+            if (_atlas == null && !_attempted)
+            {
+                Log.Info("[UI] Icon atlas cleanup skipped (never created).");
+                return;
+            }
+
+            var atlas = _atlas;
+            _atlas = null;
+            _attempted = false;
+
+            if (atlas == null)
+            {
+                Log.Info("[UI] Icon atlas cache reset (load attempt only).");
+                return;
+            }
+
+            if (atlas.material != null)
+            {
+                var texture = atlas.material.mainTexture;
+                Object.Destroy(atlas.material);
+                if (texture != null)
+                    Object.Destroy(texture);
+            }
+
+            Object.Destroy(atlas);
+            Log.Info("[UI] Icon atlas cache cleared.");
         }
 
         private static void AddSprite(

@@ -2,8 +2,7 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
-using PickyParking.App;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
 
 namespace PickyParking.Patching.TMPE
 {
@@ -87,12 +86,12 @@ namespace PickyParking.Patching.TMPE
             [HarmonyArgument(6)] ushort vehicleId,
             ref bool __state)
         {
-            ParkingSearchContextSetup.BeginFindParkingForCitizen(ref driverInstance, vehicleId, ref __state);
+            ParkingSearchContextPatchHandler.BeginFindParkingForCitizen(ref driverInstance, vehicleId, ref __state);
         }
 
         private static Exception Finalizer(Exception __exception, bool __state)
         {
-            return ParkingSearchContextSetup.EndFindParkingForCitizen(__exception, __state);
+            return ParkingSearchContextPatchHandler.EndFindParkingForCitizen(__exception, __state);
         }
     }
 }

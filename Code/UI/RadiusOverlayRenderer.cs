@@ -1,9 +1,9 @@
 using ColossalFramework;
 using ColossalFramework.Math;
-using PickyParking.Infrastructure;
+using PickyParking.ModLifecycle;
 using UnityEngine;
 using PickyParking.ModEntry;
-using PickyParking.Domain;
+using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.UI
 {
@@ -25,13 +25,13 @@ namespace PickyParking.UI
             if (!runtime.GameAccess.TryGetSelectedBuilding(out ushort buildingId, out _))
                 return;
 
-            ParkingRestrictionsConfigDefinition rule;
+            ParkingRulesConfigDefinition rule;
             if (runtime.ParkingRulePreviewState != null
                 && runtime.ParkingRulePreviewState.TryGetPreview(buildingId, out var previewRule))
             {
                 rule = previewRule;
             }
-            else if (!runtime.ParkingRestrictionsConfigRegistry.TryGet(buildingId, out rule))
+            else if (!runtime.ParkingRulesConfigRegistry.TryGet(buildingId, out rule))
             {
                 return;
             }

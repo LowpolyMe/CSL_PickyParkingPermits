@@ -1,7 +1,9 @@
 using UnityEngine;
 using ColossalFramework.UI;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.ModEntry;
+using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.UI
 {
@@ -13,7 +15,7 @@ namespace PickyParking.UI
         private const float InjectionRetrySeconds = 1f;
         private const float WrapperPadding = 25f;
 
-        private ParkingRestrictionsConfigPanel _panel;
+        private ParkingRulesConfigPanel _panel;
         private ParkingPrefabSupportPanel _supportPanel;
         private ushort _lastSelectedBuildingId;
         private float _nextInjectionAttemptTime;
@@ -150,21 +152,21 @@ namespace PickyParking.UI
                     Log.Info("[UI] Wrapper autoFitChildrenVertically enabled.");
             }
             EnsureWrapperPaddingSpacer();
-            var existing = wrapper.GetComponentInChildren<ParkingRestrictionsConfigPanel>();
+            var existing = wrapper.GetComponentInChildren<ParkingRulesConfigPanel>();
             if (existing != null)
             {
                 _panel = existing;
-                Log.Info("[UI] Reusing existing ParkingRestrictionsConfigPanel.");
+                Log.Info("[UI] Reusing existing ParkingRulesConfigPanel.");
             }
             else
             {
-                _panel = wrapper.AddUIComponent<ParkingRestrictionsConfigPanel>();
+                _panel = wrapper.AddUIComponent<ParkingRulesConfigPanel>();
                 _panel.relativePosition = Vector3.zero;
                 _panel.size = wrapper.size;
                 int targetIndex = Mathf.Min(3, wrapper.childCount - 1);
                 _panel.zOrder = targetIndex;
                 _panel.transform.SetSiblingIndex(targetIndex);
-                Log.Info("[UI] Injected ParkingRestrictionsConfigPanel into Wrapper container.");
+                Log.Info("[UI] Injected ParkingRulesConfigPanel into Wrapper container.");
             }
 
             var supportExisting = wrapper.GetComponentInChildren<ParkingPrefabSupportPanel>();
@@ -275,10 +277,10 @@ namespace PickyParking.UI
             if (runtime == null || info == null)
                 return false;
 
-            if (runtime.PrefabIdentity == null || runtime.SupportedParkingLotRegistry == null)
+            if (runtime.SupportedParkingLotRegistry == null)
                 return false;
 
-            var key = runtime.PrefabIdentity.CreateKey(info);
+            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
             return runtime.SupportedParkingLotRegistry.Contains(key);
         }
 

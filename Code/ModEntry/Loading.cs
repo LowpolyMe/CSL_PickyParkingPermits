@@ -1,14 +1,16 @@
 using System;
 using System.Reflection;
 using ICities;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.ModLifecycle;
 using PickyParking.Patching;
-using PickyParking.Infrastructure.Persistence;
-using PickyParking.Infrastructure.Integration;
+using PickyParking.ParkingRulesSaving;
 using PickyParking.Settings;
 using PickyParking.UI;
 using PickyParking.Features.Debug;
-using PickyParking.App;
+using PickyParking.Features.ParkingPolicing;
+using PickyParking.Features.ParkingPolicing.Runtime;
+using PickyParking.Patching.TMPE;
 using UnityEngine;
 
 namespace PickyParking.ModEntry
@@ -23,6 +25,7 @@ namespace PickyParking.ModEntry
         private PatchSetup _patches;
         private GameObject _runtimeObject;
         private static bool _assemblyVersionLogged;
+        private int _unloadSequence;
 
         public override void OnCreated(ILoading loading)
         {
@@ -46,9 +49,8 @@ namespace PickyParking.ModEntry
             ParkingRuntimeContext.SetCurrent(new ParkingRuntimeContext(
                 runtime.FeatureGate,
                 runtime.SupportedParkingLotRegistry,
-                runtime.ParkingRestrictionsConfigRegistry,
+                runtime.ParkingRulesConfigRegistry,
                 runtime.GameAccess,
-                runtime.PrefabIdentity,
                 runtime.TmpeIntegration,
                 runtime.ParkingPermissionEvaluator,
                 runtime.ParkedVehicleReevaluation));
@@ -107,15 +109,11 @@ namespace PickyParking.ModEntry
         private void Unload(bool clearLevelContext)
         {
             DestroyRuntimeObjects();
+            ParkingRulesIconAtlas.ClearCache();
             ParkingSearchContext.ClearAll();
-            SimThread.Dispatch(() =>
-            {
-                ParkingSearchContext.ClearAll();
-                ParkingCandidateBlocker.ClearThreadStatic();
-                if (Log.IsVerboseEnabled)
-                    Log.Info("[Runtime] Sim-thread cleanup complete.");
-            });
-            ParkingSearchContextSetup.ClearCaches();
+            int unloadId = ++_unloadSequence;
+            Log.Info("[Runtime] Unload started id=" + unloadId);
+            ParkingSearchContextPatchHandler.ClearCaches();
             if (clearLevelContext)
             {
                 LevelBootstrap.Context.Clear();
@@ -131,6 +129,25 @@ namespace PickyParking.ModEntry
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
             ParkingSearchContext.EnableEpisodeLogs = false;
+
+            SimThread.Dispatch(() =>
+            {
+                if (_unloadSequence != unloadId)
+                {
+                    Log.Info("[Runtime] Sim-thread cleanup skipped (newer unload id=" + _unloadSequence + ")");
+                    return;
+                }
+
+                if (ModRuntime.Current != null)
+                {
+                    Log.Info("[Runtime] Sim-thread cleanup skipped (new runtime active)");
+                    return;
+                }
+
+                ParkingSearchContext.ClearAll();
+                ParkingCandidateBlocker.ClearThreadStatic();
+                Log.Info("[Runtime] Sim-thread cleanup complete id=" + unloadId);
+            });
         }
 
         private static bool IsGameplayMode(LoadMode mode)

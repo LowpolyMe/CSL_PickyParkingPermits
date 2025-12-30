@@ -2,8 +2,8 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
-using PickyParking.App;
-using PickyParking.Infrastructure;
+using PickyParking.Logging;
+using PickyParking.Patching;
 
 namespace PickyParking.Patching.Game
 {
@@ -72,7 +72,7 @@ namespace PickyParking.Patching.Game
             uint ownerCitizen,
             ref bool __result)
         {
-            return ParkingCandidateBlocker.HandleCreateParkedVehiclePrefix(
+            return ParkingCandidateBlockerPatchHandler.HandleCreateParkedVehiclePrefix(
                 ref parked,
                 ref r,
                 info,
