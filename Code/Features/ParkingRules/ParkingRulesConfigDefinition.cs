@@ -41,8 +41,6 @@ namespace PickyParking.Features.ParkingRules
             VisitorsAllowed = visitorsAllowed;
         }
 
-        public bool IsUnrestricted => !ResidentsWithinRadiusOnly && !WorkSchoolWithinRadiusOnly && !VisitorsAllowed;
-
         public void Write(BinaryWriter writer)
         {
             writer.Write(ResidentsWithinRadiusOnly);

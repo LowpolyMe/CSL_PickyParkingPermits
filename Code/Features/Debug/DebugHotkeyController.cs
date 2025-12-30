@@ -230,10 +230,7 @@ namespace PickyParking.Features.Debug
 
         private void SetOrRemove(ushort buildingId, ParkingRulesConfigDefinition rule)
         {
-            if (rule.IsUnrestricted)
-                _parkingRulesRepository.Remove(buildingId);
-            else
-                _parkingRulesRepository.Set(buildingId, rule);
+            _parkingRulesRepository.Set(buildingId, rule);
         }
 
         private static ParkingRulesConfigDefinition CreateDefaultRule()

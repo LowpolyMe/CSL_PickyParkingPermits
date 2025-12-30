@@ -323,6 +323,7 @@ namespace PickyParking.UI
                 return;
 
             _editor.ApplyRuleNow(_buildingId, BuildInput(), "ApplyButton");
+            _editor.RequestPendingReevaluationIfAny(_buildingId);
             _baselineRule = _editor.BuildRuleFromInput(BuildInput());
             _hasStoredRule = true;
             _isDirty = false;
