@@ -24,11 +24,6 @@ namespace PickyParking.Features.ParkingRules
             ParkingPosition? homePosition,
             ParkingPosition? workPosition)
         {  
-            if (rule.IsUnrestricted)
-                return new Result(true, DecisionReason.Allowed_Unrestricted);
-
-            
-            
             if (isVisitor)
             {
                 if (rule.VisitorsAllowed)
