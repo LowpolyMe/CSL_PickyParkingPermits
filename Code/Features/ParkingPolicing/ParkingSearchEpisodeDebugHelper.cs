@@ -22,6 +22,7 @@ namespace PickyParking.Features.ParkingPolicing
         public string LastReason { get; private set; }
         public ushort LastBuildingId { get; private set; }
         public string LastPrefab { get; private set; }
+        public string LastBuildingName { get; private set; }
 
         public ParkingSearchEpisodeDebugHelper(ushort vehicleId, uint citizenId, bool isVisitor, string source, int startDepth)
         {
@@ -41,7 +42,7 @@ namespace PickyParking.Features.ParkingPolicing
             IsVisitor = isVisitor;
         }
 
-        public void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName)
+        public void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName, string buildingName)
         {
             CandidateChecks++;
 
@@ -51,6 +52,7 @@ namespace PickyParking.Features.ParkingPolicing
             LastReason = reason;
             LastBuildingId = buildingId;
             LastPrefab = prefabName;
+            LastBuildingName = buildingName;
         }
 
         public void EndAndMaybeLog(bool enabled, int minCandidates, int minDurationMs)
@@ -58,6 +60,9 @@ namespace PickyParking.Features.ParkingPolicing
             if (!enabled) return;
 
             int duration = Math.Max(0, NowMs() - _startMs);
+            if (CandidateChecks == 0)
+                return;
+
             if (CandidateChecks < minCandidates && duration < minDurationMs)
                 return;
 
@@ -69,7 +74,7 @@ namespace PickyParking.Features.ParkingPolicing
                     $"vehicleId={VehicleId} citizenId={CitizenId} isVisitor={IsVisitor} " +
                     $"candidates={CandidateChecks} denied={DeniedCount} allowed={AllowedCount} " +
                     $"durationMs={duration} " +
-                    $"last=({LastReason ?? "NULL"} bld={LastBuildingId} prefab={LastPrefab ?? "NULL"})"
+                    $"last=({LastReason ?? "NULL"} bld={LastBuildingId} prefab={LastPrefab ?? "NULL"} name={LastBuildingName ?? "NULL"})"
                 );
             }
         }

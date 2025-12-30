@@ -65,6 +65,53 @@ namespace PickyParking.Features.ParkingPolicing
         public static bool IsVisitor => HasContext && (Stack.Peek().Episode?.IsVisitor ?? false);
         public static string Source => HasContext ? Stack.Peek().Source : null;
 
+        public struct EpisodeSnapshot
+        {
+            public int CandidateChecks;
+            public int DeniedCount;
+            public int AllowedCount;
+            public string LastReason;
+            public ushort LastBuildingId;
+            public string LastPrefab;
+            public string LastBuildingName;
+            public bool IsVisitor;
+            public string Source;
+            public ushort VehicleId;
+            public uint CitizenId;
+            public int StartDepth;
+        }
+
+        public static bool TryGetEpisodeSnapshot(out EpisodeSnapshot snapshot)
+        {
+            snapshot = default;
+            var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "TryGetEpisodeSnapshot");
+            if (stack == null || stack.Count == 0)
+                return false;
+
+            var frame = stack.Peek();
+            var episode = frame.Episode;
+            if (episode == null)
+                return false;
+
+            snapshot = new EpisodeSnapshot
+            {
+                CandidateChecks = episode.CandidateChecks,
+                DeniedCount = episode.DeniedCount,
+                AllowedCount = episode.AllowedCount,
+                LastReason = episode.LastReason,
+                LastBuildingId = episode.LastBuildingId,
+                LastPrefab = episode.LastPrefab,
+                LastBuildingName = episode.LastBuildingName,
+                IsVisitor = episode.IsVisitor,
+                Source = frame.Source,
+                VehicleId = frame.VehicleId,
+                CitizenId = frame.CitizenId,
+                StartDepth = episode.StartDepth
+            };
+
+            return true;
+        }
+
         public static void SetEpisodeVisitorFlag(bool isVisitor)
         {
             var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "SetEpisodeVisitorFlag");
@@ -90,12 +137,12 @@ namespace PickyParking.Features.ParkingPolicing
             stack.Push(new Frame(vehicleId, citizenId, source, episode));
         }
 
-        public static void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName)
+        public static void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName, string buildingName)
         {
             var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "RecordCandidate");
             if (stack == null || stack.Count == 0) return;
             var f = stack.Peek();
-            f.Episode?.RecordCandidate(denied, reason, buildingId, prefabName);
+            f.Episode?.RecordCandidate(denied, reason, buildingId, prefabName, buildingName);
         }
 
         public static void Pop()
