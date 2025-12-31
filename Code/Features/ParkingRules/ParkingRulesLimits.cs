@@ -4,10 +4,10 @@ namespace PickyParking.Features.ParkingRules
 {
     public static class ParkingRulesLimits
     {
-        public const ushort MinRadiusMeters = 50;
-        public const ushort MidRadiusMeters = 2000;
+        public const ushort MinRadiusMeters = 25;
+        public const ushort MidRadiusMeters = 500;
         public const ushort MaxRadiusMeters = 17000;
-        public const ushort DefaultRadiusMeters = 200;
+        public const ushort DefaultRadiusMeters = 500;
         public const ushort AllRadiusMeters = ushort.MaxValue;
 
         public static ParkingRulesConfigDefinition ClampRule(ParkingRulesConfigDefinition rule, out bool normalized)

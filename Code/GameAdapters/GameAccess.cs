@@ -10,6 +10,7 @@ namespace PickyParking.GameAdapters
     
     public sealed class GameAccess
     {
+        private const int ParkedGridSafetyLimit = 32768;
         private readonly List<Vector3> _parkingSpacePositions = new List<Vector3>(64);
         private readonly HashSet<ushort> _foundParkedVehicleIds = new HashSet<ushort>();
 
@@ -264,6 +265,16 @@ namespace PickyParking.GameAdapters
         
         
         
+        public bool TryGetParkingSpaceCount(ushort buildingId, out int totalSpaces)
+        {
+            totalSpaces = 0;
+            if (!TryCollectParkingSpacePositions(buildingId, _parkingSpacePositions))
+                return false;
+
+            totalSpaces = _parkingSpacePositions.Count;
+            return totalSpaces > 0;
+        }
+
         public void CollectParkedVehiclesOnLot(
             ushort buildingId,
             List<ushort> results,
@@ -272,11 +283,41 @@ namespace PickyParking.GameAdapters
             results.Clear();
             if (buildingId == 0) return;
 
-            
-            _foundParkedVehicleIds.Clear();
-            if (!TryCollectParkingSpacePositions(buildingId, _parkingSpacePositions))
+            int totalSpaces;
+            int occupiedSpaces;
+            if (!TryCollectParkingSpaceUsage(buildingId, maxSnapDistance, _foundParkedVehicleIds, out totalSpaces, out occupiedSpaces))
                 return;
 
+            results.AddRange(_foundParkedVehicleIds);
+            _foundParkedVehicleIds.Clear();
+        }
+
+        public bool TryGetParkingSpaceStats(
+            ushort buildingId,
+            out int totalSpaces,
+            out int occupiedSpaces,
+            float maxSnapDistance = 2f)
+        {
+            return TryCollectParkingSpaceUsage(buildingId, maxSnapDistance, null, out totalSpaces, out occupiedSpaces);
+        }
+
+        private bool TryCollectParkingSpaceUsage(
+            ushort buildingId,
+            float maxSnapDistance,
+            HashSet<ushort> outParkedVehicleIds,
+            out int totalSpaces,
+            out int occupiedSpaces)
+        {
+            totalSpaces = 0;
+            occupiedSpaces = 0;
+
+            if (outParkedVehicleIds != null)
+                outParkedVehicleIds.Clear();
+
+            if (!TryCollectParkingSpacePositions(buildingId, _parkingSpacePositions))
+                return false;
+
+            totalSpaces = _parkingSpacePositions.Count;
             float maxSnapDistSqr = maxSnapDistance * maxSnapDistance;
 
             var vm = Singleton<VehicleManager>.instance;
@@ -289,6 +330,7 @@ namespace PickyParking.GameAdapters
                 int gz = Mathf.Clamp((int)(spacePos.z / 32f + 270f), 0, 539);
 
                 ushort parkedId = vm.m_parkedGrid[gz * 540 + gx];
+                bool spaceOccupied = false;
 
                 int safety = 0;
                 while (parkedId != 0)
@@ -302,18 +344,26 @@ namespace PickyParking.GameAdapters
                         float dz = pv.m_position.z - spacePos.z;
 
                         if (dx * dx + dz * dz <= maxSnapDistSqr)
-                            _foundParkedVehicleIds.Add(parkedId);
+                        {
+                            spaceOccupied = true;
+                            if (outParkedVehicleIds != null)
+                                outParkedVehicleIds.Add(parkedId);
+                            else
+                                break;
+                        }
                     }
 
                     parkedId = next;
 
-                    if (++safety > 32768)
+                    if (++safety > ParkedGridSafetyLimit)
                         break;
                 }
+
+                if (spaceOccupied)
+                    occupiedSpaces++;
             }
 
-            results.AddRange(_foundParkedVehicleIds);
-            _foundParkedVehicleIds.Clear();
+            return true;
         }
 
         

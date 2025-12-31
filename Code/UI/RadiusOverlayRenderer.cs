@@ -97,11 +97,12 @@ namespace PickyParking.UI
             if (radius <= 0f)
                 return;
 
+            float size = radius * 2f;
             Singleton<RenderManager>.instance.OverlayEffect.DrawCircle(
                 cameraInfo,
                 color,
                 center,
-                radius,
+                size,
                 minY,
                 maxY,
                 renderLimits: false,

@@ -20,7 +20,6 @@ namespace PickyParking.UI
         private readonly ushort _minDistanceMeters;
         private readonly ushort _midDistanceMeters;
         private readonly ushort _maxDistanceMeters;
-        private readonly float _distanceMidpointT;
         private readonly Action _onToggleRestrictions;
         private readonly Action<ParkingRulesSliderRow> _onToggleSlider;
         private readonly Action<ParkingRulesSliderRow, float> _onSliderValueChanged;
@@ -33,6 +32,7 @@ namespace PickyParking.UI
         public ParkingRulesSliderRow WorkSchoolRow { get; private set; }
         public ParkingRulesToggleRow VisitorsRow { get; private set; }
         public UIPanel FooterRow { get; private set; }
+        public UILabel ParkingSpacesLabel { get; private set; }
 
         public PickyParkingPanelVisuals(
             ParkingRulesConfigPanel panel,
@@ -46,7 +46,6 @@ namespace PickyParking.UI
             ushort minDistanceMeters,
             ushort midDistanceMeters,
             ushort maxDistanceMeters,
-            float distanceMidpointT,
             Action onToggleRestrictions,
             Action<ParkingRulesSliderRow> onToggleSlider,
             Action<ParkingRulesSliderRow, float> onSliderValueChanged,
@@ -64,7 +63,6 @@ namespace PickyParking.UI
             _minDistanceMeters = minDistanceMeters;
             _midDistanceMeters = midDistanceMeters;
             _maxDistanceMeters = maxDistanceMeters;
-            _distanceMidpointT = distanceMidpointT;
             _onToggleRestrictions = onToggleRestrictions;
             _onToggleSlider = onToggleSlider;
             _onSliderValueChanged = onSliderValueChanged;
@@ -204,6 +202,7 @@ namespace PickyParking.UI
         private void CreateHeader(float rowPanelHeight, float rowHeight, float verticalPadding)
         {
             CreateHeaderRow(rowPanelHeight, rowHeight, verticalPadding);
+            CreateParkingStatsRow(rowPanelHeight, rowHeight, verticalPadding);
         }
 
         private void CreateRestrictionsToggleRow(float rowPanelHeight, float rowHeight, float horizontalPadding, float verticalPadding)
@@ -511,6 +510,21 @@ namespace PickyParking.UI
             title.relativePosition = new Vector3(0f, verticalPadding);
         }
 
+        private void CreateParkingStatsRow(float rowPanelHeight, float rowHeight, float verticalPadding)
+        {
+            UIPanel statsRow = CreateRowContainer("ParkingStatsRow", rowPanelHeight);
+            UILabel stats = statsRow.AddUIComponent<UILabel>();
+            stats.text = "Spaces: n/a";
+            stats.textScale = _theme.ParkingStatsTextScale;
+            stats.textColor = _theme.EnabledColor;
+            stats.autoSize = false;
+            stats.size = new Vector2(statsRow.width, rowHeight);
+            stats.textAlignment = UIHorizontalAlignment.Center;
+            stats.verticalAlignment = UIVerticalAlignment.Middle;
+            stats.relativePosition = new Vector3(0f, verticalPadding);
+            ParkingSpacesLabel = stats;
+        }
+
         public void UpdateRestrictionsToggleVisuals(bool enabled)
         {
             if (RestrictionsToggleButton == null)
@@ -532,6 +546,22 @@ namespace PickyParking.UI
                 VisitorsRow.RowPanel.isVisible = visible;
             if (FooterRow != null)
                 FooterRow.isVisible = visible;
+        }
+
+        public void UpdateParkingSpacesText(int totalSpaces, int freeSpaces)
+        {
+            if (ParkingSpacesLabel == null)
+                return;
+
+            ParkingSpacesLabel.text = "Spaces: " + totalSpaces + " total, " + freeSpaces + " free";
+        }
+
+        public void UpdateParkingSpacesUnavailable()
+        {
+            if (ParkingSpacesLabel == null)
+                return;
+
+            ParkingSpacesLabel.text = "Spaces: n/a";
         }
 
         private void CreateApplyButton(UIPanel footerRow, float horizontalPadding, float verticalPadding)
@@ -576,8 +606,7 @@ namespace PickyParking.UI
                     _distanceSliderMaxValue,
                     _minDistanceMeters,
                     _midDistanceMeters,
-                    _maxDistanceMeters,
-                    _distanceMidpointT);
+                    _maxDistanceMeters);
             }
             else if (t >= _distanceSliderMaxValue)
             {
