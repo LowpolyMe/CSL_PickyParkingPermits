@@ -11,7 +11,6 @@ using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Patching.TMPE;
-using PickyParking.Patching.Game;
 using UnityEngine;
 
 namespace PickyParking.ModEntry
@@ -135,7 +134,10 @@ namespace PickyParking.ModEntry
             ParkingSearchContext.LogMinCandidates = ParkingSearchContext.DefaultLogMinCandidates;
             ParkingSearchContext.LogMinDurationMs = ParkingSearchContext.DefaultLogMinDurationMs;
             ParkingCandidateBlocker.EnableCandidateBlockerLogs = false;
-            VehicleManager_CreateParkedVehiclePatch.EnableCreateParkedVehicleLogs = false;
+            ParkingDebugSettings.EnableCreateParkedVehicleLogs = false;
+            ParkingDebugSettings.EnableGameAccessLogs = false;
+            ParkingDebugSettings.EnableBuildingDebugLogs = false;
+            ParkingDebugSettings.BuildingDebugId = 0;
 
             SimThread.Dispatch(() =>
             {

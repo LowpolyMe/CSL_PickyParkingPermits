@@ -72,6 +72,26 @@ namespace PickyParking.UI
                 settings.EnableDebugCreateParkedVehicleLogs = isChecked;
                 HandleDebugLoggingChanged("OptionsUI: CreateParkedVehicle logging", settings, saveSettings);
             });
+            debugGroup.AddCheckbox("Building-specific debug logs", settings.EnableDebugBuildingLogs, isChecked =>
+            {
+                settings.EnableDebugBuildingLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: Building debug logs", settings, saveSettings);
+            });
+            debugGroup.AddTextfield(
+                "Building id for debug logs",
+                settings.DebugBuildingId.ToString(),
+                _ => { },
+                text =>
+                {
+                    if (!ushort.TryParse(text, out var buildingId))
+                    {
+                        Log.Warn("[Settings] Invalid building id for debug logs: " + (text ?? "NULL"));
+                        return;
+                    }
+
+                    settings.DebugBuildingId = buildingId;
+                    HandleDebugLoggingChanged("OptionsUI: Building debug id", settings, saveSettings);
+                });
             debugGroup.AddCheckbox("UI diagnostics", settings.EnableDebugUiLogs, isChecked =>
             {
                 settings.EnableDebugUiLogs = isChecked;

@@ -17,6 +17,8 @@ namespace PickyParking.Settings
         public bool EnableDebugGameAccessLogs { get; set; }
         public bool EnableDebugCandidateBlockerLogs { get; set; }
         public bool EnableDebugCreateParkedVehicleLogs { get; set; }
+        public bool EnableDebugBuildingLogs { get; set; }
+        public ushort DebugBuildingId { get; set; }
         public bool EnableDebugUiLogs { get; set; }
         public bool EnableDebugTmpeLogs { get; set; }
         public bool EnableDebugPermissionEvaluatorLogs { get; set; }
@@ -31,6 +33,8 @@ namespace PickyParking.Settings
             EnableDebugGameAccessLogs = false;
             EnableDebugCandidateBlockerLogs = false;
             EnableDebugCreateParkedVehicleLogs = false;
+            EnableDebugBuildingLogs = false;
+            DebugBuildingId = 0;
             EnableDebugUiLogs = false;
             EnableDebugTmpeLogs = false;
             EnableDebugPermissionEvaluatorLogs = false;

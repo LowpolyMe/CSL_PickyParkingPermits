@@ -8,7 +8,6 @@ using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.Debug;
-using PickyParking.Patching.Game;
 
 namespace PickyParking.ModEntry
 {
@@ -83,14 +82,15 @@ namespace PickyParking.ModEntry
                 ? 0
                 : ParkingSearchContext.DefaultLogMinDurationMs;
             ParkingCandidateBlocker.EnableCandidateBlockerLogs = settings.EnableDebugCandidateBlockerLogs;
-            VehicleManager_CreateParkedVehiclePatch.EnableCreateParkedVehicleLogs =
+            ParkingDebugSettings.EnableCreateParkedVehicleLogs =
                 settings.EnableDebugCreateParkedVehicleLogs;
+            ParkingDebugSettings.EnableBuildingDebugLogs = settings.EnableDebugBuildingLogs;
+            ParkingDebugSettings.BuildingDebugId = settings.DebugBuildingId;
             Log.SetUiDebugEnabled(settings.EnableDebugUiLogs);
             Log.SetTmpeDebugEnabled(settings.EnableDebugTmpeLogs);
             Log.SetPermissionDebugEnabled(settings.EnableDebugPermissionEvaluatorLogs);
 
-            if (Current != null && Current.GameAccess != null)
-                Current.GameAccess.DebugGameAccess = settings.EnableDebugGameAccessLogs;
+            ParkingDebugSettings.EnableGameAccessLogs = settings.EnableDebugGameAccessLogs;
         }
 
         
@@ -129,10 +129,7 @@ namespace PickyParking.ModEntry
                 
             }
 
-            var gameAccess = new GameAccess
-            {
-                DebugGameAccess = false
-            };
+            var gameAccess = new GameAccess();
 
             var policy = new ParkingRuleEvaluator();
             var evaluator = new ParkingPermissionEvaluator(

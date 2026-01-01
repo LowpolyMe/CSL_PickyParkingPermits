@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ColossalFramework;
 using UnityEngine;
 using PickyParking.Logging;
+using PickyParking.Features.Debug;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
@@ -55,8 +56,9 @@ namespace PickyParking.Features.ParkingPolicing
             if (_disposed) return;
             if (!_isFeatureActive.IsActive) return;
 
-            if (buildingId == 27392)
-                Log.Warn("[Parking] Reevaluation requested for Industry1 buildingId=27392\n" + Environment.StackTrace);
+            if (ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+                Log.Warn("[Parking] Reevaluation requested for buildingId=" +
+                         buildingId + "\n" + Environment.StackTrace);
 
             if (!_pendingSet.Add(buildingId))
                 return;

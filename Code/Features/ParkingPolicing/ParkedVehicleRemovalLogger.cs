@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using ColossalFramework;
 using UnityEngine;
 using PickyParking.Logging;
+using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing.Runtime;
 
 namespace PickyParking.Features.ParkingPolicing
 {
     internal static class ParkedVehicleRemovalLogger
     {
-        private const ushort DebugLotBuildingId = 27392;
         private const float MaxSnapDistanceSqr = 4f;
         [ThreadStatic] private static List<Vector3> _spacePositions;
 
         public static void LogIfMatchesLot(ushort parkedVehicleId, ushort buildingId, string source)
         {
-            if (buildingId != DebugLotBuildingId)
+            if (!ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
                 return;
 
             float lotDistSqr = 0f;
@@ -28,6 +28,9 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfNearDebugLot(ushort parkedVehicleId, string source)
         {
+            if (!ParkingDebugSettings.EnableBuildingDebugLogs || ParkingDebugSettings.BuildingDebugId == 0)
+                return;
+
             if (!TryGetParkedPosition(parkedVehicleId, out var pos))
                 return;
 
@@ -37,7 +40,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (!lotMatched)
                 return;
 
-            LogRemoval(parkedVehicleId, DebugLotBuildingId, source, lotMatched, lotDistSqr, lotSpaceCount);
+            LogRemoval(parkedVehicleId, ParkingDebugSettings.BuildingDebugId, source, lotMatched, lotDistSqr, lotSpaceCount);
         }
 
         private static bool TryGetParkedPosition(ushort parkedVehicleId, out Vector3 position)
@@ -62,7 +65,9 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             List<Vector3> spaces = GetSpacePositions();
-            if (!context.GameAccess.TryCollectParkingSpacePositions(DebugLotBuildingId, spaces))
+            if (!ParkingDebugSettings.EnableBuildingDebugLogs || ParkingDebugSettings.BuildingDebugId == 0)
+                return false;
+            if (!context.GameAccess.TryCollectParkingSpacePositions(ParkingDebugSettings.BuildingDebugId, spaces))
                 return false;
 
             lotSpaceCount = spaces.Count;

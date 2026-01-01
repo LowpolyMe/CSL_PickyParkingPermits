@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
+using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
 using UnityEngine;
 using PickyParking.Logging;
@@ -15,9 +16,6 @@ namespace PickyParking.Patching.Game
     internal static class VehicleManager_CreateParkedVehiclePatch
     {
         private const string TargetMethodName = "CreateParkedVehicle";
-        private const ushort DebugIndustry1BuildingId = 27392;
-        private const ushort DebugIndustry2BuildingId = 40969;
-        internal static bool EnableCreateParkedVehicleLogs = false;
         public static void Apply(Harmony harmony)
         {
             MethodInfo method = FindTargetMethod();
@@ -94,13 +92,13 @@ namespace PickyParking.Patching.Game
             Vector3 position,
             uint ownerCitizen)
         {
-            if (!EnableCreateParkedVehicleLogs || !__result || parked == 0 || !Log.IsVerboseEnabled)
+            if (!ParkingDebugSettings.EnableCreateParkedVehicleLogs || !__result || parked == 0 || !Log.IsVerboseEnabled)
                 return;
 
             if (!ParkingCandidateBlocker.TryGetRuleBuildingAtPosition(position, out ushort buildingId))
                 return;
 
-            if (buildingId != DebugIndustry1BuildingId && buildingId != DebugIndustry2BuildingId)
+            if (!ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
                 return;
 
             string prefabName = info != null ? info.name : "UNKNOWN";
