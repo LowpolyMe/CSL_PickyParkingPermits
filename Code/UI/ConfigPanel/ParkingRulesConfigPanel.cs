@@ -1,6 +1,7 @@
 using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
+using PickyParking.GameAdapters;
 using PickyParking.ModEntry;
 using PickyParking.Logging;
 
@@ -18,7 +19,8 @@ namespace PickyParking.UI
 
         private ParkingRulesConfigPanelState _state;
         private ParkingRulesConfigPanelView _view;
-        private ParkingRulesConfigPanelWorkflow _workflow;
+        private ParkingRulesConfigEditor _editor;
+        private GameAccess _game;
         private ParkingRulesConfigUiConfig _uiConfig;
         private ParkingPanelTheme _theme;
 
@@ -27,10 +29,9 @@ namespace PickyParking.UI
             base.Start();
 
             ModRuntime runtime = ModRuntime.Current;
-            _workflow = new ParkingRulesConfigPanelWorkflow(
-                runtime != null ? runtime.ParkingRulesConfigEditor : null,
-                runtime != null ? runtime.GameAccess : null);
-            _uiConfig = _workflow.UiConfig;
+            _editor = runtime != null ? runtime.ParkingRulesConfigEditor : null;
+            _game = runtime != null ? runtime.GameAccess : null;
+            _uiConfig = _editor != null ? _editor.UiConfig : ParkingRulesConfigUiConfig.Default;
             _theme = new ParkingPanelTheme();
             _state = new ParkingRulesConfigPanelState();
 
@@ -91,7 +92,7 @@ namespace PickyParking.UI
             if (!_state.RestrictionsEnabled)
                 return;
 
-            _workflow.CommitPendingChanges(_state.BuildingId, BuildInput());
+            _editor.CommitPendingChanges(_state.BuildingId, BuildInput());
         }
 
         public void DiscardUnappliedChangesIfAny()
@@ -101,10 +102,10 @@ namespace PickyParking.UI
 
         public void ClearPreview()
         {
-            if (_workflow == null)
+            if (_editor == null)
                 return;
 
-            _workflow.ClearPreview(_state.BuildingId);
+            _editor.ClearPreview(_state.BuildingId);
         }
 
         public void RequestPendingReevaluationIfAny()
@@ -241,20 +242,20 @@ namespace PickyParking.UI
 
         private bool CanOperateOnBuilding()
         {
-            return _state.BuildingId != 0 && _workflow != null && _workflow.CanEditRules && _state.IsPrefabSupported;
+            return _state.BuildingId != 0 && _editor != null && _state.IsPrefabSupported;
         }
 
         private bool CanOperateOnBuilding(ushort buildingId)
         {
-            return buildingId != 0 && _workflow != null && _workflow.CanEditRules && _state.IsPrefabSupported;
+            return buildingId != 0 && _editor != null && _state.IsPrefabSupported;
         }
 
         private void Refresh()
         {
-            if (_workflow == null || !_workflow.CanEditRules)
+            if (_editor == null)
                 return;
 
-            bool hasStoredRule = _workflow.TryGetStoredRule(_state.BuildingId, out var storedRule);
+            bool hasStoredRule = _editor.TryGetStoredRule(_state.BuildingId, out var storedRule);
 
             _state.RestrictionsEnabled = hasStoredRule;
             _state.HasStoredRule = hasStoredRule;
@@ -280,7 +281,7 @@ namespace PickyParking.UI
             UpdateParkingSpaceStats();
 
             if (hasStoredRule && Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[UI] Refreshed panel for building " + _state.BuildingId + ": " + _workflow.FormatRule(storedRule));
+                Log.Info("[UI] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
         }
 
         private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)
@@ -313,7 +314,7 @@ namespace PickyParking.UI
             if (!_state.RestrictionsEnabled)
                 return;
 
-            _workflow.UpdatePreview(_state.BuildingId, BuildInput());
+            _editor.UpdatePreview(_state.BuildingId, BuildInput());
         }
 
         private void ApplyChangesInternal(string reason)
@@ -322,7 +323,7 @@ namespace PickyParking.UI
                 return;
 
             _state.IsDirty = false;
-            _workflow.ApplyRuleNow(_state.BuildingId, BuildInput(), reason);
+            _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), reason);
         }
 
         private void ApplyChangesFromButton()
@@ -334,9 +335,9 @@ namespace PickyParking.UI
                 return;
 
             ParkingRulesConfigInput input = BuildInput();
-            _workflow.ApplyRuleNow(_state.BuildingId, input, "ApplyButton");
-            _workflow.RequestPendingReevaluationIfAny(_state.BuildingId);
-            _state.BaselineRule = _workflow.BuildRuleFromInput(input);
+            _editor.ApplyRuleNow(_state.BuildingId, input, "ApplyButton");
+            _editor.RequestPendingReevaluationIfAny(_state.BuildingId);
+            _state.BaselineRule = _editor.BuildRuleFromInput(input);
             _state.HasStoredRule = true;
             _state.ResetDirty();
         }
@@ -346,7 +347,7 @@ namespace PickyParking.UI
             if (!CanOperateOnBuilding(buildingId))
                 return;
 
-            _workflow.RequestPendingReevaluationIfAny(buildingId);
+            _editor.RequestPendingReevaluationIfAny(buildingId);
         }
 
         private float GetDefaultSliderValue()
@@ -365,7 +366,7 @@ namespace PickyParking.UI
             if (!_state.RestrictionsEnabled)
             {
                 ClearPreview();
-                _workflow.RemoveRule(_state.BuildingId, "RestrictionsToggleOff");
+                _editor.RemoveRule(_state.BuildingId, "RestrictionsToggleOff");
                 _state.HasStoredRule = false;
                 _state.ResetDirty();
                 return;
@@ -380,7 +381,7 @@ namespace PickyParking.UI
                     workSchoolRadiusMeters: DefaultNewRuleRadiusMeters,
                     visitorsAllowed: true);
                 ApplyRuleToUi(_state.BaselineRule);
-                _workflow.ApplyRuleNow(_state.BuildingId, BuildInput(), "DefaultsOnEnable");
+                _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), "DefaultsOnEnable");
                 _state.HasStoredRule = true;
                 _state.ResetDirty();
             }
@@ -407,12 +408,12 @@ namespace PickyParking.UI
 
         private void UpdateParkingSpaceStats()
         {
-            if (_view == null || _workflow == null)
+            if (_view == null || _game == null)
                 return;
 
             int totalSpaces;
             int occupiedSpaces;
-            if (!_workflow.TryGetParkingSpaceStats(_state.BuildingId, out totalSpaces, out occupiedSpaces))
+            if (!_game.TryGetParkingSpaceStats(_state.BuildingId, out totalSpaces, out occupiedSpaces))
             {
                 _view.Visuals.UpdateParkingSpacesUnavailable();
                 return;

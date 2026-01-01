@@ -9,7 +9,6 @@ using PickyParking.Settings;
 using PickyParking.UI;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
-using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
 
@@ -45,15 +44,6 @@ namespace PickyParking.ModEntry
             var runtime = ModRuntime.Create(settings, settingsController, LevelBootstrap.Context);
             ModRuntime.SetCurrent(runtime);
             ModRuntime.ApplyLoggingSettings(settings);
-            ParkingRuntimeContext.SetCurrent(new ParkingRuntimeContext(
-                runtime.FeatureGate,
-                runtime.SupportedParkingLotRegistry,
-                runtime.ParkingRulesConfigRegistry,
-                runtime.GameAccess,
-                runtime.TmpeIntegration,
-                runtime.ParkingPermissionEvaluator,
-                runtime.ParkedVehicleReevaluation));
-
             if (ModRuntime.Current != null)
             {
                 ModRuntime.Current.TmpeIntegration.RefreshState();
@@ -124,7 +114,6 @@ namespace PickyParking.ModEntry
                 _patches = null;
             }
 
-            ParkingRuntimeContext.ClearCurrent();
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
             Log.SetUiDebugEnabled(false);
