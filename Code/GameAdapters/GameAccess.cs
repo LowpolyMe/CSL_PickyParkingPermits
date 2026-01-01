@@ -19,6 +19,7 @@ namespace PickyParking.GameAdapters
         private const ushort DebugIndustry1BuildingId = 27392;
         private const ushort DebugIndustry2BuildingId = 40969;
         private const float TmpeSpaceMatchEpsilon = 0.25f;
+        private const string InvisibleParkingSpacePropName = "Invisible Parking Space";
         private readonly List<Vector3> _parkingSpacePositions = new List<Vector3>(64);
         private readonly HashSet<ushort> _foundParkedVehicleIds = new HashSet<ushort>();
         private readonly HashSet<long> _debugUniquePositions = new HashSet<long>();
@@ -275,6 +276,9 @@ namespace PickyParking.GameAdapters
                 propInfo = propInfo.GetVariation(ref randomizer);
                 if (propInfo == null) continue;
 
+                if (string.Equals(propInfo.name, InvisibleParkingSpacePropName, StringComparison.Ordinal))
+                    continue;
+
                 var spaces = propInfo.m_parkingSpaces;
                 if (spaces == null || spaces.Length == 0) continue;
 
@@ -481,6 +485,8 @@ namespace PickyParking.GameAdapters
             List<string> freeSamples = null;
             HashSet<ushort> loggedParkedVehicles = null;
 
+            int tmpeFreeSpaces = 0;
+
             foreach (BuildingInfo.Prop prop in buildingInfo.m_props)
             {
                 var randomizer = new Randomizer(buildingId << 6 | prop.m_index);
@@ -493,6 +499,9 @@ namespace PickyParking.GameAdapters
 
                 propInfo = propInfo.GetVariation(ref randomizer);
                 if (propInfo == null) continue;
+
+                if (string.Equals(propInfo.name, InvisibleParkingSpacePropName, StringComparison.Ordinal))
+                    continue;
 
                 var spaces = propInfo.m_parkingSpaces;
                 if (spaces == null || spaces.Length == 0) continue;
@@ -521,8 +530,6 @@ namespace PickyParking.GameAdapters
 
                 for (int i = 0; i < spaces.Length; i++)
                 {
-                    totalSpaces++;
-
                     Vector3 spaceWorldPos = propMatrix.MultiplyPoint(spaces[i].m_position);
                     float maxDistance = TmpeSpaceMatchEpsilon;
                     Vector3 parkPos = default;
@@ -556,8 +563,9 @@ namespace PickyParking.GameAdapters
                         return false;
                     }
 
-                    if (!isFree)
-                        occupiedSpaces++;
+                    totalSpaces++;
+                    if (isFree)
+                        tmpeFreeSpaces++;
 
                     if (logTmpeSpaceDetails &&
                         (blockedSamples == null || blockedSamples.Count < 8 ||
@@ -666,6 +674,8 @@ namespace PickyParking.GameAdapters
                     }
                 }
             }
+
+            occupiedSpaces = totalSpaces - tmpeFreeSpaces;
 
             if (Log.IsVerboseEnabled && DebugGameAccess && buildingId == DebugIndustry1BuildingId)
             {
