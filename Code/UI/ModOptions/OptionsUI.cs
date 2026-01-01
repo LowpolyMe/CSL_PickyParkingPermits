@@ -51,8 +51,42 @@ namespace PickyParking.UI
                 HandleVerboseLoggingChanged(isChecked, settings, saveSettings);
             });
 
-            
-            
+            UIHelperBase debugGroup = helper.AddGroup("Debug logging (requires verbose)");
+            debugGroup.AddCheckbox("Parking search episodes", settings.EnableDebugParkingSearchEpisodes, isChecked =>
+            {
+                settings.EnableDebugParkingSearchEpisodes = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: Parking search episodes", settings, saveSettings);
+            });
+            debugGroup.AddCheckbox("Game access parking spaces", settings.EnableDebugGameAccessLogs, isChecked =>
+            {
+                settings.EnableDebugGameAccessLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: Game access parking spaces", settings, saveSettings);
+            });
+            debugGroup.AddCheckbox("Candidate blocker decisions", settings.EnableDebugCandidateBlockerLogs, isChecked =>
+            {
+                settings.EnableDebugCandidateBlockerLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: Candidate blocker decisions", settings, saveSettings);
+            });
+            debugGroup.AddCheckbox("CreateParkedVehicle parking violations", settings.EnableDebugCreateParkedVehicleLogs, isChecked =>
+            {
+                settings.EnableDebugCreateParkedVehicleLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: CreateParkedVehicle logging", settings, saveSettings);
+            });
+            debugGroup.AddCheckbox("UI diagnostics", settings.EnableDebugUiLogs, isChecked =>
+            {
+                settings.EnableDebugUiLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: UI diagnostics", settings, saveSettings);
+            });
+            debugGroup.AddCheckbox("TMPE integration diagnostics", settings.EnableDebugTmpeLogs, isChecked =>
+            {
+                settings.EnableDebugTmpeLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: TMPE diagnostics", settings, saveSettings);
+            });
+            debugGroup.AddCheckbox("Parking permission evaluation", settings.EnableDebugPermissionEvaluatorLogs, isChecked =>
+            {
+                settings.EnableDebugPermissionEvaluatorLogs = isChecked;
+                HandleDebugLoggingChanged("OptionsUI: Permission evaluation", settings, saveSettings);
+            });
         }
 
         private static void HandleVerboseLoggingChanged(bool isChecked, ModSettings settings, Action saveSettings)
@@ -61,9 +95,16 @@ namespace PickyParking.UI
             if (saveSettings != null)
                 saveSettings();
             ReloadSettings("OptionsUI: Verbose logging");
-            Log.SetVerboseEnabled(isChecked);
-            ParkingSearchContext.EnableEpisodeLogs = isChecked;
+            ModRuntime.ApplyLoggingSettings(settings);
             Log.Info(isChecked ? "[Settings] Verbose logging enabled." : "[Settings] Verbose logging disabled.");
+        }
+
+        private static void HandleDebugLoggingChanged(string reason, ModSettings settings, Action saveSettings)
+        {
+            if (saveSettings != null)
+                saveSettings();
+            ReloadSettings(reason);
+            ModRuntime.ApplyLoggingSettings(settings);
         }
 
         private static void CreateHueSlider(

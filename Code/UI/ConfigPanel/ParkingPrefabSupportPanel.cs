@@ -156,7 +156,7 @@ namespace PickyParking.UI
                 Log.Warn("[UI] Settings controller missing; prefab add not persisted.");
             }
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
                 Log.Info("[UI] Added supported prefab " + key);
         }
     }

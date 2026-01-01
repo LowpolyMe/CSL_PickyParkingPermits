@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ColossalFramework;
 using UnityEngine;
@@ -53,6 +54,9 @@ namespace PickyParking.Features.ParkingPolicing
             if (buildingId == 0) return;
             if (_disposed) return;
             if (!_isFeatureActive.IsActive) return;
+
+            if (buildingId == 27392)
+                Log.Warn("[Parking] Reevaluation requested for Industry1 buildingId=27392\n" + Environment.StackTrace);
 
             if (!_pendingSet.Add(buildingId))
                 return;
@@ -132,6 +136,10 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (!moved)
                 {
+                    ParkedVehicleRemovalLogger.LogIfMatchesLot(
+                        parkedVehicleId: parkedId,
+                        buildingId: _activeBuilding,
+                        source: "Reevaluation.ReleaseParkedVehicle");
                     Singleton<VehicleManager>.instance.ReleaseParkedVehicle(parkedId);
                     _activeReleasedCount++;
                 }

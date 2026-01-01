@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
+using PickyParking.Features.ParkingPolicing;
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.Patching;
@@ -14,6 +15,9 @@ namespace PickyParking.Patching.Game
     internal static class VehicleManager_CreateParkedVehiclePatch
     {
         private const string TargetMethodName = "CreateParkedVehicle";
+        private const ushort DebugIndustry1BuildingId = 27392;
+        private const ushort DebugIndustry2BuildingId = 40969;
+        internal static bool EnableCreateParkedVehicleLogs = false;
         public static void Apply(Harmony harmony)
         {
             MethodInfo method = FindTargetMethod();
@@ -25,7 +29,8 @@ namespace PickyParking.Patching.Game
 
             harmony.Patch(
                 method,
-                prefix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Prefix))
+                prefix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Prefix)),
+                postfix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Postfix))
             );
 
             Log.Info("[Parking] Patched CreateParkedVehicle (parking violation logging).");
@@ -80,6 +85,33 @@ namespace PickyParking.Patching.Game
                 rotation,
                 ownerCitizen,
                 ref __result);
+        }
+
+        private static void Postfix(
+            bool __result,
+            ushort parked,
+            VehicleInfo info,
+            Vector3 position,
+            uint ownerCitizen)
+        {
+            if (!EnableCreateParkedVehicleLogs || !__result || parked == 0 || !Log.IsVerboseEnabled)
+                return;
+
+            if (!ParkingCandidateBlocker.TryGetRuleBuildingAtPosition(position, out ushort buildingId))
+                return;
+
+            if (buildingId != DebugIndustry1BuildingId && buildingId != DebugIndustry2BuildingId)
+                return;
+
+            string prefabName = info != null ? info.name : "UNKNOWN";
+            string source = ParkingSearchContext.Source ?? "NULL";
+
+            Log.Info(
+                "[Parking] CreateParkedVehicle created " +
+                $"buildingId={buildingId} parkedId={parked} prefab={prefabName} ownerCitizen={ownerCitizen} " +
+                $"pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
+                $"source={source} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"
+            );
         }
     }
 }

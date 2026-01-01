@@ -11,6 +11,7 @@ using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Patching.TMPE;
+using PickyParking.Patching.Game;
 using UnityEngine;
 
 namespace PickyParking.ModEntry
@@ -42,10 +43,9 @@ namespace PickyParking.ModEntry
             var settingsStorage = new ModSettingsStorage();
             var settingsController = ModSettingsController.Load(settingsStorage);
             ModSettings settings = settingsController.Current;
-            Log.SetVerboseEnabled(settings.EnableVerboseLogging);
-            ParkingSearchContext.EnableEpisodeLogs = settings.EnableVerboseLogging;
             var runtime = ModRuntime.Create(settings, settingsController, LevelBootstrap.Context);
             ModRuntime.SetCurrent(runtime);
+            ModRuntime.ApplyLoggingSettings(settings);
             ParkingRuntimeContext.SetCurrent(new ParkingRuntimeContext(
                 runtime.FeatureGate,
                 runtime.SupportedParkingLotRegistry,
@@ -128,7 +128,14 @@ namespace PickyParking.ModEntry
             ParkingRuntimeContext.ClearCurrent();
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
+            Log.SetUiDebugEnabled(false);
+            Log.SetTmpeDebugEnabled(false);
+            Log.SetPermissionDebugEnabled(false);
             ParkingSearchContext.EnableEpisodeLogs = false;
+            ParkingSearchContext.LogMinCandidates = ParkingSearchContext.DefaultLogMinCandidates;
+            ParkingSearchContext.LogMinDurationMs = ParkingSearchContext.DefaultLogMinDurationMs;
+            ParkingCandidateBlocker.EnableCandidateBlockerLogs = false;
+            VehicleManager_CreateParkedVehiclePatch.EnableCreateParkedVehicleLogs = false;
 
             SimThread.Dispatch(() =>
             {

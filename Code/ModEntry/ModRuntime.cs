@@ -8,6 +8,7 @@ using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.Debug;
+using PickyParking.Patching.Game;
 
 namespace PickyParking.ModEntry
 {
@@ -68,6 +69,29 @@ namespace PickyParking.ModEntry
         
         
         public static ModRuntime Current { get; private set; }
+
+        public static void ApplyLoggingSettings(ModSettings settings)
+        {
+            if (settings == null) return;
+
+            Log.SetVerboseEnabled(settings.EnableVerboseLogging);
+            ParkingSearchContext.EnableEpisodeLogs = settings.EnableDebugParkingSearchEpisodes;
+            ParkingSearchContext.LogMinCandidates = settings.EnableVerboseLogging
+                ? 1
+                : ParkingSearchContext.DefaultLogMinCandidates;
+            ParkingSearchContext.LogMinDurationMs = settings.EnableVerboseLogging
+                ? 0
+                : ParkingSearchContext.DefaultLogMinDurationMs;
+            ParkingCandidateBlocker.EnableCandidateBlockerLogs = settings.EnableDebugCandidateBlockerLogs;
+            VehicleManager_CreateParkedVehiclePatch.EnableCreateParkedVehicleLogs =
+                settings.EnableDebugCreateParkedVehicleLogs;
+            Log.SetUiDebugEnabled(settings.EnableDebugUiLogs);
+            Log.SetTmpeDebugEnabled(settings.EnableDebugTmpeLogs);
+            Log.SetPermissionDebugEnabled(settings.EnableDebugPermissionEvaluatorLogs);
+
+            if (Current != null && Current.GameAccess != null)
+                Current.GameAccess.DebugGameAccess = settings.EnableDebugGameAccessLogs;
+        }
 
         
         

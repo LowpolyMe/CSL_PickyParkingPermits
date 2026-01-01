@@ -48,7 +48,11 @@ namespace PickyParking.Features.ParkingPolicing
                 return new Result(true, failOpenReason);
 
             if (!_game.TryGetDriverInfo(vehicleId, out var driverContext))
+            {
+                if (PickyParking.Logging.Log.IsVerboseEnabled)
+                    PickyParking.Logging.Log.Info($"[Parking] Evaluate denied: no driver context vehicleId={vehicleId} buildingId={candidateBuildingId}");
                 return new Result(false, DecisionReason.Denied_NoDriverContext);
+            }
 
             Vector3? homePos;
             Vector3? workPos;
@@ -65,7 +69,11 @@ namespace PickyParking.Features.ParkingPolicing
                 return new Result(true, failOpenReason);
 
             if (!_game.TryGetCitizenInfo(citizenId, out var citizenContext))
+            {
+                if (PickyParking.Logging.Log.IsVerboseEnabled)
+                    PickyParking.Logging.Log.Info($"[Parking] EvaluateCitizen denied: no citizen context citizenId={citizenId} buildingId={candidateBuildingId}");
                 return new Result(false, DecisionReason.Denied_NoCitizenContext);
+            }
 
             Vector3? homePos;
             Vector3? workPos;
@@ -85,12 +93,16 @@ namespace PickyParking.Features.ParkingPolicing
             if (!_rules.TryGet(candidateBuildingId, out rule))
             {
                 failOpenReason = DecisionReason.Allowed_FailOpen_NoRuleConfigured;
+                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsPermissionDebugEnabled)
+                    PickyParking.Logging.Log.Info($"[Parking] Fail-open: no rule configured buildingId={candidateBuildingId}");
                 return false;
             }
 
             if (!_game.TryGetBuildingPosition(candidateBuildingId, out lotPos))
             {
                 failOpenReason = DecisionReason.Allowed_FailOpen_TryGetBuildingPosition;
+                if (PickyParking.Logging.Log.IsVerboseEnabled)
+                    PickyParking.Logging.Log.Info($"[Parking] Fail-open: TryGetBuildingPosition failed buildingId={candidateBuildingId}");
                 return false;
             }
 

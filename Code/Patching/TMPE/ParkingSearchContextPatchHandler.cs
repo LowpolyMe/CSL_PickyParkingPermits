@@ -39,6 +39,14 @@ namespace PickyParking.Patching.TMPE
             try
             {
                 uint citizenId = driverInstance.m_citizen;
+                if (Log.IsVerboseEnabled && citizenId == 0u && vehicleId != 0)
+                {
+                    Log.Info(
+                        "[TMPE] BeginFindParkingForCitizen: driver citizenId=0 " +
+                        $"vehicleId={vehicleId} sourceBuilding={driverInstance.m_sourceBuilding} targetBuilding={driverInstance.m_targetBuilding}"
+                    );
+                }
+
                 if (citizenId != 0u || vehicleId != 0)
                 {
                     ParkingSearchContext.Push(vehicleId, citizenId, "TMPE.FindParkingSpaceForCitizen");

@@ -279,7 +279,7 @@ namespace PickyParking.UI
             UpdatePreviewRule();
             UpdateParkingSpaceStats();
 
-            if (hasStoredRule && Log.IsVerboseEnabled)
+            if (hasStoredRule && Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
                 Log.Info("[UI] Refreshed panel for building " + _state.BuildingId + ": " + _workflow.FormatRule(storedRule));
         }
 

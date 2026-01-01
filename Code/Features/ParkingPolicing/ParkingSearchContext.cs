@@ -13,6 +13,8 @@ namespace PickyParking.Features.ParkingPolicing
     public static class ParkingSearchContext
     {
         private static int _wrongThreadLogged;
+        public const int DefaultLogMinCandidates = 10;
+        public const int DefaultLogMinDurationMs = 50;
 
         public static int Depth
         {
@@ -23,8 +25,8 @@ namespace PickyParking.Features.ParkingPolicing
             }
         }
         public static bool EnableEpisodeLogs = true;
-        public static int LogMinCandidates = 10;
-        public static int LogMinDurationMs = 50;
+        public static int LogMinCandidates = DefaultLogMinCandidates;
+        public static int LogMinDurationMs = DefaultLogMinDurationMs;
 
         internal struct Frame
         {
