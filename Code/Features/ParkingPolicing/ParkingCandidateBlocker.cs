@@ -144,7 +144,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             foreach (var kvp in context.ParkingRulesConfigRegistry.Enumerate())
             {
-                if (!IsSupportedParkingLot(context, kvp.Key))
+                if (!IsInScope(context, kvp.Key))
                     continue;
 
                 spacePositions.Clear();
@@ -193,15 +193,6 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             return false;
-        }
-
-        private static bool IsSupportedParkingLot(ParkingRuntimeContext services, ushort buildingId)
-        {
-            if (services == null) return false;
-            if (!services.GameAccess.TryGetBuildingInfo(buildingId, out var info)) return false;
-
-            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
-            return services.SupportedParkingLotRegistry.Contains(key);
         }
 
         private static bool IsInScope(ParkingRuntimeContext services, ushort buildingId)
