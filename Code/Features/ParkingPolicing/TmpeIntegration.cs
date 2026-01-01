@@ -25,6 +25,10 @@ namespace PickyParking.Features.ParkingPolicing
         private Type _apmType;
         private object _apmInstance;
         private MethodInfo _tryMoveParkedVehicle;
+        private FieldInfo _findParkingSpacePropDelegateField;
+        private Delegate _findParkingSpacePropDelegate;
+        private VehicleInfo _defaultPassengerCarInfo;
+        private bool _defaultPassengerCarInfoSearched;
 
         public TmpeIntegration(FeatureGate featureGate, ParkingPermissionEvaluator evaluator)
         {
@@ -169,6 +173,73 @@ namespace PickyParking.Features.ParkingPolicing
                 BindingFlags.Public | BindingFlags.Instance);
 
             return _tryMoveParkedVehicle != null;
+        }
+
+        private bool EnsureFindParkingSpacePropDelegate()
+        {
+            if (_findParkingSpacePropDelegate != null && _apmInstance != null)
+                return true;
+
+            _apmType = Type.GetType(AdvancedParkingManagerType, throwOnError: false);
+            if (_apmType == null) return false;
+
+            FieldInfo instanceField = _apmType.GetField("Instance", BindingFlags.Public | BindingFlags.Static);
+            if (instanceField == null) return false;
+
+            _apmInstance = instanceField.GetValue(null);
+            if (_apmInstance == null) return false;
+
+            _findParkingSpacePropDelegateField = _apmType.GetField(
+                "_findParkingSpacePropDelegate",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (_findParkingSpacePropDelegateField == null) return false;
+
+            _findParkingSpacePropDelegate =
+                _findParkingSpacePropDelegateField.GetValue(_apmInstance) as Delegate;
+
+            return _findParkingSpacePropDelegate != null;
+        }
+
+        public bool TryGetFindParkingSpacePropDelegate(out Delegate findDelegate)
+        {
+            findDelegate = null;
+            if (!_isFeatureActive.IsActive) return false;
+
+            if (!EnsureFindParkingSpacePropDelegate())
+                return false;
+
+            findDelegate = _findParkingSpacePropDelegate;
+            return findDelegate != null;
+        }
+
+        public bool TryGetDefaultPassengerCarInfo(out VehicleInfo info)
+        {
+            info = null;
+            if (_defaultPassengerCarInfoSearched)
+            {
+                info = _defaultPassengerCarInfo;
+                return info != null;
+            }
+
+            _defaultPassengerCarInfoSearched = true;
+
+            int loadedCount = PrefabCollection<VehicleInfo>.LoadedCount();
+            for (uint i = 0; i < loadedCount; i++)
+            {
+                VehicleInfo candidate = PrefabCollection<VehicleInfo>.GetLoaded(i);
+                if (candidate != null && candidate.m_vehicleAI is PassengerCarAI)
+                {
+                    _defaultPassengerCarInfo = candidate;
+                    break;
+                }
+            }
+
+            info = _defaultPassengerCarInfo;
+            if (info == null && Log.IsVerboseEnabled)
+                Log.Info("[TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
+
+            return info != null;
         }
 
         public bool TryMoveParkedVehicleWithConfigDistance(ushort parkedVehicleId, uint ownerCitizenId, ushort homeId, Vector3 refPos)

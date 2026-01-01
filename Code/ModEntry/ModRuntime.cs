@@ -105,7 +105,10 @@ namespace PickyParking.ModEntry
                 
             }
 
-            var gameAccess = new GameAccess();
+            var gameAccess = new GameAccess
+            {
+                DebugGameAccess = false
+            };
 
             var policy = new ParkingRuleEvaluator();
             var evaluator = new ParkingPermissionEvaluator(
