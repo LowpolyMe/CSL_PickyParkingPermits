@@ -99,9 +99,6 @@ namespace PickyParking.GameAdapters
                 propInfo = propInfo.GetVariation(ref randomizer);
                 if (propInfo == null) continue;
 
-                if (string.Equals(propInfo.name, InvisibleParkingSpacePropName, StringComparison.Ordinal))
-                    continue;
-
                 var spaces = propInfo.m_parkingSpaces;
                 if (spaces == null || spaces.Length == 0) continue;
 
@@ -315,9 +312,6 @@ namespace PickyParking.GameAdapters
 
                 propInfo = propInfo.GetVariation(ref randomizer);
                 if (propInfo == null) continue;
-
-                if (string.Equals(propInfo.name, InvisibleParkingSpacePropName, StringComparison.Ordinal))
-                    continue;
 
                 var spaces = propInfo.m_parkingSpaces;
                 if (spaces == null || spaces.Length == 0) continue;

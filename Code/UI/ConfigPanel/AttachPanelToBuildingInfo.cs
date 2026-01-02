@@ -63,10 +63,8 @@ namespace PickyParking.UI
                 UpdatePanels(false);
                 return;
             }
-
-            int totalSpaces;
-            bool hasParkingSpaces = runtime.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces) && totalSpaces > 0;
-            if (!hasParkingSpaces)
+            
+            if (!HasParkingSpaces(runtime, buildingId))
             {
                 _lastSelectedBuildingId = buildingId;
                 _lastPrefabSupported = false;
@@ -85,6 +83,13 @@ namespace PickyParking.UI
             BindPanelsForSelection(buildingId, info, prefabSupported, supportChanged);
 
             UpdatePanels(prefabSupported);
+        }
+
+        private static bool HasParkingSpaces(ModRuntime runtime, ushort buildingId)
+        {
+            int totalSpaces;
+            bool hasParkingSpaces = runtime.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces) && totalSpaces > 0;
+            return hasParkingSpaces;
         }
 
         private void TryInject()
