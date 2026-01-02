@@ -14,10 +14,11 @@ namespace PickyParking.GameAdapters
     {
         private const int ParkedGridSafetyLimit = 32768;
         private const float TmpeSpaceMatchEpsilon = 0.25f;
-        private const string InvisibleParkingSpacePropName = "Invisible Parking Space";
+        private const float ParkingSpaceDedupScale = 4f;
         private readonly List<Vector3> _parkingSpacePositions = new List<Vector3>(64);
         private readonly HashSet<ushort> _foundParkedVehicleIds = new HashSet<ushort>();
         private readonly HashSet<long> _debugUniquePositions = new HashSet<long>();
+        private readonly HashSet<PositionKey> _uniqueSpaceKeys = new HashSet<PositionKey>();
         private readonly ParkedVehicleQueries _parkedVehicleQueries;
 
         public ParkingSpaceQueries(ParkedVehicleQueries parkedVehicleQueries)
@@ -88,6 +89,7 @@ namespace PickyParking.GameAdapters
 
             bool transformMatrixCalculated = false;
             Matrix4x4 buildingMatrix = default;
+            _uniqueSpaceKeys.Clear();
 
             foreach (BuildingInfo.Prop prop in buildingInfo.m_props)
             {
@@ -128,7 +130,9 @@ namespace PickyParking.GameAdapters
                 for (int i = 0; i < spaces.Length; i++)
                 {
                     Vector3 local = spaces[i].m_position;
-                    outPositions.Add(propMatrix.MultiplyPoint(local));
+                    Vector3 spaceWorldPos = propMatrix.MultiplyPoint(local);
+                    if (_uniqueSpaceKeys.Add(PositionKey.FromVector(spaceWorldPos, ParkingSpaceDedupScale)))
+                        outPositions.Add(spaceWorldPos);
                 }
             }
 
@@ -291,6 +295,7 @@ namespace PickyParking.GameAdapters
 
             bool transformMatrixCalculated = false;
             Matrix4x4 buildingMatrix = default;
+            _uniqueSpaceKeys.Clear();
 
             bool logTmpeSpaceDetails = Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs &&
                                       ParkingDebugSettings.IsBuildingDebugEnabled(buildingId);
@@ -341,6 +346,8 @@ namespace PickyParking.GameAdapters
                 for (int i = 0; i < spaces.Length; i++)
                 {
                     Vector3 spaceWorldPos = propMatrix.MultiplyPoint(spaces[i].m_position);
+                    if (!_uniqueSpaceKeys.Add(PositionKey.FromVector(spaceWorldPos, ParkingSpaceDedupScale)))
+                        continue;
                     float maxDistance = TmpeSpaceMatchEpsilon;
                     Vector3 parkPos = default;
                     Quaternion parkRot = default;
@@ -582,6 +589,50 @@ namespace PickyParking.GameAdapters
                 $"buildingId={buildingId} spaces={totalSpaces} unique={uniqueCount} occupied={occupiedSpaces} " +
                 $"maxSnapDistance={maxSnapDistance} sample=[{sample}]"
             );
+        }
+
+        private struct PositionKey : IEquatable<PositionKey>
+        {
+            public readonly int X;
+            public readonly int Y;
+            public readonly int Z;
+
+            public PositionKey(int x, int y, int z)
+            {
+                X = x;
+                Y = y;
+                Z = z;
+            }
+
+            public bool Equals(PositionKey other)
+            {
+                return X == other.X && Y == other.Y && Z == other.Z;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PositionKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 31 + X;
+                    hash = hash * 31 + Y;
+                    hash = hash * 31 + Z;
+                    return hash;
+                }
+            }
+
+            public static PositionKey FromVector(Vector3 pos, float scale)
+            {
+                return new PositionKey(
+                    Mathf.RoundToInt(pos.x * scale),
+                    Mathf.RoundToInt(pos.y * scale),
+                    Mathf.RoundToInt(pos.z * scale));
+            }
         }
     }
 }
