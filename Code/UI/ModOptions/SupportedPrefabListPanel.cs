@@ -6,7 +6,6 @@ using ColossalFramework;
 using ColossalFramework.UI;
 using PickyParking.Logging;
 using PickyParking.Features.ParkingLotPrefabs;
-using PickyParking.ModEntry;
 using PickyParking.Settings;
 
 namespace PickyParking.UI
@@ -36,6 +35,12 @@ namespace PickyParking.UI
         private bool _refreshQueued;
         private Action _saveSettings;
         private UITextureAtlas _defaultAtlas;
+        private UiServices _services;
+
+        public void Initialize(UiServices services)
+        {
+            _services = services;
+        }
 
         public override void Start()
         {
@@ -368,12 +373,11 @@ namespace PickyParking.UI
             }
         }
 
-        private static bool TryBuildRulesCountByPrefabName(out Dictionary<string, int> counts)
+        private bool TryBuildRulesCountByPrefabName(out Dictionary<string, int> counts)
         {
             counts = null;
 
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime == null || runtime.ParkingRulesConfigRegistry == null)
+            if (_services == null || _services.ParkingRulesConfigRegistry == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
                     Log.Info("[UI] Rules count build skipped: runtime or registry missing.");
@@ -389,7 +393,7 @@ namespace PickyParking.UI
 
             var map = new Dictionary<string, int>();
             int totalRules = 0;
-            foreach (var pair in runtime.ParkingRulesConfigRegistry.Enumerate())
+            foreach (var pair in _services.ParkingRulesConfigRegistry.Enumerate())
             {
                 ushort buildingId = pair.Key;
                 if (buildingId == 0)
@@ -443,9 +447,8 @@ namespace PickyParking.UI
             if (_prefabKeys != null)
                 removed = _prefabKeys.Remove(key);
 
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime != null && runtime.SupportedParkingLotRegistry != null)
-                runtime.SupportedParkingLotRegistry.Remove(key);
+            if (_services != null && _services.SupportedParkingLotRegistry != null)
+                _services.SupportedParkingLotRegistry.Remove(key);
 
             if (removed && _saveSettings != null)
                 _saveSettings();
@@ -472,11 +475,11 @@ namespace PickyParking.UI
             return PrefabCollection<BuildingInfo>.LoadedCount() > 0;
         }
 
-        private static bool ShouldShowInstances(bool showThumbnails)
+        private bool ShouldShowInstances(bool showThumbnails)
         {
             return showThumbnails
-                && ModRuntime.Current != null
-                && ModRuntime.Current.ParkingRulesConfigRegistry != null
+                && _services != null
+                && _services.ParkingRulesConfigRegistry != null
                 && Singleton<BuildingManager>.exists;
         }
 

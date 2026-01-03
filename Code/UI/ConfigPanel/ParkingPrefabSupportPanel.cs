@@ -2,7 +2,6 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Logging;
-using PickyParking.ModEntry;
 
 namespace PickyParking.UI
 {
@@ -16,6 +15,12 @@ namespace PickyParking.UI
         private BuildingInfo _buildingInfo;
         private UILabel _messageLabel;
         private UIButton _actionButton;
+        private UiServices _services;
+
+        public void Initialize(UiServices services)
+        {
+            _services = services;
+        }
 
         public override void Start()
         {
@@ -136,20 +141,19 @@ namespace PickyParking.UI
             if (_buildingInfo == null)
                 return;
 
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime == null || runtime.SupportedParkingLotRegistry == null)
+            if (_services == null || _services.SupportedParkingLotRegistry == null)
                 return;
 
             PrefabKey key = ParkingLotPrefabKeyFactory.CreateKey(_buildingInfo);
-            bool added = runtime.SupportedParkingLotRegistry.Add(key);
+            bool added = _services.SupportedParkingLotRegistry.Add(key);
             if (!added)
                 return;
 
-            if (runtime.SettingsController != null && runtime.SettingsController.Current != null)
+            if (_services.SettingsController != null && _services.SettingsController.Current != null)
             {
-                runtime.SettingsController.Current.SupportedParkingLotPrefabs =
-                    new System.Collections.Generic.List<PrefabKey>(runtime.SupportedParkingLotRegistry.EnumerateKeys());
-                runtime.SettingsController.Save("UI.AddSupportedPrefab");
+                _services.SettingsController.Current.SupportedParkingLotPrefabs =
+                    new System.Collections.Generic.List<PrefabKey>(_services.SupportedParkingLotRegistry.EnumerateKeys());
+                _services.SettingsController.Save("UI.AddSupportedPrefab");
             }
             else
             {

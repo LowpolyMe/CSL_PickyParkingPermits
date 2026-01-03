@@ -2,7 +2,6 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
-using PickyParking.ModEntry;
 using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.UI
@@ -25,6 +24,16 @@ namespace PickyParking.UI
         private UIComponent _paddingSpacer;
         private bool _isVisibilitySubscribed;
         private bool _hasLoggedViewDump;
+        private UiServices _services;
+
+        public void Initialize(UiServices services)
+        {
+            _services = services;
+            if (_panel != null)
+                _panel.Initialize(services);
+            if (_supportPanel != null)
+                _supportPanel.Initialize(services);
+        }
 
         public void Start()
         {
@@ -33,8 +42,8 @@ namespace PickyParking.UI
 
         public void Update()
         {
-            var runtime = ModRuntime.Current;
-            if (runtime == null)
+            var services = _services;
+            if (services == null)
             {
                 UpdatePanels(false);
                 return;
@@ -51,20 +60,20 @@ namespace PickyParking.UI
                     return;
             }
 
-            if (!runtime.FeatureGate.IsActive)
+            if (!services.IsFeatureActive)
             {
                 UpdatePanels(false);
                 return;
             }
 
-            if (!runtime.GameAccess.TryGetSelectedBuilding(out ushort buildingId, out BuildingInfo info))
+            if (!services.TryGetSelectedBuilding(out ushort buildingId, out BuildingInfo info))
             {
                 _lastSelectedBuildingId = 0;
                 UpdatePanels(false);
                 return;
             }
             
-            if (!HasParkingSpaces(runtime, buildingId))
+            if (!HasParkingSpaces(services, buildingId))
             {
                 _lastSelectedBuildingId = buildingId;
                 _lastPrefabSupported = false;
@@ -75,7 +84,7 @@ namespace PickyParking.UI
                 return;
             }
 
-            bool prefabSupported = IsSupportedParkingLot(runtime, info);
+            bool prefabSupported = IsSupportedParkingLot(services, info);
             if (_panel != null)
                 _panel.SetPrefabSupported(prefabSupported);
 
@@ -85,10 +94,12 @@ namespace PickyParking.UI
             UpdatePanels(prefabSupported);
         }
 
-        private static bool HasParkingSpaces(ModRuntime runtime, ushort buildingId)
+        private static bool HasParkingSpaces(UiServices services, ushort buildingId)
         {
             int totalSpaces;
-            bool hasParkingSpaces = runtime.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces) && totalSpaces > 0;
+            bool hasParkingSpaces = services.GameAccess != null
+                && services.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces)
+                && totalSpaces > 0;
             return hasParkingSpaces;
         }
 
@@ -183,12 +194,14 @@ namespace PickyParking.UI
             if (existing != null)
             {
                 _panel = existing;
+                _panel.Initialize(_services);
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
                     Log.Info("[UI] Reusing existing ParkingRulesConfigPanel.");
             }
             else
             {
                 _panel = wrapper.AddUIComponent<ParkingRulesConfigPanel>();
+                _panel.Initialize(_services);
                 _panel.relativePosition = Vector3.zero;
                 _panel.size = wrapper.size;
                 int targetIndex = Mathf.Min(3, wrapper.childCount - 1);
@@ -202,12 +215,14 @@ namespace PickyParking.UI
             if (supportExisting != null)
             {
                 _supportPanel = supportExisting;
+                _supportPanel.Initialize(_services);
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
                     Log.Info("[UI] Reusing existing ParkingPrefabSupportPanel.");
                 return;
             }
 
             _supportPanel = wrapper.AddUIComponent<ParkingPrefabSupportPanel>();
+            _supportPanel.Initialize(_services);
             _supportPanel.relativePosition = Vector3.zero;
             _supportPanel.size = wrapper.size;
             int supportIndex = Mathf.Min(3, wrapper.childCount - 1);
@@ -310,16 +325,16 @@ namespace PickyParking.UI
             }
         }
 
-        private static bool IsSupportedParkingLot(ModRuntime runtime, BuildingInfo info)
+        private static bool IsSupportedParkingLot(UiServices services, BuildingInfo info)
         {
-            if (runtime == null || info == null)
+            if (services == null || info == null)
                 return false;
 
-            if (runtime.SupportedParkingLotRegistry == null)
+            if (services.SupportedParkingLotRegistry == null)
                 return false;
 
             var key = ParkingLotPrefabKeyFactory.CreateKey(info);
-            return runtime.SupportedParkingLotRegistry.Contains(key);
+            return services.SupportedParkingLotRegistry.Contains(key);
         }
 
         private void HandleHostVisibilityChanged(UIComponent component, bool isVisible)

@@ -1,7 +1,6 @@
 using System;
 using ColossalFramework.UI;
 using ICities;
-using PickyParking.ModEntry;
 using PickyParking.Settings;
 using PickyParking.UI.ModResources;
 using UnityEngine;
@@ -10,7 +9,7 @@ namespace PickyParking.UI
 {
     internal static class CustomizationOptions
     {
-        public static void Build(UIHelperBase helper, ModSettings settings, Action saveSettings)
+        public static void Build(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
         {
             UIHelperBase overlayGroup = helper.AddGroup("Overlay Colors");
             Texture2D hueTexture = ModResourceLoader.LoadTexture("HueGradient.png");
@@ -23,7 +22,7 @@ namespace PickyParking.UI
                 {
                     settings.ResidentsRadiusHue = value;
                     SaveSettings(saveSettings);
-                    ReloadSettings("OptionsUI: Resident radius hue");
+                    ReloadSettings("OptionsUI: Resident radius hue", services);
                 },
                 hueTexture);
 
@@ -35,7 +34,7 @@ namespace PickyParking.UI
                 {
                     settings.WorkSchoolRadiusHue = value;
                     SaveSettings(saveSettings);
-                    ReloadSettings("OptionsUI: Work/school radius hue");
+                    ReloadSettings("OptionsUI: Work/school radius hue", services);
                 },
                 hueTexture);
         }
@@ -81,13 +80,11 @@ namespace PickyParking.UI
                 saveSettings();
         }
 
-        private static void ReloadSettings(string reason)
+        private static void ReloadSettings(string reason, UiServices services)
         {
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime == null || runtime.SettingsController == null || runtime.SettingsController.Current == null)
+            if (services == null)
                 return;
-
-            runtime.SettingsController.Reload(reason);
+            services.ReloadSettings(reason);
         }
     }
 }

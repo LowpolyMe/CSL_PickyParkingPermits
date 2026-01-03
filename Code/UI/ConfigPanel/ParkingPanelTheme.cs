@@ -1,10 +1,14 @@
 using UnityEngine;
-using PickyParking.ModEntry;
-
 namespace PickyParking.UI
 {
     internal sealed class ParkingPanelTheme
     {
+        private readonly UiServices _services;
+
+        public ParkingPanelTheme(UiServices services)
+        {
+            _services = services;
+        }
         public float RowHeight { get; } = 35f;
         public float HorizontalPadding { get; } = 10f;
         public float VerticalPadding { get; } = 2f;
@@ -42,18 +46,16 @@ namespace PickyParking.UI
         private Color32 GetResidentsFillColor()
         {
             float hue = DefaultResidentsHue;
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime != null && runtime.SettingsController != null && runtime.SettingsController.Current != null)
-                hue = runtime.SettingsController.Current.ResidentsRadiusHue;
+            if (_services != null && _services.Settings != null)
+                hue = _services.Settings.ResidentsRadiusHue;
             return ColorConversion.FromHue(hue);
         }
 
         private Color32 GetWorkSchoolFillColor()
         {
             float hue = DefaultWorkSchoolHue;
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime != null && runtime.SettingsController != null && runtime.SettingsController.Current != null)
-                hue = runtime.SettingsController.Current.WorkSchoolRadiusHue;
+            if (_services != null && _services.Settings != null)
+                hue = _services.Settings.WorkSchoolRadiusHue;
             return ColorConversion.FromHue(hue);
         }
     }

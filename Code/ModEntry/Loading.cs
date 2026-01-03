@@ -25,6 +25,7 @@ namespace PickyParking.ModEntry
         private GameObject _runtimeObject;
         private static bool _assemblyVersionLogged;
         private int _unloadSequence;
+        private UiServices _uiServices;
 
         public override void OnCreated(ILoading loading)
         {
@@ -52,6 +53,8 @@ namespace PickyParking.ModEntry
             _patches = new PatchSetup();
             _patches.ApplyAll();
 
+            _uiServices = new UiServices(runtime, settingsController);
+            OverlayRenderer.SetServices(_uiServices);
             CreateRuntimeObjects(mode);
 
             Log.Info("[Parking] Loaded.");
@@ -83,7 +86,8 @@ namespace PickyParking.ModEntry
             UnityEngine.Object.DontDestroyOnLoad(_runtimeObject);
 
             _runtimeObject.AddComponent<DebugHotkeyListener>();
-            _runtimeObject.AddComponent<AttachPanelToBuildingInfo>();
+            var attachPanel = _runtimeObject.AddComponent<AttachPanelToBuildingInfo>();
+            attachPanel.Initialize(_uiServices);
         }
 
         private void DestroyRuntimeObjects()
@@ -98,6 +102,8 @@ namespace PickyParking.ModEntry
         private void Unload(bool clearLevelContext)
         {
             DestroyRuntimeObjects();
+            OverlayRenderer.SetServices(null);
+            _uiServices = null;
             ParkingRulesIconAtlas.ClearCache();
             ParkingSearchContext.ClearAll();
             int unloadId = ++_unloadSequence;

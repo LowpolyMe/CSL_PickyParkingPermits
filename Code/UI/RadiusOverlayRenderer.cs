@@ -1,8 +1,6 @@
 using ColossalFramework;
 using ColossalFramework.Math;
-using PickyParking.ModLifecycle;
 using UnityEngine;
-using PickyParking.ModEntry;
 using PickyParking.Features.ParkingRules;
 
 namespace PickyParking.UI
@@ -16,28 +14,27 @@ namespace PickyParking.UI
         private const float MinOverlayY = -100000f;
         private const float MaxOverlayY = 100000f;
 
-        public static void RenderOverlay(RenderManager.CameraInfo cameraInfo)
+        public static void RenderOverlay(RenderManager.CameraInfo cameraInfo, UiServices services)
         {
-            ModRuntime runtime = ModRuntime.Current;
-            if (runtime == null || !runtime.FeatureGate.IsActive)
+            if (services == null || !services.IsFeatureActive)
                 return;
 
-            if (!runtime.GameAccess.TryGetSelectedBuilding(out ushort buildingId, out _))
+            if (!services.TryGetSelectedBuilding(out ushort buildingId, out _))
                 return;
 
             ParkingRulesConfigDefinition rule;
-            if (runtime.ParkingRulePreviewState != null
-                && runtime.ParkingRulePreviewState.TryGetPreview(buildingId, out var previewRule))
+            if (services.ParkingRulePreviewState != null
+                && services.ParkingRulePreviewState.TryGetPreview(buildingId, out var previewRule))
             {
                 rule = previewRule;
             }
-            else if (!runtime.ParkingRulesConfigRegistry.TryGet(buildingId, out rule))
+            else if (services.ParkingRulesConfigRegistry == null
+                || !services.ParkingRulesConfigRegistry.TryGet(buildingId, out rule))
             {
                 return;
             }
             
-
-            if (!runtime.GameAccess.TryGetBuildingPosition(buildingId, out Vector3 center))
+            if (!services.TryGetBuildingPosition(buildingId, out Vector3 center))
                 return;
 
             if (cameraInfo == null)
@@ -48,10 +45,10 @@ namespace PickyParking.UI
 
             float residentsHue = 0.35f;
             float workSchoolHue = 0.1f;
-            if (runtime.SettingsController != null && runtime.SettingsController.Current != null)
+            if (services.Settings != null)
             {
-                residentsHue = runtime.SettingsController.Current.ResidentsRadiusHue;
-                workSchoolHue = runtime.SettingsController.Current.WorkSchoolRadiusHue;
+                residentsHue = services.Settings.ResidentsRadiusHue;
+                workSchoolHue = services.Settings.WorkSchoolRadiusHue;
             }
 
             if (rule.ResidentsWithinRadiusOnly)

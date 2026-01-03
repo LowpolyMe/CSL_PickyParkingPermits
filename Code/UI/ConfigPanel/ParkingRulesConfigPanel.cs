@@ -2,7 +2,6 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
-using PickyParking.ModEntry;
 using PickyParking.Logging;
 
 namespace PickyParking.UI
@@ -23,16 +22,21 @@ namespace PickyParking.UI
         private GameAccess _game;
         private ParkingRulesConfigUiConfig _uiConfig;
         private ParkingPanelTheme _theme;
+        private UiServices _services;
+
+        public void Initialize(UiServices services)
+        {
+            _services = services;
+        }
 
         public override void Start()
         {
             base.Start();
 
-            ModRuntime runtime = ModRuntime.Current;
-            _editor = runtime != null ? runtime.ParkingRulesConfigEditor : null;
-            _game = runtime != null ? runtime.GameAccess : null;
+            _editor = _services != null ? _services.ParkingRulesConfigEditor : null;
+            _game = _services != null ? _services.GameAccess : null;
             _uiConfig = _editor != null ? _editor.UiConfig : ParkingRulesConfigUiConfig.Default;
-            _theme = new ParkingPanelTheme();
+            _theme = new ParkingPanelTheme(_services);
             _state = new ParkingRulesConfigPanelState();
 
             _view = ParkingRulesConfigPanelView.Build(

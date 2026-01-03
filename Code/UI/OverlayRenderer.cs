@@ -4,9 +4,19 @@ namespace PickyParking.UI
 {
     public static class OverlayRenderer
     {
+        private static UiServices _services;
+
+        public static void SetServices(UiServices services)
+        {
+            _services = services;
+        }
+
         public static void RenderOverlay(RenderManager.CameraInfo cameraInfo)
         {
-            RadiusOverlayRenderer.RenderOverlay(cameraInfo);
+            if (_services == null)
+                return;
+
+            RadiusOverlayRenderer.RenderOverlay(cameraInfo, _services);
         }
     }
 }
