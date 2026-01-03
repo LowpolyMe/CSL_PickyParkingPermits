@@ -364,8 +364,7 @@ namespace PickyParking.UI
             for (int i = count - 1; i >= 0; i--)
             {
                 var component = _rowsPanel.components[i];
-                if (component != null)
-                    Destroy(component.gameObject);
+                DisableAndDestroy(component);
             }
         }
 
@@ -494,8 +493,7 @@ namespace PickyParking.UI
             for (int i = count - 1; i >= 0; i--)
             {
                 UIComponent component = components[i];
-                if (component != null)
-                    Destroy(component.gameObject);
+                DisableAndDestroy(component);
             }
         }
 
@@ -586,6 +584,17 @@ namespace PickyParking.UI
         {
             UIView view = UIView.GetAView();
             return view != null ? view.defaultAtlas : null;
+        }
+
+        private static void DisableAndDestroy(UIComponent component)
+        {
+            if (component == null)
+                return;
+
+            component.isVisible = false;
+            component.isInteractive = false;
+            component.isEnabled = false;
+            Destroy(component.gameObject);
         }
 
         private struct ColumnLayout
