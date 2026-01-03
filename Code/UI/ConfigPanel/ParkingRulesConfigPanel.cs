@@ -12,10 +12,6 @@ namespace PickyParking.UI
     
     public sealed class ParkingRulesConfigPanel : UIPanel
     {
-        private const float SliderAllThreshold = 0.99f;
-        private const ushort DefaultNewRuleRadiusMeters = 500;
-        private const float ParkingStatsUpdateIntervalSeconds = 0.5f;
-
         private ParkingRulesConfigPanelState _state;
         private ParkingRulesConfigPanelView _view;
         private ParkingRulesConfigEditor _editor;
@@ -63,7 +59,7 @@ namespace PickyParking.UI
             if (Time.unscaledTime < _state.NextParkingStatsUpdateTime)
                 return;
 
-            _state.NextParkingStatsUpdateTime = Time.unscaledTime + ParkingStatsUpdateIntervalSeconds;
+            _state.NextParkingStatsUpdateTime = Time.unscaledTime + ConfigPanelUiValues.ConfigPanel.ParkingStatsUpdateIntervalSeconds;
             UpdateParkingSpaceStats();
         }
 
@@ -224,7 +220,7 @@ namespace PickyParking.UI
             }
             else if (value <= 0f)
                 return 0f;
-            if (value >= SliderAllThreshold)
+            if (value >= ConfigPanelUiValues.ConfigPanel.SliderAllThreshold)
                 return 1f;
             return value;
         }
@@ -380,9 +376,9 @@ namespace PickyParking.UI
             {
                 _state.BaselineRule = new ParkingRulesConfigDefinition(
                     residentsWithinRadiusOnly: true,
-                    residentsRadiusMeters: DefaultNewRuleRadiusMeters,
+                    residentsRadiusMeters: ConfigPanelUiValues.ConfigPanel.DefaultNewRuleRadiusMeters,
                     workSchoolWithinRadiusOnly: true,
-                    workSchoolRadiusMeters: DefaultNewRuleRadiusMeters,
+                    workSchoolRadiusMeters: ConfigPanelUiValues.ConfigPanel.DefaultNewRuleRadiusMeters,
                     visitorsAllowed: true);
                 ApplyRuleToUi(_state.BaselineRule);
                 _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), "DefaultsOnEnable");

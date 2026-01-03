@@ -8,12 +8,6 @@ namespace PickyParking.UI
 {
     public sealed class AttachPanelToBuildingInfo : MonoBehaviour
     {
-        private const string CityServicePanelName = "CityServiceWorldInfoPanel";
-        private const string CityServicePanelLibraryName = "(Library) CityServiceWorldInfoPanel";
-        private const string WrapperContainerPath = "Wrapper";
-        private const float InjectionRetrySeconds = 1f;
-        private const float WrapperPadding = 25f;
-
         private ParkingRulesConfigPanel _panel;
         private ParkingPrefabSupportPanel _supportPanel;
         private ushort _lastSelectedBuildingId;
@@ -54,7 +48,7 @@ namespace PickyParking.UI
                 if (Time.unscaledTime < _nextInjectionAttemptTime)
                     return;
 
-                _nextInjectionAttemptTime = Time.unscaledTime + InjectionRetrySeconds;
+                _nextInjectionAttemptTime = Time.unscaledTime + ConfigPanelUiValues.AttachPanel.InjectionRetrySeconds;
                 TryInject();
                 if (_panel == null && _supportPanel == null)
                     return;
@@ -108,23 +102,23 @@ namespace PickyParking.UI
             if (_panel != null)
                 return;
 
-            GameObject panelObject = GameObject.Find(CityServicePanelLibraryName);
+            GameObject panelObject = GameObject.Find(ConfigPanelUiValues.AttachPanel.CityServicePanelLibraryName);
             if (panelObject == null)
-                panelObject = GameObject.Find(CityServicePanelName);
+                panelObject = GameObject.Find(ConfigPanelUiValues.AttachPanel.CityServicePanelName);
             if (panelObject == null)
             {
                 UIView view = UIView.GetAView();
                 if (view != null)
                 {
-                    UIComponent found = view.FindUIComponent<UIComponent>(CityServicePanelLibraryName);
+                    UIComponent found = view.FindUIComponent<UIComponent>(ConfigPanelUiValues.AttachPanel.CityServicePanelLibraryName);
                     if (found == null)
-                        found = view.FindUIComponent<UIComponent>(CityServicePanelName);
+                        found = view.FindUIComponent<UIComponent>(ConfigPanelUiValues.AttachPanel.CityServicePanelName);
                     if (found != null)
                         panelObject = found.gameObject;
 
                     if (panelObject == null)
                     {
-                        UIComponent prefixMatch = FindComponentByContains(view, CityServicePanelName);
+                        UIComponent prefixMatch = FindComponentByContains(view, ConfigPanelUiValues.AttachPanel.CityServicePanelName);
                         if (prefixMatch != null)
                         {
                             panelObject = prefixMatch.gameObject;
@@ -165,11 +159,11 @@ namespace PickyParking.UI
                     Log.Info("[UI] Subscribed to CityServiceWorldInfoPanel visibility.");
             }
 
-            Transform wrapperTransform = root.transform.Find(WrapperContainerPath);
+            Transform wrapperTransform = root.transform.Find(ConfigPanelUiValues.AttachPanel.WrapperContainerPath);
             if (wrapperTransform == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Wrapper container path not found: " + WrapperContainerPath);
+                    Log.Info("[UI] Wrapper container path not found: " + ConfigPanelUiValues.AttachPanel.WrapperContainerPath);
                 return;
             }
 
@@ -406,7 +400,7 @@ namespace PickyParking.UI
             UIPanel spacer = _wrapperContainer.AddUIComponent<UIPanel>();
             spacer.name = "PickyParkingWrapperPadding";
             spacer.width = _wrapperContainer.width;
-            spacer.height = WrapperPadding;
+            spacer.height = ConfigPanelUiValues.AttachPanel.WrapperPadding;
             spacer.isVisible = true;
             spacer.autoLayout = false;
             spacer.backgroundSprite = string.Empty;

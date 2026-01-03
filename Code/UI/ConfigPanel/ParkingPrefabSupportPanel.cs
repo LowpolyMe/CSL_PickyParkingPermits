@@ -7,10 +7,6 @@ namespace PickyParking.UI
 {
     public sealed class ParkingPrefabSupportPanel : UIPanel
     {
-        private const float RowHeight = 32f;
-        private const float HorizontalPadding = 10f;
-        private const float VerticalPadding = 4f;
-
         private ushort _buildingId;
         private BuildingInfo _buildingInfo;
         private UILabel _messageLabel;
@@ -68,10 +64,10 @@ namespace PickyParking.UI
             title.textScale = 1f;
             title.textColor = new Color32(255, 255, 255, 255);
             title.autoSize = false;
-            title.size = new Vector2(row.width, RowHeight);
+            title.size = new Vector2(row.width, ConfigPanelUiValues.SupportPanel.RowHeight);
             title.textAlignment = UIHorizontalAlignment.Center;
             title.verticalAlignment = UIVerticalAlignment.Middle;
-            title.relativePosition = new Vector3(0f, VerticalPadding);
+            title.relativePosition = new Vector3(0f, ConfigPanelUiValues.SupportPanel.VerticalPadding);
         }
 
         private void CreateMessageRow()
@@ -81,10 +77,12 @@ namespace PickyParking.UI
             _messageLabel.textScale = 0.8f;
             _messageLabel.textColor = new Color32(200, 200, 200, 255);
             _messageLabel.autoSize = false;
-            _messageLabel.size = new Vector2(row.width - HorizontalPadding * 2f, RowHeight);
+            _messageLabel.size = new Vector2(row.width - ConfigPanelUiValues.SupportPanel.HorizontalPadding * 2f, ConfigPanelUiValues.SupportPanel.RowHeight);
             _messageLabel.textAlignment = UIHorizontalAlignment.Center;
             _messageLabel.verticalAlignment = UIVerticalAlignment.Middle;
-            _messageLabel.relativePosition = new Vector3(HorizontalPadding, VerticalPadding);
+            _messageLabel.relativePosition = new Vector3(
+                ConfigPanelUiValues.SupportPanel.HorizontalPadding,
+                ConfigPanelUiValues.SupportPanel.VerticalPadding);
             _messageLabel.wordWrap = true;
         }
 
@@ -93,10 +91,12 @@ namespace PickyParking.UI
             UIPanel row = CreateRowContainer("ActionRow");
             _actionButton = row.AddUIComponent<UIButton>();
             _actionButton.textScale = 0.9f;
-            _actionButton.size = new Vector2(row.width - HorizontalPadding * 2f, RowHeight - VerticalPadding * 2f);
+            _actionButton.size = new Vector2(
+                row.width - ConfigPanelUiValues.SupportPanel.HorizontalPadding * 2f,
+                ConfigPanelUiValues.SupportPanel.RowHeight - ConfigPanelUiValues.SupportPanel.VerticalPadding * 2f);
             _actionButton.pivot = UIPivotPoint.TopLeft;
             _actionButton.relativePosition = new Vector3(
-                HorizontalPadding,
+                ConfigPanelUiValues.SupportPanel.HorizontalPadding,
                 (row.height - _actionButton.height) * 0.5f);
             _actionButton.atlas = UIView.GetAView().defaultAtlas;
             _actionButton.normalBgSprite = "LevelBarBackground";
@@ -110,7 +110,7 @@ namespace PickyParking.UI
             UIPanel row = AddUIComponent<UIPanel>();
             row.name = name;
             row.width = width;
-            row.height = RowHeight + VerticalPadding * 2f;
+            row.height = ConfigPanelUiValues.SupportPanel.RowHeight + ConfigPanelUiValues.SupportPanel.VerticalPadding * 2f;
             row.autoLayout = false;
             return row;
         }

@@ -5,8 +5,6 @@ namespace PickyParking.UI
 {
     internal static class DistanceDisplayFormatter
     {
-        private const string InfiniteLabel = "\u221E";
-
         public static string FormatDisplay(
             float sliderValue,
             float distanceSliderMaxValue,
@@ -15,7 +13,7 @@ namespace PickyParking.UI
             float mappedMeters)
         {
             if (sliderValue >= 1f)
-                return InfiniteLabel;
+                return ConfigPanelUiValues.DistanceDisplay.InfiniteLabel;
 
             if (sliderValue <= 0f)
                 return "0 m";
