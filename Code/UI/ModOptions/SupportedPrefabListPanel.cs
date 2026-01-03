@@ -26,6 +26,7 @@ namespace PickyParking.UI
         private const float ScrollbarWidth = 12f;
         private const float ScrollbarGap = 2f;
         private const float MinNameWidth = 120f;
+        private const float HoverOutlineInset = 1f;
         private static readonly Color32 RowHoverOutlineColor = new Color32(255, 255, 255, 140);
 
         private UIScrollablePanel _rowsPanel;
@@ -76,7 +77,7 @@ namespace PickyParking.UI
 
             UIButton removeButton = row.AddUIComponent<UIButton>();
             removeButton.text = "Remove";
-            removeButton.textScale = 0.8f;
+            removeButton.textScale = ModOptionsUiValues.SupportedPrefabList.LabelTextScale;
             removeButton.color = new Color32(100, 0, 0, 255);
             removeButton.hoveredColor = new Color32(255, 0, 0, 255);
             removeButton.atlas = GetAtlas();
@@ -108,9 +109,9 @@ namespace PickyParking.UI
             autoLayout = false;
 
             if (parent != null)
-                width = parent.width - 50f;
+                width = parent.width - ModOptionsUiValues.OptionsPanel.WidthOffset;
             else
-                width = 600f;
+                width = ModOptionsUiValues.OptionsPanel.DefaultWidth;
 
             height = HeaderHeight + ListHeight + VerticalPadding * 2f;
         }
@@ -138,7 +139,11 @@ namespace PickyParking.UI
             _rowsPanel.relativePosition = new Vector3(0f, HeaderHeight + VerticalPadding * 2f);
             _rowsPanel.autoLayout = true;
             _rowsPanel.autoLayoutDirection = LayoutDirection.Vertical;
-            _rowsPanel.autoLayoutPadding = new RectOffset(0, 0, 2, 2);
+            _rowsPanel.autoLayoutPadding = new RectOffset(
+                0,
+                0,
+                ModOptionsUiValues.SupportedPrefabList.RowsPanelVerticalPadding,
+                ModOptionsUiValues.SupportedPrefabList.RowsPanelVerticalPadding);
             _rowsPanel.clipChildren = true;
             _rowsPanel.scrollWheelDirection = UIOrientation.Vertical;
 
@@ -181,7 +186,7 @@ namespace PickyParking.UI
             thumb.atlas = GetAtlas();
             thumb.spriteName = "ScrollbarThumb";
             thumb.relativePosition = Vector3.zero;
-            thumb.size = new Vector2(ScrollbarWidth, 40f);
+            thumb.size = new Vector2(ScrollbarWidth, ModOptionsUiValues.SupportedPrefabList.ScrollbarThumbHeight);
             scrollbar.thumbObject = thumb;
 
             return scrollbar;
@@ -229,8 +234,8 @@ namespace PickyParking.UI
             UISprite outline = row.AddUIComponent<UISprite>();
             outline.atlas = GetAtlas();
             outline.spriteName = "GenericTab";
-            outline.size = new Vector2(row.width - 2f, row.height - 2f);
-            outline.relativePosition = new Vector3(1f, 1f);
+            outline.size = new Vector2(row.width - HoverOutlineInset * 2f, row.height - HoverOutlineInset * 2f);
+            outline.relativePosition = new Vector3(HoverOutlineInset, HoverOutlineInset);
             outline.color = RowHoverOutlineColor;
             outline.isVisible = false;
             outline.isInteractive = false;
@@ -559,7 +564,7 @@ namespace PickyParking.UI
         {
             UILabel label = parent.AddUIComponent<UILabel>();
             label.text = text ?? string.Empty;
-            label.textScale = 0.8f;
+            label.textScale = ModOptionsUiValues.SupportedPrefabList.LabelTextScale;
             label.autoSize = false;
             label.size = new Vector2(width, height);
             label.textAlignment = alignment;

@@ -153,7 +153,13 @@ namespace PickyParking.UI
             OnValueChanged onChanged,
             Texture2D backgroundTexture)
         {
-            object sliderObj = group.AddSlider(label, 0f, 1f, 0.01f, initialHue, onChanged);
+            object sliderObj = group.AddSlider(
+                label,
+                ModOptionsUiValues.HueSliders.Min,
+                ModOptionsUiValues.HueSliders.Max,
+                ModOptionsUiValues.HueSliders.Step,
+                initialHue,
+                onChanged);
             var slider = sliderObj as UISlider;
             if (slider == null)
                 return;
