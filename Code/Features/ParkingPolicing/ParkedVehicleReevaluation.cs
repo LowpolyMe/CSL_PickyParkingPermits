@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using ColossalFramework;
 using UnityEngine;
 using PickyParking.Logging;
+using PickyParking.Features.Debug;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
@@ -53,6 +55,10 @@ namespace PickyParking.Features.ParkingPolicing
             if (buildingId == 0) return;
             if (_disposed) return;
             if (!_isFeatureActive.IsActive) return;
+
+            if (ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+                Log.Warn("[Parking] Reevaluation requested for buildingId=" +
+                         buildingId + "\n" + Environment.StackTrace);
 
             if (!_pendingSet.Add(buildingId))
                 return;
@@ -132,6 +138,10 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (!moved)
                 {
+                    ParkedVehicleRemovalLogger.LogIfMatchesLot(
+                        parkedVehicleId: parkedId,
+                        buildingId: _activeBuilding,
+                        source: "Reevaluation.ReleaseParkedVehicle");
                     Singleton<VehicleManager>.instance.ReleaseParkedVehicle(parkedId);
                     _activeReleasedCount++;
                 }

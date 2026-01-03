@@ -9,7 +9,6 @@ using PickyParking.Settings;
 using PickyParking.UI;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
-using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
 
@@ -42,19 +41,9 @@ namespace PickyParking.ModEntry
             var settingsStorage = new ModSettingsStorage();
             var settingsController = ModSettingsController.Load(settingsStorage);
             ModSettings settings = settingsController.Current;
-            Log.SetVerboseEnabled(settings.EnableVerboseLogging);
-            ParkingSearchContext.EnableEpisodeLogs = settings.EnableVerboseLogging;
             var runtime = ModRuntime.Create(settings, settingsController, LevelBootstrap.Context);
             ModRuntime.SetCurrent(runtime);
-            ParkingRuntimeContext.SetCurrent(new ParkingRuntimeContext(
-                runtime.FeatureGate,
-                runtime.SupportedParkingLotRegistry,
-                runtime.ParkingRulesConfigRegistry,
-                runtime.GameAccess,
-                runtime.TmpeIntegration,
-                runtime.ParkingPermissionEvaluator,
-                runtime.ParkedVehicleReevaluation));
-
+            ModRuntime.ApplyLoggingSettings(settings);
             if (ModRuntime.Current != null)
             {
                 ModRuntime.Current.TmpeIntegration.RefreshState();
@@ -125,10 +114,19 @@ namespace PickyParking.ModEntry
                 _patches = null;
             }
 
-            ParkingRuntimeContext.ClearCurrent();
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
+            Log.SetUiDebugEnabled(false);
+            Log.SetTmpeDebugEnabled(false);
+            Log.SetPermissionDebugEnabled(false);
             ParkingSearchContext.EnableEpisodeLogs = false;
+            ParkingSearchContext.LogMinCandidates = ParkingSearchContext.DefaultLogMinCandidates;
+            ParkingSearchContext.LogMinDurationMs = ParkingSearchContext.DefaultLogMinDurationMs;
+            ParkingCandidateBlocker.EnableCandidateBlockerLogs = false;
+            ParkingDebugSettings.EnableCreateParkedVehicleLogs = false;
+            ParkingDebugSettings.EnableGameAccessLogs = false;
+            ParkingDebugSettings.EnableBuildingDebugLogs = false;
+            ParkingDebugSettings.BuildingDebugId = 0;
 
             SimThread.Dispatch(() =>
             {

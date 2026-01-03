@@ -1,18 +1,21 @@
 using System.Collections.Generic;
 using ColossalFramework;
-using ColossalFramework.Math;
 using UnityEngine;
+using PickyParking.Logging;
+using PickyParking.Features.Debug;
 
 namespace PickyParking.GameAdapters
 {
-    
-    
-    
     public sealed class GameAccess
     {
-        private const int ParkedGridSafetyLimit = 32768;
-        private readonly List<Vector3> _parkingSpacePositions = new List<Vector3>(64);
-        private readonly HashSet<ushort> _foundParkedVehicleIds = new HashSet<ushort>();
+        private readonly ParkedVehicleQueries _parkedVehicleQueries;
+        private readonly ParkingSpaceQueries _parkingSpaceQueries;
+
+        public GameAccess()
+        {
+            _parkedVehicleQueries = new ParkedVehicleQueries();
+            _parkingSpaceQueries = new ParkingSpaceQueries(_parkedVehicleQueries);
+        }
 
         public struct DriverContext
         {
@@ -39,7 +42,7 @@ namespace PickyParking.GameAdapters
                 ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
 
             if ((building.m_flags & Building.Flags.Created) == 0) return false;
-            if ((building.m_flags & Building.Flags.Deleted) != 0) return false; 
+            if ((building.m_flags & Building.Flags.Deleted) != 0) return false;
 
             info = building.Info;
             return info != null;
@@ -77,16 +80,33 @@ namespace PickyParking.GameAdapters
             ref Vehicle vehicle =
                 ref Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleId];
 
-            if ((vehicle.m_flags & Vehicle.Flags.Created) == 0) return false;
+            if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
+            {
+                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                    Log.Info($"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
+                return false;
+            }
 
             VehicleInfo info = vehicle.Info;
             VehicleAI ai = info?.m_vehicleAI;
-            if (ai == null) return false;
+            if (ai == null)
+            {
+                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                    Log.Info($"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
+                return false;
+            }
 
-            
             InstanceID owner = ai.GetOwnerID(vehicleId, ref vehicle);
             uint citizenId = owner.Citizen;
-            if (citizenId == 0) return false;
+            if (citizenId == 0)
+            {
+                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                    Log.Info(
+                        "[Parking] TryGetDriverInfo failed: owner citizenId=0 " +
+                        $"vehicleId={vehicleId} citizenUnits={vehicle.m_citizenUnits}"
+                    );
+                return false;
+            }
 
             ref Citizen citizen =
                 ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
@@ -103,18 +123,19 @@ namespace PickyParking.GameAdapters
             return true;
         }
 
-        
-        
-        
         public bool TryGetCitizenInfo(uint citizenId, out DriverContext context)
         {
             context = default;
-            if (citizenId == 0) return false;
+            if (citizenId == 0)
+            {
+                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                    Log.Info("[Parking] TryGetCitizenInfo failed: citizenId=0");
+                return false;
+            }
 
             ref Citizen citizen =
                 ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
 
-            
             bool isVisitor = (citizen.m_flags & Citizen.Flags.Tourist) != 0;
 
             context = new DriverContext(
@@ -127,152 +148,32 @@ namespace PickyParking.GameAdapters
             return true;
         }
 
-        
-        
-        
         public bool TryGetParkedVehicleInfo(
             ushort parkedVehicleId,
             out uint ownerCitizenId,
             out ushort homeId,
             out Vector3 position)
         {
-            ownerCitizenId = 0;
-            homeId = 0;
-            position = default;
-
-            if (parkedVehicleId == 0) return false;
-
-            ref VehicleParked pv =
-                ref Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[parkedVehicleId];
-
-            if (pv.m_flags == 0) return false;
-
-            ownerCitizenId = pv.m_ownerCitizen;
-            position = pv.m_position;
-
-            if (ownerCitizenId == 0)
-                return false;
-
-            ref Citizen citizen =
-                ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[ownerCitizenId];
-
-            homeId = citizen.m_homeBuilding;
-            return true;
+            return _parkedVehicleQueries.TryGetParkedVehicleInfo(
+                parkedVehicleId,
+                out ownerCitizenId,
+                out homeId,
+                out position);
         }
 
-        
-        
-        
-        
-        
         public bool TryGetApproxParkingArea(ushort buildingId, out Vector3 center, out float radius)
         {
-            center = default;
-            radius = 0f;
-
-            if (!TryGetBuildingPosition(buildingId, out center))
-                return false;
-
-            ref Building b =
-                ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
-
-            BuildingInfo info = b.Info;
-            if (info == null)
-                return false;
-
-            
-            float w = info.m_cellWidth * 8f;
-            float l = info.m_cellLength * 8f;
-            float halfDiag = 0.5f * Mathf.Sqrt(w * w + l * l);
-
-            radius = Mathf.Max(halfDiag + 24f, 48f);
-            return true;
+            return _parkingSpaceQueries.TryGetApproxParkingArea(buildingId, out center, out radius);
         }
 
-        
-        
-        
-        
-        public bool TryCollectParkingSpacePositions(
-            ushort buildingId,
-            List<Vector3> outPositions)
+        public bool TryCollectParkingSpacePositions(ushort buildingId, List<Vector3> outPositions)
         {
-            outPositions.Clear();
-            if (buildingId == 0) return false;
-
-            var bm = Singleton<BuildingManager>.instance;
-            ref Building building = ref bm.m_buildings.m_buffer[buildingId];
-
-            BuildingInfo buildingInfo = building.Info;
-            if (buildingInfo == null) return false;
-            if (buildingInfo.m_props == null) return false;
-
-            
-            if ((buildingInfo.m_hasParkingSpaces & VehicleInfo.VehicleType.Car) == VehicleInfo.VehicleType.None)
-                return false;
-
-            bool transformMatrixCalculated = false;
-            Matrix4x4 buildingMatrix = default;
-
-            foreach (BuildingInfo.Prop prop in buildingInfo.m_props)
-            {
-                var randomizer = new Randomizer(buildingId << 6 | prop.m_index);
-
-                PropInfo propInfo = prop.m_finalProp;
-                if (propInfo == null) continue;
-
-                propInfo = propInfo.GetVariation(ref randomizer);
-                if (propInfo == null) continue;
-
-                var spaces = propInfo.m_parkingSpaces;
-                if (spaces == null || spaces.Length == 0) continue;
-
-                if (!transformMatrixCalculated)
-                {
-                    transformMatrixCalculated = true;
-
-                    Vector3 meshPos = Building.CalculateMeshPosition(
-                        buildingInfo,
-                        building.m_position,
-                        building.m_angle,
-                        building.Length);
-
-                    Quaternion q = Quaternion.AngleAxis(
-                        building.m_angle * Mathf.Rad2Deg,
-                        Vector3.down);
-
-                    buildingMatrix.SetTRS(meshPos, q, Vector3.one);
-                }
-
-                Vector3 propWorldPos = buildingMatrix.MultiplyPoint(prop.m_position);
-
-                float angle = building.m_angle + prop.m_radAngle;
-                Quaternion propRot = Quaternion.AngleAxis(angle * Mathf.Rad2Deg, Vector3.down);
-                Matrix4x4 propMatrix = Matrix4x4.TRS(propWorldPos, propRot, Vector3.one);
-
-                for (int i = 0; i < spaces.Length; i++)
-                {
-                    
-                    Vector3 local = spaces[i].m_position;
-                    outPositions.Add(propMatrix.MultiplyPoint(local));
-                }
-            }
-
-            return outPositions.Count > 0;
+            return _parkingSpaceQueries.TryCollectParkingSpacePositions(buildingId, outPositions);
         }
 
-        
-        
-        
-        
         public bool TryGetParkingSpaceCount(ushort buildingId, out int totalSpaces)
         {
-            totalSpaces = 0;
-            if (!TryCollectParkingSpacePositions(buildingId, _parkingSpacePositions))
-                return false;
-
-            totalSpaces = _parkingSpacePositions.Count;
-            return totalSpaces > 0;
+            return _parkingSpaceQueries.TryGetParkingSpaceCount(buildingId, out totalSpaces);
         }
 
         public void CollectParkedVehiclesOnLot(
@@ -280,16 +181,7 @@ namespace PickyParking.GameAdapters
             List<ushort> results,
             float maxSnapDistance = 2f)
         {
-            results.Clear();
-            if (buildingId == 0) return;
-
-            int totalSpaces;
-            int occupiedSpaces;
-            if (!TryCollectParkingSpaceUsage(buildingId, maxSnapDistance, _foundParkedVehicleIds, out totalSpaces, out occupiedSpaces))
-                return;
-
-            results.AddRange(_foundParkedVehicleIds);
-            _foundParkedVehicleIds.Clear();
+            _parkingSpaceQueries.CollectParkedVehiclesOnLot(buildingId, results, maxSnapDistance);
         }
 
         public bool TryGetParkingSpaceStats(
@@ -298,79 +190,32 @@ namespace PickyParking.GameAdapters
             out int occupiedSpaces,
             float maxSnapDistance = 2f)
         {
-            return TryCollectParkingSpaceUsage(buildingId, maxSnapDistance, null, out totalSpaces, out occupiedSpaces);
+            return _parkingSpaceQueries.TryGetParkingSpaceStats(
+                buildingId,
+                out totalSpaces,
+                out occupiedSpaces,
+                maxSnapDistance);
         }
 
-        private bool TryCollectParkingSpaceUsage(
-            ushort buildingId,
-            float maxSnapDistance,
-            HashSet<ushort> outParkedVehicleIds,
-            out int totalSpaces,
-            out int occupiedSpaces)
+        public bool IsPrivatePassengerCar(ushort vehicleId)
         {
-            totalSpaces = 0;
-            occupiedSpaces = 0;
+            if (vehicleId == 0) return false;
 
-            if (outParkedVehicleIds != null)
-                outParkedVehicleIds.Clear();
+            ref Vehicle vehicle =
+                ref Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleId];
 
-            if (!TryCollectParkingSpacePositions(buildingId, _parkingSpacePositions))
+            if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
                 return false;
 
-            totalSpaces = _parkingSpacePositions.Count;
-            float maxSnapDistSqr = maxSnapDistance * maxSnapDistance;
+            VehicleInfo info = vehicle.Info;
+            if (info == null)
+                return false;
 
-            var vm = Singleton<VehicleManager>.instance;
+            VehicleAI ai = info.m_vehicleAI;
+            if (ai == null)
+                return false;
 
-            for (int s = 0; s < _parkingSpacePositions.Count; s++)
-            {
-                Vector3 spacePos = _parkingSpacePositions[s];
-
-                int gx = Mathf.Clamp((int)(spacePos.x / 32f + 270f), 0, 539);
-                int gz = Mathf.Clamp((int)(spacePos.z / 32f + 270f), 0, 539);
-
-                ushort parkedId = vm.m_parkedGrid[gz * 540 + gx];
-                bool spaceOccupied = false;
-
-                int safety = 0;
-                while (parkedId != 0)
-                {
-                    ref VehicleParked pv = ref vm.m_parkedVehicles.m_buffer[parkedId];
-                    ushort next = pv.m_nextGridParked;
-
-                    if (pv.m_flags != 0)
-                    {
-                        float dx = pv.m_position.x - spacePos.x;
-                        float dz = pv.m_position.z - spacePos.z;
-
-                        if (dx * dx + dz * dz <= maxSnapDistSqr)
-                        {
-                            spaceOccupied = true;
-                            if (outParkedVehicleIds != null)
-                                outParkedVehicleIds.Add(parkedId);
-                            else
-                                break;
-                        }
-                    }
-
-                    parkedId = next;
-
-                    if (++safety > ParkedGridSafetyLimit)
-                        break;
-                }
-
-                if (spaceOccupied)
-                    occupiedSpaces++;
-            }
-
-            return true;
+            return ai is PassengerCarAI;
         }
-
-        
-        
-        
-        
-        public bool IsPrivatePassengerCar(ushort vehicleId) => true;
     }
 }
-

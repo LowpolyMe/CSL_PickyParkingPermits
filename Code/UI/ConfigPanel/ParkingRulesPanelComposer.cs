@@ -326,7 +326,7 @@ namespace PickyParking.UI
                 UpdateSliderFill(row);
             };
 
-            if (Log.IsVerboseEnabled && thumb.spriteInfo == null)
+            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled && thumb.spriteInfo == null)
                 Log.Info("[UI] Slider thumb sprite missing: " + thumb.spriteName);
 
             UpdateSliderFill(row);

@@ -1,6 +1,6 @@
 using HarmonyLib;
-using PickyParking.Patching.Game;
 using PickyParking.Patching.TMPE;
+using PickyParking.Patching.Game;
 
 namespace PickyParking.Patching
 {
@@ -20,6 +20,7 @@ namespace PickyParking.Patching
             
             BuildingManager_ReleaseBuildingPatch.Apply(_bootstrap.Harmony);
             VehicleManager_CreateParkedVehiclePatch.Apply(_bootstrap.Harmony);
+            VehicleManager_ReleaseParkedVehiclePatch.Apply(_bootstrap.Harmony);
             DefaultTool_RenderOverlayPatch.Apply(_bootstrap.Harmony);
             
             

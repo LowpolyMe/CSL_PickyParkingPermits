@@ -53,7 +53,8 @@ namespace PickyParking.UI
         {
             if (_atlas == null && !_attempted)
             {
-                Log.Info("[UI] Icon atlas cleanup skipped (never created).");
+                if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                    Log.Info("[UI] Icon atlas cleanup skipped (never created).");
                 return;
             }
 
@@ -63,7 +64,8 @@ namespace PickyParking.UI
 
             if (atlas == null)
             {
-                Log.Info("[UI] Icon atlas cache reset (load attempt only).");
+                if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                    Log.Info("[UI] Icon atlas cache reset (load attempt only).");
                 return;
             }
 
@@ -76,7 +78,8 @@ namespace PickyParking.UI
             }
 
             Object.Destroy(atlas);
-            Log.Info("[UI] Icon atlas cache cleared.");
+            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                Log.Info("[UI] Icon atlas cache cleared.");
         }
 
         private static void AddSprite(

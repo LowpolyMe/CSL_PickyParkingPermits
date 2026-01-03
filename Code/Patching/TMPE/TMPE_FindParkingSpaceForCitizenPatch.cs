@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using System.Collections.Generic;
+using System.Text;
 using ColossalFramework;
 using HarmonyLib;
 using PickyParking.Features.ParkingPolicing;
@@ -24,6 +26,12 @@ namespace PickyParking.Patching.TMPE
         private static int _overrideTouristAllow;
         private static float _nextSummaryTime;
         private static bool _touristOverrideWarned;
+        private static readonly Dictionary<uint, int> _lastFailedAttemptsByInstance = new Dictionary<uint, int>();
+        private static FieldInfo _extInstanceIdField;
+        private static FieldInfo _extFailedAttemptsField;
+        private static FieldInfo _extPathModeField;
+        private static Type _extInstanceType;
+        private static readonly HashSet<Type> _extInstanceFieldWarned = new HashSet<Type>();
 
         public static void Apply(Harmony harmony)
         {
@@ -98,10 +106,13 @@ namespace PickyParking.Patching.TMPE
 
         private static void Prefix(
             [HarmonyArgument(2)] ref CitizenInstance driverInstance,
+            [HarmonyArgument(3)] object extDriverInstanceObj,
             [HarmonyArgument(6)] ushort vehicleId,
             [HarmonyArgument(7)] ref bool allowTourists,
             ref bool __state)
         {
+            MaybeLogFailedAttempts(extDriverInstanceObj, ref driverInstance, vehicleId);
+
             if (TryGetDriverTourist(ref driverInstance, out bool isTourist) && isTourist)
             {
                 if (!allowTourists)
@@ -136,7 +147,7 @@ namespace PickyParking.Patching.TMPE
             if (__result)
                 return;
 
-            if (!Log.IsVerboseEnabled)
+            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
                 return;
 
             TryGetDriverTourist(ref driverInstance, out bool driverIsTourist);
@@ -235,7 +246,7 @@ namespace PickyParking.Patching.TMPE
             if (now < _nextSummaryTime)
                 return;
 
-            if (_failCount > 0 && Log.IsVerboseEnabled)
+            if (_failCount > 0 && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
             {
                 Log.Info(
                     "[TMPE] Parking search failures (summary) " +
@@ -252,6 +263,97 @@ namespace PickyParking.Patching.TMPE
             _failNonTouristAllDenied = 0;
             _overrideTouristAllow = 0;
             _nextSummaryTime = now + SummaryIntervalSeconds;
+        }
+
+        private static void MaybeLogFailedAttempts(object extDriverInstanceObj, ref CitizenInstance driverInstance, ushort vehicleId)
+        {
+            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+                return;
+
+            if (extDriverInstanceObj == null)
+                return;
+
+            if (!TryGetExtInstanceFields(extDriverInstanceObj, out uint instanceId, out int failedAttempts, out object pathMode))
+                return;
+
+            int last;
+            if (_lastFailedAttemptsByInstance.TryGetValue(instanceId, out last) && last == failedAttempts)
+                return;
+
+            _lastFailedAttemptsByInstance[instanceId] = failedAttempts;
+
+            uint citizenId = driverInstance.m_citizen;
+            string pathModeText = pathMode != null ? pathMode.ToString() : "NULL";
+            Log.Info(
+                "[TMPE] Parking attempts changed " +
+                $"instanceId={instanceId} citizenId={citizenId} vehicleId={vehicleId} " +
+                $"failedAttempts={failedAttempts} pathMode={pathModeText}"
+            );
+        }
+
+        private static bool TryGetExtInstanceFields(
+            object extDriverInstanceObj,
+            out uint instanceId,
+            out int failedAttempts,
+            out object pathMode)
+        {
+            instanceId = 0;
+            failedAttempts = 0;
+            pathMode = null;
+
+            if (_extInstanceType == null || _extInstanceType != extDriverInstanceObj.GetType())
+            {
+                _extInstanceType = extDriverInstanceObj.GetType();
+                _extInstanceIdField = _extInstanceType.GetField("instanceId", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                _extFailedAttemptsField = _extInstanceType.GetField("failedParkingAttempts", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                _extPathModeField = _extInstanceType.GetField("pathMode", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+
+            if (_extInstanceIdField == null || _extFailedAttemptsField == null)
+            {
+                LogMissingExtFields(extDriverInstanceObj.GetType());
+                return false;
+            }
+
+            try
+            {
+                object instanceRaw = _extInstanceIdField.GetValue(extDriverInstanceObj);
+                object attemptsRaw = _extFailedAttemptsField.GetValue(extDriverInstanceObj);
+                instanceId = Convert.ToUInt32(instanceRaw);
+                failedAttempts = Convert.ToInt32(attemptsRaw);
+                if (_extPathModeField != null)
+                    pathMode = _extPathModeField.GetValue(extDriverInstanceObj);
+                return true;
+            }
+            catch
+            {
+                LogMissingExtFields(extDriverInstanceObj.GetType());
+                return false;
+            }
+        }
+
+        private static void LogMissingExtFields(Type type)
+        {
+            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+                return;
+
+            if (!_extInstanceFieldWarned.Add(type))
+                return;
+
+            var sb = new StringBuilder();
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(fields[i].Name);
+                if (sb.Length > 400)
+                {
+                    sb.Append("...");
+                    break;
+                }
+            }
+
+            Log.Info($"[TMPE] ExtCitizenInstance fields missing or unreadable. type={type.FullName} fields=[{sb}]");
         }
 
         private static string FormatRuleInfo(ushort buildingId)

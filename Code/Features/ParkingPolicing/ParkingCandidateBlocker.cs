@@ -15,7 +15,7 @@ namespace PickyParking.Features.ParkingPolicing
     {
         private const float MaxSnapDistanceSqr = 4f;
         // Toggle to reduce log noise between episode logs.
-        private const bool EnableCandidateBlockerLogs = false;
+        public static bool EnableCandidateBlockerLogs = false;
         [ThreadStatic] private static List<Vector3> _spacePositions;
         private static int _wrongThreadLogged;
 
@@ -28,7 +28,11 @@ namespace PickyParking.Features.ParkingPolicing
 
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetCandidateDecision");
             if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
+            {
+                if (Log.IsVerboseEnabled)
+                    Log.Info($"[Parking] Candidate decision skipped: runtime inactive buildingId={buildingId}");
                 return false;
+            }
 
             if (!IsInScope(context, buildingId))
                 return false;
@@ -60,6 +64,20 @@ namespace PickyParking.Features.ParkingPolicing
             return true;
         }
 
+        public static bool TryGetRuleBuildingAtPosition(Vector3 position, out ushort buildingId)
+        {
+            buildingId = 0;
+
+            if (!EnsureSimulationThread("TryGetRuleBuildingAtPosition"))
+                return false;
+
+            var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetRuleBuildingAtPosition");
+            if (context == null || !context.FeatureGate.IsActive)
+                return false;
+
+            return TryFindRuleBuildingAtPosition(context, position, out buildingId, out _);
+        }
+
         public static bool ShouldBlockCreateParkedVehicle(uint ownerCitizenId, Vector3 position)
         {
             if (!EnsureSimulationThread("ShouldBlockCreateParkedVehicle"))
@@ -70,13 +88,25 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             if (!ParkingSearchContext.HasContext)
+            {
+                if (EnableCandidateBlockerLogs && Log.IsVerboseEnabled)
+                    Log.Info("[Parking] CreateParkedVehicle check skipped: no parking search context");
                 return false;
+            }
 
             if (ownerCitizenId == 0u)
+            {
+                if (EnableCandidateBlockerLogs && Log.IsVerboseEnabled)
+                    Log.Info("[Parking] CreateParkedVehicle check skipped: ownerCitizenId=0");
                 return false;
+            }
 
             if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRulesConfigDefinition rule))
+            {
+                if (EnableCandidateBlockerLogs && Log.IsVerboseEnabled)
+                    Log.Info($"[Parking] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
                 return false;
+            }
 
             var eval = context.ParkingPermissionEvaluator.EvaluateCitizen(ownerCitizenId, buildingId);
             if (eval.Allowed)
@@ -114,7 +144,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             foreach (var kvp in context.ParkingRulesConfigRegistry.Enumerate())
             {
-                if (!IsSupportedParkingLot(context, kvp.Key))
+                if (!IsInScope(context, kvp.Key))
                     continue;
 
                 spacePositions.Clear();
@@ -163,15 +193,6 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             return false;
-        }
-
-        private static bool IsSupportedParkingLot(ParkingRuntimeContext services, ushort buildingId)
-        {
-            if (services == null) return false;
-            if (!services.GameAccess.TryGetBuildingInfo(buildingId, out var info)) return false;
-
-            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
-            return services.SupportedParkingLotRegistry.Contains(key);
         }
 
         private static bool IsInScope(ParkingRuntimeContext services, ushort buildingId)

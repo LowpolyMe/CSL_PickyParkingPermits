@@ -69,6 +69,30 @@ namespace PickyParking.ModEntry
         
         public static ModRuntime Current { get; private set; }
 
+        public static void ApplyLoggingSettings(ModSettings settings)
+        {
+            if (settings == null) return;
+
+            Log.SetVerboseEnabled(settings.EnableVerboseLogging);
+            ParkingSearchContext.EnableEpisodeLogs = settings.EnableDebugParkingSearchEpisodes;
+            ParkingSearchContext.LogMinCandidates = settings.EnableVerboseLogging
+                ? 1
+                : ParkingSearchContext.DefaultLogMinCandidates;
+            ParkingSearchContext.LogMinDurationMs = settings.EnableVerboseLogging
+                ? 0
+                : ParkingSearchContext.DefaultLogMinDurationMs;
+            ParkingCandidateBlocker.EnableCandidateBlockerLogs = settings.EnableDebugCandidateBlockerLogs;
+            ParkingDebugSettings.EnableCreateParkedVehicleLogs =
+                settings.EnableDebugCreateParkedVehicleLogs;
+            ParkingDebugSettings.EnableBuildingDebugLogs = settings.EnableDebugBuildingLogs;
+            ParkingDebugSettings.BuildingDebugId = settings.DebugBuildingId;
+            Log.SetUiDebugEnabled(settings.EnableDebugUiLogs);
+            Log.SetTmpeDebugEnabled(settings.EnableDebugTmpeLogs);
+            Log.SetPermissionDebugEnabled(settings.EnableDebugPermissionEvaluatorLogs);
+
+            ParkingDebugSettings.EnableGameAccessLogs = settings.EnableDebugGameAccessLogs;
+        }
+
         
         
         
