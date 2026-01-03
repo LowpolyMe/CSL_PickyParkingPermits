@@ -19,6 +19,8 @@ namespace PickyParking.UI
         {
             if (settings == null) throw new ArgumentNullException("settings");
 
+            ModRuntime.ApplyLoggingSettings(settings);
+
             UIHelperBase overlayGroup = helper.AddGroup("Overlay Colors");
             Texture2D hueTexture = ModResourceLoader.LoadTexture("HueGradient.png");
 
@@ -45,6 +47,8 @@ namespace PickyParking.UI
                     ReloadSettings("OptionsUI: Work/school radius hue");
                 },
                 hueTexture);
+
+            CreateSupportedPrefabList(helper, settings, saveSettings);
 
             helper.AddCheckbox("Verbose logging", settings.EnableVerboseLogging, isChecked =>
             {
@@ -107,6 +111,21 @@ namespace PickyParking.UI
                 settings.EnableDebugPermissionEvaluatorLogs = isChecked;
                 HandleDebugLoggingChanged("OptionsUI: Permission evaluation", settings, saveSettings);
             });
+        }
+
+        private static void CreateSupportedPrefabList(UIHelperBase helper, ModSettings settings, Action saveSettings)
+        {
+            UIHelperBase supportedGroup = helper.AddGroup("Supported parking prefabs");
+            var helperPanel = supportedGroup as UIHelper;
+            if (helperPanel == null)
+                return;
+
+            var groupPanel = helperPanel.self as UIPanel;
+            if (groupPanel == null)
+                return;
+
+            var listPanel = groupPanel.AddUIComponent<SupportedPrefabListPanel>();
+            listPanel.Bind(settings, saveSettings);
         }
 
         private static void HandleVerboseLoggingChanged(bool isChecked, ModSettings settings, Action saveSettings)
