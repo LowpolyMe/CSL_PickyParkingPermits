@@ -597,16 +597,5 @@ namespace PickyParking.UI
             Destroy(component.gameObject);
         }
 
-        private struct ColumnLayout
-        {
-            public float ThumbnailX;
-            public float ThumbnailWidth;
-            public float NameX;
-            public float NameWidth;
-            public float InstancesX;
-            public float InstancesWidth;
-            public float RemoveX;
-            public float RemoveWidth;
-        }
     }
 }
