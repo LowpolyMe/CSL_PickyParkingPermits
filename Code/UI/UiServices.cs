@@ -1,3 +1,4 @@
+using System;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
@@ -9,21 +10,29 @@ namespace PickyParking.UI
 {
     public sealed class UiServices
     {
-        private readonly ModRuntime _runtime;
+        private readonly Func<ModRuntime> _runtimeAccessor;
         private readonly ModSettingsController _settingsController;
+
+        public UiServices(Func<ModRuntime> runtimeAccessor, ModSettingsController settingsController)
+        {
+            _runtimeAccessor = runtimeAccessor;
+            _settingsController = settingsController ?? (runtimeAccessor != null ? runtimeAccessor()?.SettingsController : null);
+        }
 
         public UiServices(ModRuntime runtime, ModSettingsController settingsController)
         {
-            _runtime = runtime;
+            _runtimeAccessor = () => runtime;
             _settingsController = settingsController ?? (runtime != null ? runtime.SettingsController : null);
         }
 
-        public bool IsFeatureActive => _runtime != null && _runtime.FeatureGate.IsActive;
-        public GameAccess GameAccess => _runtime != null ? _runtime.GameAccess : null;
-        public ParkingRulesConfigEditor ParkingRulesConfigEditor => _runtime != null ? _runtime.ParkingRulesConfigEditor : null;
-        public ParkingRulesConfigRegistry ParkingRulesConfigRegistry => _runtime != null ? _runtime.ParkingRulesConfigRegistry : null;
-        public ParkingRulePreviewState ParkingRulePreviewState => _runtime != null ? _runtime.ParkingRulePreviewState : null;
-        public SupportedParkingLotRegistry SupportedParkingLotRegistry => _runtime != null ? _runtime.SupportedParkingLotRegistry : null;
+        private ModRuntime Runtime => _runtimeAccessor != null ? _runtimeAccessor() : null;
+
+        public bool IsFeatureActive => Runtime != null && Runtime.FeatureGate.IsActive;
+        public GameAccess GameAccess => Runtime != null ? Runtime.GameAccess : null;
+        public ParkingRulesConfigEditor ParkingRulesConfigEditor => Runtime != null ? Runtime.ParkingRulesConfigEditor : null;
+        public ParkingRulesConfigRegistry ParkingRulesConfigRegistry => Runtime != null ? Runtime.ParkingRulesConfigRegistry : null;
+        public ParkingRulePreviewState ParkingRulePreviewState => Runtime != null ? Runtime.ParkingRulePreviewState : null;
+        public SupportedParkingLotRegistry SupportedParkingLotRegistry => Runtime != null ? Runtime.SupportedParkingLotRegistry : null;
         public ModSettingsController SettingsController => _settingsController;
         public ModSettings Settings => _settingsController != null ? _settingsController.Current : null;
 

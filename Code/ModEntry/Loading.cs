@@ -53,7 +53,7 @@ namespace PickyParking.ModEntry
             _patches = new PatchSetup();
             _patches.ApplyAll();
 
-            _uiServices = new UiServices(runtime, settingsController);
+            _uiServices = new UiServices(() => runtime, settingsController);
             OverlayRenderer.SetServices(_uiServices);
             CreateRuntimeObjects(mode);
 

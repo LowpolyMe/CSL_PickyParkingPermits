@@ -36,15 +36,19 @@ namespace PickyParking.UI
         private Action _saveSettings;
         private UITextureAtlas _defaultAtlas;
         private UiServices _services;
+        private bool _started;
 
         public void Initialize(UiServices services)
         {
             _services = services;
+            if (_started)
+                RequestRefreshNextFrame();
         }
 
         public override void Start()
         {
             base.Start();
+            _started = true;
             RefreshVisibilityFlags();
             _defaultAtlas = GetDefaultAtlas();
             ConfigureRootPanel();
@@ -105,6 +109,8 @@ namespace PickyParking.UI
             _saveSettings = saveSettings;
             _prefabKeys = settings != null ? settings.SupportedParkingLotPrefabs : null;
             PopulateRows();
+            if (_started && isVisible)
+                RequestRefreshNextFrame();
         }
 
         private void ConfigureRootPanel()
