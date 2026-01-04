@@ -9,6 +9,19 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     internal sealed class ParkingRulesConfigPanelUi
     {
+        private sealed class ParkingRulesConfigPanelUiArgs
+        {
+            public ParkingRulesConfigPanel Panel { get; set; }
+            public ParkingPanelTheme Theme { get; set; }
+            public ParkingRulesConfigUiConfig UiConfig { get; set; }
+            public Func<float> GetDefaultSliderValue { get; set; }
+            public Action OnToggleRestrictions { get; set; }
+            public Action<ParkingRulesSliderRow> OnToggleSlider { get; set; }
+            public Action<ParkingRulesSliderRow, float> OnSliderValueChanged { get; set; }
+            public Action OnToggleVisitors { get; set; }
+            public Action OnApplyChanges { get; set; }
+        }
+
         private struct PanelLayout
         {
             public float RowHeight;
@@ -37,6 +50,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             public UISprite DisabledOverlay;
         }
 
+
         private readonly ParkingRulesConfigPanel _panel;
         private readonly ParkingPanelTheme _theme;
         private readonly ParkingRulesConfigUiConfig _uiConfig;
@@ -54,7 +68,34 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         public UIPanel FooterRow { get; private set; }
         public UILabel ParkingSpacesLabel { get; private set; }
 
-        public ParkingRulesConfigPanelUi(ParkingRulesConfigPanelUiArgs args)
+        public static ParkingRulesConfigPanelUi Create(
+            ParkingRulesConfigPanel panel,
+            ParkingPanelTheme theme,
+            ParkingRulesConfigUiConfig uiConfig,
+            Func<float> getDefaultSliderValue,
+            Action onToggleRestrictions,
+            Action<ParkingRulesSliderRow> onToggleSlider,
+            Action<ParkingRulesSliderRow, float> onSliderValueChanged,
+            Action onToggleVisitors,
+            Action onApplyChanges)
+        {
+            var args = new ParkingRulesConfigPanelUiArgs
+            {
+                Panel = panel,
+                Theme = theme,
+                UiConfig = uiConfig,
+                GetDefaultSliderValue = getDefaultSliderValue,
+                OnToggleRestrictions = onToggleRestrictions,
+                OnToggleSlider = onToggleSlider,
+                OnSliderValueChanged = onSliderValueChanged,
+                OnToggleVisitors = onToggleVisitors,
+                OnApplyChanges = onApplyChanges
+            };
+
+            return new ParkingRulesConfigPanelUi(args);
+        }
+
+        private ParkingRulesConfigPanelUi(ParkingRulesConfigPanelUiArgs args)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
 
@@ -144,26 +185,31 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             }
         }
 
-        public void ApplySliderRowFromRule(SliderRowRuleArgs args)
+        public void ApplySliderRowFromRule(
+            ParkingRulesSliderRow row,
+            bool enabled,
+            ushort radiusMeters,
+            Func<ushort, float> convertRadiusToSliderValue,
+            Action<ParkingRulesSliderRow, float> setSliderValue)
         {
-            float storedValue = args.ConvertRadiusToSliderValue(args.RadiusMeters);
+            float storedValue = convertRadiusToSliderValue(radiusMeters);
             if (storedValue <= 0f)
                 storedValue = _getDefaultSliderValue();
 
-            args.Row.LastNonZeroValue = storedValue;
+            row.LastNonZeroValue = storedValue;
 
-            if (args.Enabled)
+            if (enabled)
             {
-                args.Row.IsEnabled = true;
-                args.SetSliderValue(args.Row, storedValue);
+                row.IsEnabled = true;
+                setSliderValue(row, storedValue);
             }
             else
             {
-                args.Row.IsEnabled = false;
-                args.SetSliderValue(args.Row, 0f);
+                row.IsEnabled = false;
+                setSliderValue(row, 0f);
             }
 
-            UpdateSliderRowVisuals(args.Row);
+            UpdateSliderRowVisuals(row);
         }
 
         public void UpdateRestrictionsToggleVisuals(bool enabled)

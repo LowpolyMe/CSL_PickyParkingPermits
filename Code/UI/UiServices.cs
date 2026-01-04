@@ -20,10 +20,8 @@ namespace PickyParking.UI
         }
 
         public UiServices(ModRuntime runtime, ModSettingsController settingsController)
+            : this(runtime != null ? (Func<ModRuntime>)(() => runtime) : null, settingsController)
         {
-            _runtimeAccessor = () => runtime;
-            _settingsController = settingsController ?? (runtime != null ? runtime.SettingsController : null);
-            Game = new UiGameQueries(_runtimeAccessor);
         }
 
         private ModRuntime Runtime => _runtimeAccessor != null ? _runtimeAccessor() : null;

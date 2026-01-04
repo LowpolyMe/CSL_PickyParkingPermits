@@ -15,7 +15,7 @@ namespace PickyParking.GameAdapters
             _runtimeAccessor = runtimeAccessor;
         }
 
-        private GameAccess GameAccess => _runtimeAccessor != null ? _runtimeAccessor()?.GameAccess : null;
+        private GameAccess GameAccess => _runtimeAccessor?.Invoke()?.GameAccess;
 
         public bool IsBuildingManagerReadyForUi()
         {

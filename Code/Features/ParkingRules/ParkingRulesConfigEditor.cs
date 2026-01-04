@@ -57,12 +57,11 @@ namespace PickyParking.Features.ParkingRules
             SimThread.Dispatch(() => _parkingRulesRepository.Remove(buildingId));
         }
 
-        public void CommitPendingChanges(ushort buildingId, ParkingRulesConfigInput input)
+        public void CommitPendingChanges(ushort buildingId, ParkingRulesConfigDefinition rule)
         {
-            if (buildingId == 0 || input == null || _parkingRulesRepository == null)
+            if (buildingId == 0 || _parkingRulesRepository == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = BuildRuleFromInput(input);
             if (Log.IsVerboseEnabled)
                 Log.Info("[ParkingRules] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
 
@@ -77,21 +76,19 @@ namespace PickyParking.Features.ParkingRules
             _previewState.Clear(buildingId);
         }
 
-        public void UpdatePreview(ushort buildingId, ParkingRulesConfigInput input)
+        public void UpdatePreview(ushort buildingId, ParkingRulesConfigDefinition rule)
         {
-            if (buildingId == 0 || input == null || _previewState == null)
+            if (buildingId == 0 || _previewState == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = BuildRuleFromInput(input);
             _previewState.SetPreview(buildingId, rule);
         }
 
-        public void ApplyRuleNow(ushort buildingId, ParkingRulesConfigInput input, string reason)
+        public void ApplyRuleNow(ushort buildingId, ParkingRulesConfigDefinition rule, string reason)
         {
-            if (buildingId == 0 || input == null || _parkingRulesRepository == null)
+            if (buildingId == 0 || _parkingRulesRepository == null)
                 return;
 
-            ParkingRulesConfigDefinition rule = BuildRuleFromInput(input);
             _hasPendingReevaluation = true;
             _pendingReevaluationBuildingId = buildingId;
 
@@ -137,16 +134,6 @@ namespace PickyParking.Features.ParkingRules
             return "ResidentsOnly=" + rule.ResidentsWithinRadiusOnly + " (" + rule.ResidentsRadiusMeters + "m), "
                    + "WorkSchoolOnly=" + rule.WorkSchoolWithinRadiusOnly + " (" + rule.WorkSchoolRadiusMeters + "m), "
                    + "VisitorsAllowed=" + rule.VisitorsAllowed;
-        }
-
-        public ParkingRulesConfigDefinition BuildRuleFromInput(ParkingRulesConfigInput input)
-        {
-            return new ParkingRulesConfigDefinition(
-                input.ResidentsEnabled,
-                input.ResidentsRadiusMeters,
-                input.WorkSchoolEnabled,
-                input.WorkSchoolRadiusMeters,
-                input.VisitorsAllowed);
         }
     }
 }
