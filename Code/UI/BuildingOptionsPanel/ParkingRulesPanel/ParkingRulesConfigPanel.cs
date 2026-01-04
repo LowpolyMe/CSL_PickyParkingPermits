@@ -59,13 +59,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (_ui == null || !IsPanelVisibleForStats())
                 return;
 
-            if (_state.BuildingId == 0)
+            if (!_state.IsReadyForStatsUpdate(Time.unscaledTime))
                 return;
 
-            if (Time.unscaledTime < _state.NextParkingStatsUpdateTime)
-                return;
-
-            _state.NextParkingStatsUpdateTime = Time.unscaledTime + BuildingOptionsPanelUiValues.RulesPanel.ParkingStatsUpdateIntervalSeconds;
+            _state.ScheduleNextStatsUpdate(Time.unscaledTime + BuildingOptionsPanelUiValues.RulesPanel.ParkingStatsUpdateIntervalSeconds);
             UpdateParkingSpaceStats();
         }
 
@@ -76,13 +73,13 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 DiscardUnappliedChanges();
             }
 
-            _state.BuildingId = buildingId;
+            _state.BindBuilding(buildingId);
             Refresh();
         }
 
         public void SetPrefabSupported(bool supported)
         {
-            _state.IsPrefabSupported = supported;
+            _state.SetPrefabSupported(supported);
         }
 
         public void CommitPendingChanges()
@@ -90,7 +87,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (!_state.IsDirty)
                 return;
 
-            _state.IsDirty = false;
+            _state.ClearDirty();
 
             if (!CanOperateOnBuilding())
                 return;
@@ -159,9 +156,9 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             float snappedValue = SnapSliderValue(value);
             if (!Mathf.Approximately(snappedValue, value))
             {
-                _state.IsUpdatingUi = true;
+                _state.BeginUiSync();
                 row.Slider.value = snappedValue;
-                _state.IsUpdatingUi = false;
+                _state.EndUiSync();
             }
 
             value = snappedValue;
@@ -208,12 +205,12 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         private void SetSliderValue(ParkingRulesSliderRow row, float value)
         {
             value = SnapSliderValue(value);
-            _state.IsUpdatingUi = true;
+            _state.BeginUiSync();
             row.Slider.value = value;
             if (value > 0f)
                 row.LastNonZeroValue = value;
             _ui.UpdateSliderRowLabel(row);
-            _state.IsUpdatingUi = false;
+            _state.EndUiSync();
         }
 
         private float SnapSliderValue(float value)
@@ -238,7 +235,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             ClearPreview();
             ApplyRuleToUi(_state.BaselineRule);
-            _state.ResetDirty();
+            _state.ClearDirty();
         }
 
         private void MarkDirty()
@@ -263,25 +260,22 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             bool hasStoredRule = _editor.TryGetStoredRule(_state.BuildingId, out var storedRule);
 
-            _state.RestrictionsEnabled = hasStoredRule;
-            _state.HasStoredRule = hasStoredRule;
-
             if (hasStoredRule)
             {
-                _state.BaselineRule = storedRule;
+                _state.SetBaselineRule(storedRule, restrictionsEnabled: true, hasStoredRule: true);
                 ApplyRuleToUi(storedRule);
             }
             else
             {
-                _state.BaselineRule = new ParkingRulesConfigDefinition(
+                var baselineRule = new ParkingRulesConfigDefinition(
                     residentsWithinRadiusOnly: false,
                     residentsRadiusMeters: ParkingRulesLimits.DefaultRadiusMeters,
                     workSchoolWithinRadiusOnly: false,
                     workSchoolRadiusMeters: ParkingRulesLimits.DefaultRadiusMeters,
                     visitorsAllowed: false);
+                _state.SetBaselineRule(baselineRule, restrictionsEnabled: false, hasStoredRule: false);
             }
 
-            _state.ResetDirty();
             UpdateRestrictionsVisibility();
             UpdatePreviewRule();
             UpdateParkingSpaceStats();
@@ -330,8 +324,9 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (!CanOperateOnBuilding())
                 return;
 
-            _state.IsDirty = false;
+            _state.BeginApplying();
             _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), reason);
+            _state.ClearDirty();
         }
 
         private void ApplyChangesFromButton()
@@ -343,11 +338,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 return;
 
             ParkingRulesConfigInput input = BuildInput();
+            _state.BeginApplying();
             _editor.ApplyRuleNow(_state.BuildingId, input, "ApplyButton");
             _editor.RequestPendingReevaluationIfAny(_state.BuildingId);
-            _state.BaselineRule = _editor.BuildRuleFromInput(input);
-            _state.HasStoredRule = true;
-            _state.ResetDirty();
+            _state.CommitApplied(_editor.BuildRuleFromInput(input));
         }
 
         private void RequestPendingReevaluationIfAny(ushort buildingId)
@@ -368,30 +362,31 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (!CanOperateOnBuilding())
                 return;
 
-            _state.RestrictionsEnabled = !_state.RestrictionsEnabled;
+            bool enableRestrictions = !_state.RestrictionsEnabled;
+            if (enableRestrictions)
+                _state.EnableRestrictions();
+            else
+                _state.DisableRestrictions();
             UpdateRestrictionsVisibility();
 
-            if (!_state.RestrictionsEnabled)
+            if (!enableRestrictions)
             {
                 ClearPreview();
                 _editor.RemoveRule(_state.BuildingId, "RestrictionsToggleOff");
-                _state.HasStoredRule = false;
-                _state.ResetDirty();
                 return;
             }
 
             if (!_state.HasStoredRule)
             {
-                _state.BaselineRule = new ParkingRulesConfigDefinition(
+                var baselineRule = new ParkingRulesConfigDefinition(
                     residentsWithinRadiusOnly: true,
                     residentsRadiusMeters: BuildingOptionsPanelUiValues.RulesPanel.DefaultNewRuleRadiusMeters,
                     workSchoolWithinRadiusOnly: true,
                     workSchoolRadiusMeters: BuildingOptionsPanelUiValues.RulesPanel.DefaultNewRuleRadiusMeters,
                     visitorsAllowed: true);
-                ApplyRuleToUi(_state.BaselineRule);
+                ApplyRuleToUi(baselineRule);
                 _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), "DefaultsOnEnable");
-                _state.HasStoredRule = true;
-                _state.ResetDirty();
+                _state.CommitApplied(baselineRule);
             }
             else
             {
