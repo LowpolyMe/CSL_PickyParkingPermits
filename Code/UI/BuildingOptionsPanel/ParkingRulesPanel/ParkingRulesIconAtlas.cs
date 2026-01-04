@@ -29,7 +29,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             Texture2D texture = ModResourceLoader.LoadTexture(ParkingRulesIconAtlasUiValues.TextureFileName);
             if (texture == null)
             {
-                Log.Warn("[UI] IconsAtlas texture not found in mod Resources.");
+                Log.Warn("[ParkingRulesPanel] IconsAtlas texture not found in mod Resources.");
                 return null;
             }
 
@@ -84,7 +84,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (_atlas == null && !_attempted)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Icon atlas cleanup skipped (never created).");
+                    Log.Info("[ParkingRulesPanel] Icon atlas cleanup skipped (never created).");
                 return;
             }
 
@@ -95,7 +95,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (atlas == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Icon atlas cache reset (load attempt only).");
+                    Log.Info("[ParkingRulesPanel] Icon atlas cache reset (load attempt only).");
                 return;
             }
 
@@ -109,7 +109,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             Object.Destroy(atlas);
             if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[UI] Icon atlas cache cleared.");
+                Log.Info("[ParkingRulesPanel] Icon atlas cache cleared.");
         }
 
         private static void AddSprite(UITextureAtlas atlas, Texture2D texture, SpriteSpec spec)

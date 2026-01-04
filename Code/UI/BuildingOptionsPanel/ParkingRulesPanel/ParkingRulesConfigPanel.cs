@@ -281,7 +281,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             UpdateParkingSpaceStats();
 
             if (hasStoredRule && Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[UI] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
+                Log.Info("[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
         }
 
         private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)
