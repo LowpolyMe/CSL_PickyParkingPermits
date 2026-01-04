@@ -1,7 +1,7 @@
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing;
-using PickyParking.UI;
+using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
 
 namespace PickyParking.Features.ParkingRules
 {

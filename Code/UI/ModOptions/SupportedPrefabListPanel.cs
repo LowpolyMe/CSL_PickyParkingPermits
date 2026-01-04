@@ -12,21 +12,14 @@ namespace PickyParking.UI
 {
     internal sealed class SupportedPrefabListPanel : UIPanel
     {
-        private const float HeaderHeight = 28f;
-        private const float RowHeight = 36f;
-        private const float ListHeight = 220f;
-        private const float ThumbnailSize = 28f;
-        private const float ThumbnailBackgroundPadding = 4f;
-        private const float HorizontalPadding = 8f;
-        private const float VerticalPadding = 6f;
-        private const float ColumnSpacing = 8f;
-        private const float InstancesColumnWidth = 140f;
-        private const float RemoveButtonWidth = 90f;
-        private const float ScrollbarWidth = 12f;
-        private const float ScrollbarGap = 2f;
-        private const float MinNameWidth = 120f;
-        private const float HoverOutlineInset = 1f;
-        private static readonly Color32 RowHoverOutlineColor = new Color32(255, 255, 255, 140);
+        private struct LabelOptions
+        {
+            public string Text;
+            public float Width;
+            public float Height;
+            public UIHorizontalAlignment Alignment;
+            public float X;
+        }
 
         private UIScrollablePanel _rowsPanel;
         private bool _showThumbnails;
@@ -71,7 +64,7 @@ namespace PickyParking.UI
             UIPanel row = _rowsPanel.AddUIComponent<UIPanel>();
             row.name = "PrefabRow";
             row.width = _rowsPanel.width;
-            row.height = RowHeight;
+            row.height = ModOptionsUiValues.SupportedPrefabList.RowHeight;
             row.autoLayout = false;
 
             UISprite hoverOutline = CreateRowHoverOutline(row);
@@ -79,10 +72,24 @@ namespace PickyParking.UI
             if (_showThumbnails)
                 CreateThumbnail(row, prefabId, layout);
 
-            AddLabel(row, displayName ?? prefabId ?? string.Empty, layout.NameWidth, RowHeight, UIHorizontalAlignment.Left, layout.NameX);
+            AddLabel(row, new LabelOptions
+            {
+                Text = displayName ?? prefabId ?? string.Empty,
+                Width = layout.NameWidth,
+                Height = ModOptionsUiValues.SupportedPrefabList.RowHeight,
+                Alignment = UIHorizontalAlignment.Left,
+                X = layout.NameX
+            });
 
             if (_showInstances)
-                AddLabel(row, instancesText ?? string.Empty, layout.InstancesWidth, RowHeight, UIHorizontalAlignment.Right, layout.InstancesX);
+                AddLabel(row, new LabelOptions
+                {
+                    Text = instancesText ?? string.Empty,
+                    Width = layout.InstancesWidth,
+                Height = ModOptionsUiValues.SupportedPrefabList.RowHeight,
+                    Alignment = UIHorizontalAlignment.Right,
+                    X = layout.InstancesX
+                });
 
             UIButton removeButton = row.AddUIComponent<UIButton>();
             removeButton.text = "Remove";
@@ -93,10 +100,12 @@ namespace PickyParking.UI
             removeButton.normalBgSprite = "LevelBarBackground";
             removeButton.hoveredBgSprite = "LevelBarForeground";
             removeButton.pressedBgSprite = "LevelBarForeground";
-            removeButton.size = new Vector2(layout.RemoveWidth, RowHeight - VerticalPadding * 2f);
+            removeButton.size = new Vector2(
+                layout.RemoveWidth,
+                ModOptionsUiValues.SupportedPrefabList.RowHeight - ModOptionsUiValues.SupportedPrefabList.VerticalPadding * 2f);
             removeButton.relativePosition = new Vector3(
                 layout.RemoveX,
-                VerticalPadding);
+                ModOptionsUiValues.SupportedPrefabList.VerticalPadding);
             removeButton.eventMouseEnter += (_, __) => hoverOutline.isVisible = true;
             removeButton.eventMouseLeave += (_, __) => hoverOutline.isVisible = false;
             removeButton.eventClicked += (_, __) => HandleRemoveClicked(key, displayName);
@@ -124,17 +133,21 @@ namespace PickyParking.UI
             else
                 width = ModOptionsUiValues.OptionsPanel.DefaultWidth;
 
-            height = HeaderHeight + ListHeight + VerticalPadding * 2f;
+            height = ModOptionsUiValues.SupportedPrefabList.HeaderHeight
+                + ModOptionsUiValues.SupportedPrefabList.ListHeight
+                + ModOptionsUiValues.SupportedPrefabList.VerticalPadding * 2f;
         }
 
         private void BuildPanelUi()
         {
-            float listWidth = width - ScrollbarWidth - ScrollbarGap;
+            float listWidth = width
+                - ModOptionsUiValues.SupportedPrefabList.ScrollbarWidth
+                - ModOptionsUiValues.SupportedPrefabList.ScrollbarGap;
 
             UIPanel headerRow = AddUIComponent<UIPanel>();
             headerRow.name = "HeaderRow";
-            headerRow.size = new Vector2(listWidth, HeaderHeight);
-            headerRow.relativePosition = new Vector3(0f, VerticalPadding);
+            headerRow.size = new Vector2(listWidth, ModOptionsUiValues.SupportedPrefabList.HeaderHeight);
+            headerRow.relativePosition = new Vector3(0f, ModOptionsUiValues.SupportedPrefabList.VerticalPadding);
             headerRow.atlas = GetAtlas();
             headerRow.backgroundSprite = "SubcategoriesPanel";
             headerRow.color = new Color32(50, 50, 50, 255);
@@ -146,8 +159,11 @@ namespace PickyParking.UI
             _rowsPanel.atlas = GetAtlas();
             _rowsPanel.backgroundSprite = "SubcategoriesPanel";
             _rowsPanel.color = new Color32(60, 60, 60, 255);
-            _rowsPanel.size = new Vector2(listWidth, ListHeight);
-            _rowsPanel.relativePosition = new Vector3(0f, HeaderHeight + VerticalPadding * 2f);
+            _rowsPanel.size = new Vector2(listWidth, ModOptionsUiValues.SupportedPrefabList.ListHeight);
+            _rowsPanel.relativePosition = new Vector3(
+                0f,
+                ModOptionsUiValues.SupportedPrefabList.HeaderHeight
+                + ModOptionsUiValues.SupportedPrefabList.VerticalPadding * 2f);
             _rowsPanel.autoLayout = true;
             _rowsPanel.autoLayoutDirection = LayoutDirection.Vertical;
             _rowsPanel.autoLayoutPadding = new RectOffset(
@@ -158,8 +174,11 @@ namespace PickyParking.UI
             _rowsPanel.clipChildren = true;
             _rowsPanel.scrollWheelDirection = UIOrientation.Vertical;
 
-            UIScrollbar scrollbar = CreateScrollbar(ListHeight);
-            scrollbar.relativePosition = new Vector3(listWidth + ScrollbarGap, HeaderHeight + VerticalPadding * 2f);
+            UIScrollbar scrollbar = CreateScrollbar(ModOptionsUiValues.SupportedPrefabList.ListHeight);
+            scrollbar.relativePosition = new Vector3(
+                listWidth + ModOptionsUiValues.SupportedPrefabList.ScrollbarGap,
+                ModOptionsUiValues.SupportedPrefabList.HeaderHeight
+                + ModOptionsUiValues.SupportedPrefabList.VerticalPadding * 2f);
             _rowsPanel.verticalScrollbar = scrollbar;
         }
 
@@ -167,37 +186,60 @@ namespace PickyParking.UI
         {
             ColumnLayout layout = BuildColumnLayout(contentWidth, showThumbnails, showInstances);
 
-            AddLabel(headerRow, "Prefab", layout.NameWidth, HeaderHeight, UIHorizontalAlignment.Left, layout.NameX);
+            AddLabel(headerRow, new LabelOptions
+            {
+                Text = "Prefab",
+                Width = layout.NameWidth,
+                Height = ModOptionsUiValues.SupportedPrefabList.HeaderHeight,
+                Alignment = UIHorizontalAlignment.Left,
+                X = layout.NameX
+            });
 
             if (showInstances)
-                AddLabel(headerRow, "Rules in city", layout.InstancesWidth, HeaderHeight, UIHorizontalAlignment.Right, layout.InstancesX);
+                AddLabel(headerRow, new LabelOptions
+                {
+                    Text = "Rules in city",
+                    Width = layout.InstancesWidth,
+                    Height = ModOptionsUiValues.SupportedPrefabList.HeaderHeight,
+                    Alignment = UIHorizontalAlignment.Right,
+                    X = layout.InstancesX
+                });
 
-            AddLabel(headerRow, "Remove", layout.RemoveWidth, HeaderHeight, UIHorizontalAlignment.Center, layout.RemoveX);
+            AddLabel(headerRow, new LabelOptions
+            {
+                Text = "Remove",
+                Width = layout.RemoveWidth,
+                Height = ModOptionsUiValues.SupportedPrefabList.HeaderHeight,
+                Alignment = UIHorizontalAlignment.Center,
+                X = layout.RemoveX
+            });
         }
 
         private UIScrollbar CreateScrollbar(float height)
         {
             UIScrollbar scrollbar = AddUIComponent<UIScrollbar>();
             scrollbar.name = "PrefabListScrollbar";
-            scrollbar.width = ScrollbarWidth;
+            scrollbar.width = ModOptionsUiValues.SupportedPrefabList.ScrollbarWidth;
             scrollbar.height = height;
             scrollbar.orientation = UIOrientation.Vertical;
             scrollbar.minValue = 0f;
             scrollbar.value = 0f;
-            scrollbar.incrementAmount = RowHeight;
+            scrollbar.incrementAmount = ModOptionsUiValues.SupportedPrefabList.RowHeight;
 
             UISlicedSprite track = scrollbar.AddUIComponent<UISlicedSprite>();
             track.atlas = GetAtlas();
             track.spriteName = "ScrollbarTrack";
             track.relativePosition = Vector3.zero;
-            track.size = new Vector2(ScrollbarWidth, height);
+            track.size = new Vector2(ModOptionsUiValues.SupportedPrefabList.ScrollbarWidth, height);
             scrollbar.trackObject = track;
 
             UISlicedSprite thumb = track.AddUIComponent<UISlicedSprite>();
             thumb.atlas = GetAtlas();
             thumb.spriteName = "ScrollbarThumb";
             thumb.relativePosition = Vector3.zero;
-            thumb.size = new Vector2(ScrollbarWidth, ModOptionsUiValues.SupportedPrefabList.ScrollbarThumbHeight);
+            thumb.size = new Vector2(
+                ModOptionsUiValues.SupportedPrefabList.ScrollbarWidth,
+                ModOptionsUiValues.SupportedPrefabList.ScrollbarThumbHeight);
             scrollbar.thumbObject = thumb;
 
             return scrollbar;
@@ -208,11 +250,12 @@ namespace PickyParking.UI
             UISprite background = row.AddUIComponent<UISprite>();
             background.atlas = GetAtlas();
             background.spriteName = "GenericTab";
-            float backgroundSize = ThumbnailSize + ThumbnailBackgroundPadding * 2f;
+            float backgroundSize = ModOptionsUiValues.SupportedPrefabList.ThumbnailSize
+                + ModOptionsUiValues.SupportedPrefabList.ThumbnailBackgroundPadding * 2f;
             background.size = new Vector2(backgroundSize, backgroundSize);
             background.relativePosition = new Vector3(
-                layout.ThumbnailX - ThumbnailBackgroundPadding,
-                (RowHeight - backgroundSize) * 0.5f);
+                layout.ThumbnailX - ModOptionsUiValues.SupportedPrefabList.ThumbnailBackgroundPadding,
+                (ModOptionsUiValues.SupportedPrefabList.RowHeight - backgroundSize) * 0.5f);
 
             UITextureAtlas atlas;
             string spriteName;
@@ -222,10 +265,12 @@ namespace PickyParking.UI
                 UISprite thumbnail = row.AddUIComponent<UISprite>();
                 thumbnail.atlas = atlas;
                 thumbnail.spriteName = spriteName;
-                thumbnail.size = new Vector2(ThumbnailSize, ThumbnailSize);
+                thumbnail.size = new Vector2(
+                    ModOptionsUiValues.SupportedPrefabList.ThumbnailSize,
+                    ModOptionsUiValues.SupportedPrefabList.ThumbnailSize);
                 thumbnail.relativePosition = new Vector3(
                     layout.ThumbnailX,
-                    (RowHeight - ThumbnailSize) * 0.5f);
+                    (ModOptionsUiValues.SupportedPrefabList.RowHeight - ModOptionsUiValues.SupportedPrefabList.ThumbnailSize) * 0.5f);
                 return;
             }
 
@@ -234,10 +279,12 @@ namespace PickyParking.UI
             fallback.spriteName = "ThumbnailBuildingDefault";
             if (fallback.atlas == null || fallback.atlas[fallback.spriteName] == null)
                 fallback.spriteName = "OptionBase";
-            fallback.size = new Vector2(ThumbnailSize, ThumbnailSize);
+            fallback.size = new Vector2(
+                ModOptionsUiValues.SupportedPrefabList.ThumbnailSize,
+                ModOptionsUiValues.SupportedPrefabList.ThumbnailSize);
             fallback.relativePosition = new Vector3(
                 layout.ThumbnailX,
-                (RowHeight - ThumbnailSize) * 0.5f);
+                (ModOptionsUiValues.SupportedPrefabList.RowHeight - ModOptionsUiValues.SupportedPrefabList.ThumbnailSize) * 0.5f);
         }
 
         private UISprite CreateRowHoverOutline(UIPanel row)
@@ -245,9 +292,13 @@ namespace PickyParking.UI
             UISprite outline = row.AddUIComponent<UISprite>();
             outline.atlas = GetAtlas();
             outline.spriteName = "GenericTab";
-            outline.size = new Vector2(row.width - HoverOutlineInset * 2f, row.height - HoverOutlineInset * 2f);
-            outline.relativePosition = new Vector3(HoverOutlineInset, HoverOutlineInset);
-            outline.color = RowHoverOutlineColor;
+            outline.size = new Vector2(
+                row.width - ModOptionsUiValues.SupportedPrefabList.HoverOutlineInset * 2f,
+                row.height - ModOptionsUiValues.SupportedPrefabList.HoverOutlineInset * 2f);
+            outline.relativePosition = new Vector3(
+                ModOptionsUiValues.SupportedPrefabList.HoverOutlineInset,
+                ModOptionsUiValues.SupportedPrefabList.HoverOutlineInset);
+            outline.color = ModOptionsUiValues.SupportedPrefabList.RowHoverOutlineColor;
             outline.isVisible = false;
             outline.isInteractive = false;
             outline.zOrder = 0;
@@ -533,28 +584,36 @@ namespace PickyParking.UI
 
         private ColumnLayout BuildColumnLayout(float contentWidth, bool showThumbnails, bool showInstances)
         {
-            float thumbnailColumn = showThumbnails ? ThumbnailSize + ColumnSpacing : 0f;
-            float instancesColumn = showInstances ? InstancesColumnWidth + ColumnSpacing : 0f;
-            float nameWidth = contentWidth - (HorizontalPadding * 2f + thumbnailColumn + instancesColumn + RemoveButtonWidth + ColumnSpacing * 2f);
-            if (nameWidth < MinNameWidth)
-                nameWidth = MinNameWidth;
+            float thumbnailColumn = showThumbnails
+                ? ModOptionsUiValues.SupportedPrefabList.ThumbnailSize + ModOptionsUiValues.SupportedPrefabList.ColumnSpacing
+                : 0f;
+            float instancesColumn = showInstances
+                ? ModOptionsUiValues.SupportedPrefabList.InstancesColumnWidth + ModOptionsUiValues.SupportedPrefabList.ColumnSpacing
+                : 0f;
+            float nameWidth = contentWidth - (ModOptionsUiValues.SupportedPrefabList.HorizontalPadding * 2f
+                + thumbnailColumn
+                + instancesColumn
+                + ModOptionsUiValues.SupportedPrefabList.RemoveButtonWidth
+                + ModOptionsUiValues.SupportedPrefabList.ColumnSpacing * 2f);
+            if (nameWidth < ModOptionsUiValues.SupportedPrefabList.MinNameWidth)
+                nameWidth = ModOptionsUiValues.SupportedPrefabList.MinNameWidth;
 
-            float x = HorizontalPadding;
+            float x = ModOptionsUiValues.SupportedPrefabList.HorizontalPadding;
             var layout = new ColumnLayout();
             layout.ThumbnailX = x;
-            layout.ThumbnailWidth = ThumbnailSize;
+            layout.ThumbnailWidth = ModOptionsUiValues.SupportedPrefabList.ThumbnailSize;
 
             if (showThumbnails)
-                x += ThumbnailSize + ColumnSpacing;
+                x += ModOptionsUiValues.SupportedPrefabList.ThumbnailSize + ModOptionsUiValues.SupportedPrefabList.ColumnSpacing;
             layout.NameX = x;
             layout.NameWidth = nameWidth;
 
-            x += nameWidth + ColumnSpacing;
+            x += nameWidth + ModOptionsUiValues.SupportedPrefabList.ColumnSpacing;
             if (showInstances)
             {
                 layout.InstancesX = x;
-                layout.InstancesWidth = InstancesColumnWidth;
-                x += InstancesColumnWidth + ColumnSpacing;
+                layout.InstancesWidth = ModOptionsUiValues.SupportedPrefabList.InstancesColumnWidth;
+                x += ModOptionsUiValues.SupportedPrefabList.InstancesColumnWidth + ModOptionsUiValues.SupportedPrefabList.ColumnSpacing;
             }
             else
             {
@@ -562,21 +621,21 @@ namespace PickyParking.UI
                 layout.InstancesWidth = 0f;
             }
             layout.RemoveX = x;
-            layout.RemoveWidth = RemoveButtonWidth;
+            layout.RemoveWidth = ModOptionsUiValues.SupportedPrefabList.RemoveButtonWidth;
 
             return layout;
         }
 
-        private static UILabel AddLabel(UIPanel parent, string text, float width, float height, UIHorizontalAlignment alignment, float x)
+        private static UILabel AddLabel(UIPanel parent, LabelOptions options)
         {
             UILabel label = parent.AddUIComponent<UILabel>();
-            label.text = text ?? string.Empty;
+            label.text = options.Text ?? string.Empty;
             label.textScale = ModOptionsUiValues.SupportedPrefabList.LabelTextScale;
             label.autoSize = false;
-            label.size = new Vector2(width, height);
-            label.textAlignment = alignment;
+            label.size = new Vector2(options.Width, options.Height);
+            label.textAlignment = options.Alignment;
             label.verticalAlignment = UIVerticalAlignment.Middle;
-            label.relativePosition = new Vector3(x, 0f);
+            label.relativePosition = new Vector3(options.X, 0f);
             return label;
         }
 

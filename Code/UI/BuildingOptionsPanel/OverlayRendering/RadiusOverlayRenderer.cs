@@ -2,18 +2,24 @@ using ColossalFramework;
 using ColossalFramework.Math;
 using UnityEngine;
 using PickyParking.Features.ParkingRules;
+using PickyParking.UI;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.OverlayRendering
 {
     
     
     
     public static class RadiusOverlayRenderer
     {
-        private const float OverlayAlpha = 0.7f;
-        private const float MinOverlayY = -100000f;
-        private const float MaxOverlayY = 100000f;
-
+        private struct CircleOverlay
+        {
+            public RenderManager.CameraInfo CameraInfo;
+            public Color Color;
+            public Vector3 Center;
+            public float Radius;
+            public float MinY;
+            public float MaxY;
+        }
         public static void RenderOverlay(RenderManager.CameraInfo cameraInfo, UiServices services)
         {
             if (services == null || !services.IsFeatureActive)
@@ -40,8 +46,8 @@ namespace PickyParking.UI
             if (cameraInfo == null)
                 return;
 
-            float minY = MinOverlayY;
-            float maxY = MaxOverlayY;
+            float minY = OverlayUiValues.RadiusOverlay.MinOverlayY;
+            float maxY = OverlayUiValues.RadiusOverlay.MaxOverlayY;
 
             float residentsHue = 0.35f;
             float workSchoolHue = 0.1f;
@@ -53,35 +59,50 @@ namespace PickyParking.UI
 
             if (rule.ResidentsWithinRadiusOnly)
             {
-                Color color = ColorConversion.FromHue(residentsHue, OverlayAlpha);
+                Color color = ColorConversion.FromHue(residentsHue, OverlayUiValues.RadiusOverlay.OverlayAlpha);
                 if (rule.ResidentsRadiusMeters == ushort.MaxValue)
                 {
                     DrawFullMapOverlay(cameraInfo, color, minY, maxY);
                 }
                 else
                 {
-                    DrawCircle(cameraInfo, color, center, rule.ResidentsRadiusMeters, minY, maxY);
+                    DrawCircle(new CircleOverlay
+                    {
+                        CameraInfo = cameraInfo,
+                        Color = color,
+                        Center = center,
+                        Radius = rule.ResidentsRadiusMeters,
+                        MinY = minY,
+                        MaxY = maxY
+                    });
                 }
             }
 
             if (rule.WorkSchoolWithinRadiusOnly)
             {
-                Color color = ColorConversion.FromHue(workSchoolHue, OverlayAlpha);
+                Color color = ColorConversion.FromHue(workSchoolHue, OverlayUiValues.RadiusOverlay.OverlayAlpha);
                 if (rule.WorkSchoolRadiusMeters == ushort.MaxValue)
                 {
                     DrawFullMapOverlay(cameraInfo, color, minY, maxY);
                 }
                 else
                 {
-                    DrawCircle(cameraInfo, color, center, rule.WorkSchoolRadiusMeters, minY, maxY);
+                    DrawCircle(new CircleOverlay
+                    {
+                        CameraInfo = cameraInfo,
+                        Color = color,
+                        Center = center,
+                        Radius = rule.WorkSchoolRadiusMeters,
+                        MinY = minY,
+                        MaxY = maxY
+                    });
                 }
             }
         }
 
         private static Quad3 BuildMapQuad()
         {
-            const float mapSizeMeters = 17280f;
-            float half = mapSizeMeters * 0.5f;
+            float half = OverlayUiValues.RadiusOverlay.MapSizeMeters * 0.5f;
             return new Quad3(
                 new Vector3(-half, 0f, -half),
                 new Vector3(half, 0f, -half),
@@ -89,19 +110,19 @@ namespace PickyParking.UI
                 new Vector3(-half, 0f, half));
         }
 
-        private static void DrawCircle(RenderManager.CameraInfo cameraInfo, Color color, Vector3 center, float radius, float minY, float maxY)
+        private static void DrawCircle(CircleOverlay overlay)
         {
-            if (radius <= 0f)
+            if (overlay.Radius <= 0f)
                 return;
 
-            float size = radius * 2f;
+            float size = overlay.Radius * 2f;
             Singleton<RenderManager>.instance.OverlayEffect.DrawCircle(
-                cameraInfo,
-                color,
-                center,
+                overlay.CameraInfo,
+                overlay.Color,
+                overlay.Center,
                 size,
-                minY,
-                maxY,
+                overlay.MinY,
+                overlay.MaxY,
                 renderLimits: false,
                 alphaBlend: true);
         }
@@ -119,3 +140,8 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+

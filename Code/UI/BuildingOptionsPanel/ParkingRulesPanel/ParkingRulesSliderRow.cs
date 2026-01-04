@@ -1,7 +1,7 @@
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     internal sealed class ParkingRulesSliderRow
     {
@@ -18,3 +18,9 @@ namespace PickyParking.UI
         public bool IsEnabled;
     }
 }
+
+
+
+
+
+

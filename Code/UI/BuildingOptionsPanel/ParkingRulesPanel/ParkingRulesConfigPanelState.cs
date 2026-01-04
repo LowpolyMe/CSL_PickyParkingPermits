@@ -1,6 +1,6 @@
 using PickyParking.Features.ParkingRules;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     internal sealed class ParkingRulesConfigPanelState
     {
@@ -27,3 +27,9 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+
+

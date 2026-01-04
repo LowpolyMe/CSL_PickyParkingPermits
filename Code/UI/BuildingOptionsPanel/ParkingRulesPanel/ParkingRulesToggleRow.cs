@@ -1,6 +1,6 @@
 using ColossalFramework.UI;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     internal sealed class ParkingRulesToggleRow
     {
@@ -11,3 +11,9 @@ namespace PickyParking.UI
         public bool IsEnabled;
     }
 }
+
+
+
+
+
+

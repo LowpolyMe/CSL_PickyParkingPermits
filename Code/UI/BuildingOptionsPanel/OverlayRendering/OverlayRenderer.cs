@@ -1,6 +1,7 @@
 using ColossalFramework;
+using PickyParking.UI;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.OverlayRendering
 {
     public static class OverlayRenderer
     {
@@ -20,3 +21,8 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+

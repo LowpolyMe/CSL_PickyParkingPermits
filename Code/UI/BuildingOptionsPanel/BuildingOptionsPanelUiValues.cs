@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel
 {
-    internal static class ConfigPanelUiValues
+    internal static class BuildingOptionsPanelUiValues
     {
         internal static class AttachPanel
         {
@@ -13,7 +13,7 @@ namespace PickyParking.UI
             public const float WrapperPadding = 25f;
         }
 
-        internal static class ConfigPanel
+        internal static class RulesPanel
         {
             public const float SliderAllThreshold = 0.99f;
             public const ushort DefaultNewRuleRadiusMeters = 500;
@@ -60,17 +60,22 @@ namespace PickyParking.UI
             public static readonly Color32 ValueLabelColor = new Color32(185, 221, 254, 255);
             public static readonly Color32 SliderTrackColor = new Color32(150, 150, 150, 255);
         }
-
-        internal static class SupportPanel
-        {
-            public const float RowHeight = 32f;
-            public const float HorizontalPadding = 10f;
-            public const float VerticalPadding = 4f;
-        }
+        
 
         internal static class DistanceDisplay
         {
             public const string InfiniteLabel = "\u221E";
         }
+
+        internal static class DistanceSliderMapping
+        {
+            public const float MidPoint = 0.5f;
+        }
     }
 }
+
+
+
+
+
+

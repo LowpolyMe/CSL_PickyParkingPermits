@@ -2,18 +2,20 @@ using ColossalFramework.UI;
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.UI.ModResources;
+using PickyParking.UI.BuildingOptionsPanel;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     internal static class ParkingRulesIconAtlas
     {
-        public const string ResidentsSpriteName = "ResidentsIcon";
-        public const string WorkSchoolSpriteName = "WorkSchoolIcon";
-        public const string VisitorsSpriteName = "VisitorsIcon";
-        public const string CrossedOutSpriteName = "CrossedIcon";
-        
-        private const string TextureFileName = "IconsAtlas.png";
-
+        private struct SpriteSpec
+        {
+            public string Name;
+            public int X;
+            public int Y;
+            public int Width;
+            public int Height;
+        }
         private static UITextureAtlas _atlas;
         private static bool _attempted;
 
@@ -24,7 +26,7 @@ namespace PickyParking.UI
 
             _attempted = true;
 
-            Texture2D texture = ModResourceLoader.LoadTexture(TextureFileName);
+            Texture2D texture = ModResourceLoader.LoadTexture(ParkingRulesIconAtlasUiValues.TextureFileName);
             if (texture == null)
             {
                 Log.Warn("[UI] IconsAtlas texture not found in mod Resources.");
@@ -41,10 +43,38 @@ namespace PickyParking.UI
             int iconWidth = texture.width / 4;
             int iconHeight = texture.height;
 
-            AddSprite(atlas, ResidentsSpriteName, 0, 0, iconWidth, iconHeight, texture);
-            AddSprite(atlas, WorkSchoolSpriteName, iconWidth, 0, iconWidth, iconHeight, texture);
-            AddSprite(atlas, VisitorsSpriteName, iconWidth * 2, 0, iconWidth, iconHeight, texture);
-            AddSprite(atlas, CrossedOutSpriteName, iconWidth * 3, 0, iconWidth, iconHeight, texture);
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.ResidentsSpriteName,
+                X = 0,
+                Y = 0,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.WorkSchoolSpriteName,
+                X = iconWidth,
+                Y = 0,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.VisitorsSpriteName,
+                X = iconWidth * 2,
+                Y = 0,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.CrossedOutSpriteName,
+                X = iconWidth * 3,
+                Y = 0,
+                Width = iconWidth,
+                Height = iconHeight
+            });
             _atlas = atlas;
             return _atlas;
         }
@@ -82,26 +112,31 @@ namespace PickyParking.UI
                 Log.Info("[UI] Icon atlas cache cleared.");
         }
 
-        private static void AddSprite(
-            UITextureAtlas atlas,
-            string name,
-            int x,
-            int y,
-            int width,
-            int height,
-            Texture2D texture)
+        private static void AddSprite(UITextureAtlas atlas, Texture2D texture, SpriteSpec spec)
         {
             float texWidth = texture.width;
             float texHeight = texture.height;
 
             var info = new UITextureAtlas.SpriteInfo
             {
-                name = name,
+                name = spec.Name,
                 texture = texture,
-                region = new Rect(x / texWidth, y / texHeight, width / texWidth, height / texHeight)
+                region = new Rect(
+                    spec.X / texWidth,
+                    spec.Y / texHeight,
+                    spec.Width / texWidth,
+                    spec.Height / texHeight)
             };
 
             atlas.AddSprite(info);
         }
     }
 }
+
+
+
+
+
+
+
+

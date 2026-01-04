@@ -12,8 +12,6 @@ namespace PickyParking.UI.ModResources
     
     public static class ModResourceLoader
     {
-        private const string ResourcesFolderName = "Resources";
-
         public static Texture2D LoadTexture(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -47,7 +45,7 @@ namespace PickyParking.UI.ModResources
             if (string.IsNullOrEmpty(modPath))
                 return null;
 
-            string resourcesDir = Path.Combine(modPath, ResourcesFolderName);
+            string resourcesDir = Path.Combine(modPath, ModResourcesUiValues.ResourcesFolderName);
             return Path.Combine(resourcesDir, fileName);
         }
 

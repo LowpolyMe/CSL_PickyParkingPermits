@@ -1,7 +1,8 @@
 using System;
 using System.Globalization;
+using PickyParking.UI.BuildingOptionsPanel;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     internal static class DistanceDisplayFormatter
     {
@@ -13,7 +14,7 @@ namespace PickyParking.UI
             float mappedMeters)
         {
             if (sliderValue >= 1f)
-                return ConfigPanelUiValues.DistanceDisplay.InfiniteLabel;
+                return BuildingOptionsPanelUiValues.DistanceDisplay.InfiniteLabel;
 
             if (sliderValue <= 0f)
                 return "0 m";
@@ -63,3 +64,11 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+
+
+
+

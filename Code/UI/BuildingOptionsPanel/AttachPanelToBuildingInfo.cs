@@ -3,8 +3,9 @@ using ColossalFramework.UI;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingLotPrefabs;
+using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel
 {
     public sealed class AttachPanelToBuildingInfo : MonoBehaviour
     {
@@ -48,7 +49,7 @@ namespace PickyParking.UI
                 if (Time.unscaledTime < _nextInjectionAttemptTime)
                     return;
 
-                _nextInjectionAttemptTime = Time.unscaledTime + ConfigPanelUiValues.AttachPanel.InjectionRetrySeconds;
+                _nextInjectionAttemptTime = Time.unscaledTime + BuildingOptionsPanelUiValues.AttachPanel.InjectionRetrySeconds;
                 TryInject();
                 if (_panel == null && _supportPanel == null)
                     return;
@@ -102,23 +103,23 @@ namespace PickyParking.UI
             if (_panel != null)
                 return;
 
-            GameObject panelObject = GameObject.Find(ConfigPanelUiValues.AttachPanel.CityServicePanelLibraryName);
+            GameObject panelObject = GameObject.Find(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelLibraryName);
             if (panelObject == null)
-                panelObject = GameObject.Find(ConfigPanelUiValues.AttachPanel.CityServicePanelName);
+                panelObject = GameObject.Find(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelName);
             if (panelObject == null)
             {
                 UIView view = UIView.GetAView();
                 if (view != null)
                 {
-                    UIComponent found = view.FindUIComponent<UIComponent>(ConfigPanelUiValues.AttachPanel.CityServicePanelLibraryName);
+                    UIComponent found = view.FindUIComponent<UIComponent>(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelLibraryName);
                     if (found == null)
-                        found = view.FindUIComponent<UIComponent>(ConfigPanelUiValues.AttachPanel.CityServicePanelName);
+                        found = view.FindUIComponent<UIComponent>(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelName);
                     if (found != null)
                         panelObject = found.gameObject;
 
                     if (panelObject == null)
                     {
-                        UIComponent prefixMatch = FindComponentByContains(view, ConfigPanelUiValues.AttachPanel.CityServicePanelName);
+                        UIComponent prefixMatch = FindComponentByContains(view, BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelName);
                         if (prefixMatch != null)
                         {
                             panelObject = prefixMatch.gameObject;
@@ -159,11 +160,11 @@ namespace PickyParking.UI
                     Log.Info("[UI] Subscribed to CityServiceWorldInfoPanel visibility.");
             }
 
-            Transform wrapperTransform = root.transform.Find(ConfigPanelUiValues.AttachPanel.WrapperContainerPath);
+            Transform wrapperTransform = root.transform.Find(BuildingOptionsPanelUiValues.AttachPanel.WrapperContainerPath);
             if (wrapperTransform == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Wrapper container path not found: " + ConfigPanelUiValues.AttachPanel.WrapperContainerPath);
+                    Log.Info("[UI] Wrapper container path not found: " + BuildingOptionsPanelUiValues.AttachPanel.WrapperContainerPath);
                 return;
             }
 
@@ -400,7 +401,7 @@ namespace PickyParking.UI
             UIPanel spacer = _wrapperContainer.AddUIComponent<UIPanel>();
             spacer.name = "PickyParkingWrapperPadding";
             spacer.width = _wrapperContainer.width;
-            spacer.height = ConfigPanelUiValues.AttachPanel.WrapperPadding;
+            spacer.height = BuildingOptionsPanelUiValues.AttachPanel.WrapperPadding;
             spacer.isVisible = true;
             spacer.autoLayout = false;
             spacer.backgroundSprite = string.Empty;
@@ -477,3 +478,9 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+
+
