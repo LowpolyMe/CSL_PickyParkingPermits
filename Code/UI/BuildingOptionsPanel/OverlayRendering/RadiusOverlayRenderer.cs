@@ -25,7 +25,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.OverlayRendering
             if (services == null || !services.IsFeatureActive)
                 return;
 
-            if (!services.TryGetSelectedBuilding(out ushort buildingId, out _))
+            if (!services.Game.TryGetSelectedBuilding(out ushort buildingId, out _))
                 return;
 
             ParkingRulesConfigDefinition rule;
@@ -40,7 +40,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.OverlayRendering
                 return;
             }
             
-            if (!services.TryGetBuildingPosition(buildingId, out Vector3 center))
+            if (!services.Game.TryGetBuildingPosition(buildingId, out Vector3 center))
                 return;
 
             if (cameraInfo == null)

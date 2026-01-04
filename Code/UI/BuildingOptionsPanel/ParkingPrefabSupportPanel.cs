@@ -2,13 +2,16 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Logging;
+using PickyParking.UI;
 
 namespace PickyParking.UI.BuildingOptionsPanel
 {
     public sealed class ParkingPrefabSupportPanel : UIPanel
     {
         private ushort _buildingId;
-        private BuildingInfo _buildingInfo;
+        private string _prefabName;
+        private PrefabKey _prefabKey;
+        private bool _hasPrefabKey;
         private UILabel _messageLabel;
         private UIButton _actionButton;
         private UiServices _services;
@@ -25,10 +28,12 @@ namespace PickyParking.UI.BuildingOptionsPanel
             BuildUi();
         }
 
-        public void Bind(ushort buildingId, BuildingInfo info)
+        public void Bind(ushort buildingId, BuildingUiInfo info)
         {
             _buildingId = buildingId;
-            _buildingInfo = info;
+            _prefabName = info.PrefabName;
+            _prefabKey = info.PrefabKey;
+            _hasPrefabKey = info.HasPrefabKey;
             Refresh();
         }
 
@@ -120,7 +125,7 @@ namespace PickyParking.UI.BuildingOptionsPanel
             if (_messageLabel == null || _actionButton == null)
                 return;
 
-            string prefabName = _buildingInfo != null ? _buildingInfo.name : "Unknown asset";
+            string prefabName = !string.IsNullOrEmpty(_prefabName) ? _prefabName : "Unknown asset";
 
             _messageLabel.text = "Add Picky Parking to Asset " + prefabName + "?";
             _actionButton.text = "Add Picky Parking to asset";
@@ -138,14 +143,13 @@ namespace PickyParking.UI.BuildingOptionsPanel
 
         private void TryAddSupportedPrefab()
         {
-            if (_buildingInfo == null)
+            if (!_hasPrefabKey)
                 return;
 
             if (_services == null || _services.SupportedParkingLotRegistry == null)
                 return;
 
-            PrefabKey key = ParkingLotPrefabKeyFactory.CreateKey(_buildingInfo);
-            bool added = _services.SupportedParkingLotRegistry.Add(key);
+            bool added = _services.SupportedParkingLotRegistry.Add(_prefabKey);
             if (!added)
                 return;
 
@@ -161,7 +165,7 @@ namespace PickyParking.UI.BuildingOptionsPanel
             }
 
             if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Added supported prefab " + key);
+                Log.Info("[SupportedPrefabs] Added supported prefab " + _prefabKey);
         }
     }
 }

@@ -2,8 +2,8 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
-using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
+using PickyParking.UI;
 
 namespace PickyParking.UI.BuildingOptionsPanel
 {
@@ -61,7 +61,7 @@ namespace PickyParking.UI.BuildingOptionsPanel
                 return;
             }
 
-            if (!services.TryGetSelectedBuilding(out ushort buildingId, out BuildingInfo info))
+            if (!services.Game.TryGetSelectedBuilding(out ushort buildingId, out BuildingUiInfo info))
             {
                 _lastSelectedBuildingId = 0;
                 UpdatePanels(false);
@@ -92,8 +92,7 @@ namespace PickyParking.UI.BuildingOptionsPanel
         private static bool HasParkingSpaces(UiServices services, ushort buildingId)
         {
             int totalSpaces;
-            bool hasParkingSpaces = services.GameAccess != null
-                && services.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces)
+            bool hasParkingSpaces = services.Game.TryGetParkingSpaceCount(buildingId, out totalSpaces)
                 && totalSpaces > 0;
             return hasParkingSpaces;
         }
@@ -297,7 +296,7 @@ namespace PickyParking.UI.BuildingOptionsPanel
             _supportPanel.isVisible = visible;
         }
 
-        private void BindPanelsForSelection(ushort buildingId, BuildingInfo info, bool prefabSupported, bool supportChanged)
+        private void BindPanelsForSelection(ushort buildingId, BuildingUiInfo info, bool prefabSupported, bool supportChanged)
         {
             if (_lastSelectedBuildingId != buildingId)
             {
@@ -320,16 +319,15 @@ namespace PickyParking.UI.BuildingOptionsPanel
             }
         }
 
-        private static bool IsSupportedParkingLot(UiServices services, BuildingInfo info)
+        private static bool IsSupportedParkingLot(UiServices services, BuildingUiInfo info)
         {
-            if (services == null || info == null)
+            if (services == null)
                 return false;
 
             if (services.SupportedParkingLotRegistry == null)
                 return false;
 
-            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
-            return services.SupportedParkingLotRegistry.Contains(key);
+            return services.SupportedParkingLotRegistry.Contains(info.PrefabKey);
         }
 
         private void HandleHostVisibilityChanged(UIComponent component, bool isVisible)

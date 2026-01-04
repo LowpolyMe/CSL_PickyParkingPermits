@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using ColossalFramework;
 using ColossalFramework.UI;
 using PickyParking.Logging;
 using PickyParking.Features.ParkingLotPrefabs;
@@ -260,7 +259,7 @@ namespace PickyParking.UI.ModOptions
             UITextureAtlas atlas;
             string spriteName;
 
-            if (TryGetPrefabThumbnailSprite(prefabId, out atlas, out spriteName))
+            if (_services != null && _services.Game.TryGetPrefabThumbnailSprite(prefabId, out atlas, out spriteName, out _))
             {
                 UISprite thumbnail = row.AddUIComponent<UISprite>();
                 thumbnail.atlas = atlas;
@@ -303,58 +302,6 @@ namespace PickyParking.UI.ModOptions
             outline.isInteractive = false;
             outline.zOrder = 0;
             return outline;
-        }
-
-        private static bool TryGetPrefabThumbnailSprite(string prefabId, out UITextureAtlas atlas, out string spriteName)
-        {
-            string unusedReason;
-            return TryGetPrefabThumbnailSprite(prefabId, out atlas, out spriteName, out unusedReason);
-        }
-
-        private static bool TryGetPrefabThumbnailSprite(
-            string prefabId,
-            out UITextureAtlas atlas,
-            out string spriteName,
-            out string reason)
-        {
-            atlas = null;
-            spriteName = null;
-            reason = null;
-
-            if (string.IsNullOrEmpty(prefabId))
-            {
-                reason = "prefab id is empty";
-                return false;
-            }
-
-            BuildingInfo info = PrefabCollection<BuildingInfo>.FindLoaded(prefabId);
-            if (info == null)
-            {
-                reason = "prefab not loaded";
-                return false;
-            }
-
-            atlas = info.m_Atlas;
-            spriteName = info.m_Thumbnail;
-            if (atlas == null)
-            {
-                reason = "atlas is null";
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(spriteName))
-            {
-                reason = "thumbnail name empty";
-                return false;
-            }
-
-            if (atlas[spriteName] == null)
-            {
-                reason = "sprite missing in atlas";
-                return false;
-            }
-
-            return true;
         }
 
         private void HandleRemoveClicked(PrefabKey key, string displayName)
@@ -441,10 +388,10 @@ namespace PickyParking.UI.ModOptions
                 return false;
             }
 
-            if (!Singleton<BuildingManager>.exists)
+            if (_services == null || !_services.Game.IsBuildingManagerReadyForUi())
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[SupportedPrefabs] Rules count build skipped: BuildingManager missing.");
+                    Log.Info("[SupportedPrefabs] Rules count build skipped: building data unavailable.");
                 return false;
             }
 
@@ -456,11 +403,8 @@ namespace PickyParking.UI.ModOptions
                 if (buildingId == 0)
                     continue;
 
-                BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId].Info;
-                if (info == null)
+                if (!_services.Game.TryGetBuildingPrefabName(buildingId, out string prefabName))
                     continue;
-
-                string prefabName = info.name;
                 if (string.IsNullOrEmpty(prefabName))
                     continue;
 
@@ -489,12 +433,10 @@ namespace PickyParking.UI.ModOptions
             if (!_showThumbnails)
                 return prefabId;
 
-            BuildingInfo info = PrefabCollection<BuildingInfo>.FindLoaded(prefabId);
-            if (info == null)
-                return prefabId;
+            if (_services != null && _services.Game.TryGetPrefabDisplayName(prefabId, out string name))
+                return name;
 
-            string name = info.GetLocalizedTitle();
-            return string.IsNullOrEmpty(name) ? prefabId : name;
+            return prefabId;
         }
 
         private bool RemoveSupportedPrefab(PrefabKey key)
@@ -527,9 +469,9 @@ namespace PickyParking.UI.ModOptions
             return previousThumbnails != _showThumbnails || previousInstances != _showInstances;
         }
 
-        private static bool ShouldShowThumbnails()
+        private bool ShouldShowThumbnails()
         {
-            return PrefabCollection<BuildingInfo>.LoadedCount() > 0;
+            return _services != null && _services.Game.IsPrefabCollectionReady();
         }
 
         private bool ShouldShowInstances(bool showThumbnails)
@@ -537,7 +479,7 @@ namespace PickyParking.UI.ModOptions
             return showThumbnails
                 && _services != null
                 && _services.ParkingRulesConfigRegistry != null
-                && Singleton<BuildingManager>.exists;
+                && _services.Game.IsBuildingManagerReadyForUi();
         }
 
         private void RebuildPanelUi()

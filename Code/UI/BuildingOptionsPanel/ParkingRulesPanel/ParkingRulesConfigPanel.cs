@@ -1,7 +1,6 @@
 using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
-using PickyParking.GameAdapters;
 using PickyParking.Logging;
 using PickyParking.UI.BuildingOptionsPanel;
 
@@ -16,7 +15,6 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         private ParkingRulesConfigPanelState _state;
         private ParkingRulesConfigPanelUi _ui;
         private ParkingRulesConfigEditor _editor;
-        private GameAccess _game;
         private ParkingRulesConfigUiConfig _uiConfig;
         private ParkingPanelTheme _theme;
         private UiServices _services;
@@ -31,7 +29,6 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             base.Start();
 
             _editor = _services != null ? _services.ParkingRulesConfigEditor : null;
-            _game = _services != null ? _services.GameAccess : null;
             _uiConfig = _editor != null ? _editor.UiConfig : ParkingRulesConfigUiConfig.Default;
             _theme = new ParkingPanelTheme(_services);
             _state = new ParkingRulesConfigPanelState();
@@ -411,12 +408,12 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         private void UpdateParkingSpaceStats()
         {
-            if (_ui == null || _game == null)
+            if (_ui == null || _services == null)
                 return;
 
             int totalSpaces;
             int occupiedSpaces;
-            if (!_game.TryGetParkingSpaceStats(_state.BuildingId, out totalSpaces, out occupiedSpaces))
+            if (!_services.Game.TryGetParkingSpaceStats(_state.BuildingId, out totalSpaces, out occupiedSpaces))
             {
                 _ui.UpdateParkingSpacesUnavailable();
                 return;

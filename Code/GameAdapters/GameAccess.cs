@@ -48,6 +48,11 @@ namespace PickyParking.GameAdapters
             return info != null;
         }
 
+        public bool IsBuildingManagerReady()
+        {
+            return Singleton<BuildingManager>.exists;
+        }
+
         public bool TryGetSelectedBuilding(out ushort buildingId, out BuildingInfo info)
         {
             buildingId = 0;
