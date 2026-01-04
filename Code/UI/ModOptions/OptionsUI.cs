@@ -3,7 +3,7 @@ using ColossalFramework.UI;
 using ICities;
 using PickyParking.Settings;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.ModOptions
 {
     public static class OptionsUI
     {
@@ -36,3 +36,4 @@ namespace PickyParking.UI
         }
     }
 }
+

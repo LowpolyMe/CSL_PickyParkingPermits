@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.ModOptions
 {
     internal static class ModOptionsUiValues
     {
@@ -40,3 +40,4 @@ namespace PickyParking.UI
         }
     }
 }
+

@@ -1,4 +1,4 @@
-namespace PickyParking.UI
+namespace PickyParking.UI.ModOptions
 {
     internal struct ColumnLayout
     {
@@ -12,3 +12,4 @@ namespace PickyParking.UI
         public float RemoveWidth;
     }
 }
+

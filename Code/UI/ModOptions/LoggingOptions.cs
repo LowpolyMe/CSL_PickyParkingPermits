@@ -3,7 +3,7 @@ using ICities;
 using PickyParking.Logging;
 using PickyParking.Settings;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.ModOptions
 {
     internal static class LoggingOptions
     {
@@ -109,3 +109,4 @@ namespace PickyParking.UI
         }
     }
 }
+

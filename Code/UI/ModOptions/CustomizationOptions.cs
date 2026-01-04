@@ -5,7 +5,7 @@ using PickyParking.Settings;
 using PickyParking.UI.ModResources;
 using UnityEngine;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.ModOptions
 {
     internal static class CustomizationOptions
     {
@@ -88,3 +88,4 @@ namespace PickyParking.UI
         }
     }
 }
+

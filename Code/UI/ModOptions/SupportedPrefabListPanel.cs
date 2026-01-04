@@ -8,7 +8,7 @@ using PickyParking.Logging;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Settings;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.ModOptions
 {
     internal sealed class SupportedPrefabListPanel : UIPanel
     {
@@ -667,3 +667,4 @@ namespace PickyParking.UI
 
     }
 }
+
