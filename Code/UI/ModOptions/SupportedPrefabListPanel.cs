@@ -442,9 +442,18 @@ namespace PickyParking.UI.ModOptions
         private bool RemoveSupportedPrefab(PrefabKey key)
         {
             bool removed = false;
+            var settings = _services != null ? _services.SettingsController?.Current : null;
+            var liveList = settings != null ? settings.SupportedParkingLotPrefabs : null;
 
-            if (_prefabKeys != null)
+            if (liveList != null)
+            {
+                removed = liveList.Remove(key);
+                _prefabKeys = liveList;
+            }
+            else if (_prefabKeys != null)
+            {
                 removed = _prefabKeys.Remove(key);
+            }
 
             if (_services != null && _services.SupportedParkingLotRegistry != null)
                 _services.SupportedParkingLotRegistry.Remove(key);
