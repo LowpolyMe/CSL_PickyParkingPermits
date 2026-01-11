@@ -29,6 +29,7 @@ namespace PickyParking.Patching
                         _noContextLogged = true;
                         Log.Warn("[Parking] FindParkingSpacePropAtBuilding missing context; passenger car candidates may be skipped.");
                     }
+                    ParkingStatsCounter.IncrementPropSearchNoContextDenied();
                     result = false;
                     return false;
                 }
@@ -45,6 +46,7 @@ namespace PickyParking.Patching
                 parkOffset = -1f;
 
                 result = false;
+                ParkingStatsCounter.IncrementPropSearchDenied();
                 return false;
             }
             catch (Exception ex)
@@ -86,6 +88,7 @@ namespace PickyParking.Patching
                     if (!string.IsNullOrEmpty(source) &&
                         source.StartsWith("TMPE.", StringComparison.Ordinal))
                     {
+                        ParkingStatsCounter.IncrementCreateBypassTmpe();
                         return true;
                     }
                 }
@@ -95,6 +98,7 @@ namespace PickyParking.Patching
 
                 parked = 0;
                 result = false;
+                ParkingStatsCounter.IncrementCreateBlocked();
                 return false;
             }
             catch (Exception ex)

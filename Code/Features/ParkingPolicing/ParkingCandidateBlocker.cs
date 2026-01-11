@@ -63,6 +63,7 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName, buildingName);
+            ParkingStatsCounter.IncrementCandidateDecision(denied);
             return true;
         }
 
@@ -96,6 +97,7 @@ namespace PickyParking.Features.ParkingPolicing
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info("[Parking] CreateParkedVehicle check skipped: no parking search context");
+                ParkingStatsCounter.IncrementCreateCheckNoContext();
                 return false;
             }
 
@@ -103,6 +105,7 @@ namespace PickyParking.Features.ParkingPolicing
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info("[Parking] CreateParkedVehicle check skipped: ownerCitizenId=0");
+                ParkingStatsCounter.IncrementCreateCheckNoOwner();
                 return false;
             }
 
@@ -110,6 +113,7 @@ namespace PickyParking.Features.ParkingPolicing
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info($"[Parking] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
+                ParkingStatsCounter.IncrementCreateCheckNoRuleBuilding();
                 return false;
             }
 

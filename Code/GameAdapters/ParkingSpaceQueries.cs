@@ -7,6 +7,7 @@ using PickyParking.Logging;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingPolicing.Runtime;
+using PickyParking.ModLifecycle;
 
 namespace PickyParking.GameAdapters
 {
@@ -189,6 +190,7 @@ namespace PickyParking.GameAdapters
             occupiedSpaces = 0;
 
             if (outParkedVehicleIds == null &&
+                SimThread.IsSimulationThread() &&
                 TryCollectParkingSpaceUsageUsingTmpe(buildingId, out totalSpaces, out occupiedSpaces))
                 return true;
 

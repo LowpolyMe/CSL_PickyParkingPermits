@@ -2,6 +2,7 @@ using UnityEngine;
 using PickyParking.ModLifecycle;
 using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingRules;
+using PickyParking.Features.Debug;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -38,6 +39,8 @@ namespace PickyParking.Features.ParkingPolicing
 
         public Result Evaluate(ushort vehicleId, ushort candidateBuildingId)
         {
+            ParkingStatsCounter.IncrementEvaluateVehicle();
+
             if (!_isFeatureActive.IsActive)
                 return new Result(true, DecisionReason.Allowed_FailOpen_NotActive);
 
@@ -51,6 +54,7 @@ namespace PickyParking.Features.ParkingPolicing
             {
                 if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
                     PickyParking.Logging.Log.Info($"[Parking] Evaluate denied: no driver context vehicleId={vehicleId} buildingId={candidateBuildingId}");
+                ParkingStatsCounter.IncrementDeniedNoDriverContext();
                 return new Result(false, DecisionReason.Denied_NoDriverContext);
             }
 
@@ -62,6 +66,8 @@ namespace PickyParking.Features.ParkingPolicing
 
         public Result EvaluateCitizen(uint citizenId, ushort candidateBuildingId)
         {
+            ParkingStatsCounter.IncrementEvaluateCitizen();
+
             if (!_isFeatureActive.IsActive)
                 return new Result(true, DecisionReason.Allowed_FailOpen_NotActive);
 
@@ -72,6 +78,7 @@ namespace PickyParking.Features.ParkingPolicing
             {
                 if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
                     PickyParking.Logging.Log.Info($"[Parking] EvaluateCitizen denied: no citizen context citizenId={citizenId} buildingId={candidateBuildingId}");
+                ParkingStatsCounter.IncrementDeniedNoCitizenContext();
                 return new Result(false, DecisionReason.Denied_NoCitizenContext);
             }
 

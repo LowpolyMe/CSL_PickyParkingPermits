@@ -79,6 +79,7 @@ namespace PickyParking.ModEntry
             Log.SetDecisionDebugEnabled(settings.EnableDebugDecisionPipelineLogs);
             Log.SetEnforcementDebugEnabled(settings.EnableDebugEnforcementLogs);
             Log.SetTmpeDebugEnabled(settings.EnableDebugTmpeLogs);
+            ParkingStatsTicker.SetEnabled(settings.EnableVerboseLogging);
 
             ParkingSearchContext.EnableEpisodeLogs = settings.EnableDebugDecisionPipelineLogs;
             ParkingSearchContext.LogMinCandidates = settings.EnableVerboseLogging

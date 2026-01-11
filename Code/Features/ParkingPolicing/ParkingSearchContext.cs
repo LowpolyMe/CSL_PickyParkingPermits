@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 
@@ -137,6 +138,7 @@ namespace PickyParking.Features.ParkingPolicing
             );
 
             stack.Push(new Frame(vehicleId, citizenId, source, episode));
+            ParkingStatsCounter.IncrementContextPush(vehicleId, citizenId, source);
         }
 
         public static void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName, string buildingName)
@@ -158,6 +160,7 @@ namespace PickyParking.Features.ParkingPolicing
                 minCandidates: LogMinCandidates,
                 minDurationMs: LogMinDurationMs
             );
+            ParkingStatsCounter.IncrementContextPop();
         }
 
         

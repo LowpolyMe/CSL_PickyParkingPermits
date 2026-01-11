@@ -83,6 +83,7 @@ namespace PickyParking.Patching.TMPE
             {
                 __result = false;
                 parkPos = Vector3.zero;
+                ParkingStatsCounter.IncrementVanillaFallbackFlipped();
             }
         }
     }

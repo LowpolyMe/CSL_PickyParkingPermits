@@ -89,6 +89,7 @@ namespace PickyParking.ModEntry
             UnityEngine.Object.DontDestroyOnLoad(_runtimeObject);
 
             _runtimeObject.AddComponent<DebugHotkeyListener>();
+            _runtimeObject.AddComponent<ParkingStatsTicker>();
             var attachPanel = _runtimeObject.AddComponent<AttachPanelToBuildingInfo>();
             attachPanel.Initialize(_uiServices);
         }
@@ -109,6 +110,7 @@ namespace PickyParking.ModEntry
             _uiServices = null;
             ParkingRulesIconAtlas.ClearCache();
             ParkingSearchContext.ClearAll();
+            ParkingStatsCounter.ResetAll();
             int unloadId = ++_unloadSequence;
             Log.Info("[Runtime] Unload started id=" + unloadId);
             ParkingSearchContextPatchHandler.ClearCaches();
