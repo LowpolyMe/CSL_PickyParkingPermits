@@ -26,6 +26,7 @@ namespace PickyParking.Patching
             TMPE_FindParkingSpaceForCitizenPatch.Apply(_bootstrap.Harmony);
             TMPE_TryMoveParkedVehiclePatch.Apply(_bootstrap.Harmony);
             TMPE_FindParkingSpacePropAtBuildingPatch.Apply(_bootstrap.Harmony);
+            TMPE_VanillaFindParkingSpaceWithoutRestrictionsPatch.Apply(_bootstrap.Harmony);
             TMPE_ParkPassengerCarPatch.Apply(_bootstrap.Harmony);
             TMPE_TrySpawnParkedPassengerCarPatch.Apply(_bootstrap.Harmony);
 

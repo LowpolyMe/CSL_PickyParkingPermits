@@ -80,6 +80,16 @@ namespace PickyParking.Patching
         {
             try
             {
+                if (ParkingSearchContext.HasContext)
+                {
+                    string source = ParkingSearchContext.Source;
+                    if (!string.IsNullOrEmpty(source) &&
+                        source.StartsWith("TMPE.", StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+
                 if (!ParkingCandidateBlocker.ShouldBlockCreateParkedVehicle(ownerCitizen, position))
                     return true;
 
