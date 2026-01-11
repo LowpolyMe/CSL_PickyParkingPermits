@@ -1,4 +1,4 @@
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
     public sealed class ParkingRulesConfigUiConfig
     {
@@ -31,3 +31,9 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+
+

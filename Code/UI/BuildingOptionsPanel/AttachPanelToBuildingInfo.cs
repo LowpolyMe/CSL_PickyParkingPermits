@@ -2,19 +2,13 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
-using PickyParking.ModEntry;
-using PickyParking.Features.ParkingLotPrefabs;
+using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
+using PickyParking.UI;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel
 {
     public sealed class AttachPanelToBuildingInfo : MonoBehaviour
     {
-        private const string CityServicePanelName = "CityServiceWorldInfoPanel";
-        private const string CityServicePanelLibraryName = "(Library) CityServiceWorldInfoPanel";
-        private const string WrapperContainerPath = "Wrapper";
-        private const float InjectionRetrySeconds = 1f;
-        private const float WrapperPadding = 25f;
-
         private ParkingRulesConfigPanel _panel;
         private ParkingPrefabSupportPanel _supportPanel;
         private ushort _lastSelectedBuildingId;
@@ -25,6 +19,16 @@ namespace PickyParking.UI
         private UIComponent _paddingSpacer;
         private bool _isVisibilitySubscribed;
         private bool _hasLoggedViewDump;
+        private UiServices _services;
+
+        public void Initialize(UiServices services)
+        {
+            _services = services;
+            if (_panel != null)
+                _panel.Initialize(services);
+            if (_supportPanel != null)
+                _supportPanel.Initialize(services);
+        }
 
         public void Start()
         {
@@ -33,8 +37,8 @@ namespace PickyParking.UI
 
         public void Update()
         {
-            var runtime = ModRuntime.Current;
-            if (runtime == null)
+            var services = _services;
+            if (services == null)
             {
                 UpdatePanels(false);
                 return;
@@ -45,26 +49,26 @@ namespace PickyParking.UI
                 if (Time.unscaledTime < _nextInjectionAttemptTime)
                     return;
 
-                _nextInjectionAttemptTime = Time.unscaledTime + InjectionRetrySeconds;
+                _nextInjectionAttemptTime = Time.unscaledTime + BuildingOptionsPanelUiValues.AttachPanel.InjectionRetrySeconds;
                 TryInject();
                 if (_panel == null && _supportPanel == null)
                     return;
             }
 
-            if (!runtime.FeatureGate.IsActive)
+            if (!services.IsFeatureActive)
             {
                 UpdatePanels(false);
                 return;
             }
 
-            if (!runtime.GameAccess.TryGetSelectedBuilding(out ushort buildingId, out BuildingInfo info))
+            if (!services.Game.TryGetSelectedBuilding(out ushort buildingId, out BuildingUiInfo info))
             {
                 _lastSelectedBuildingId = 0;
                 UpdatePanels(false);
                 return;
             }
             
-            if (!HasParkingSpaces(runtime, buildingId))
+            if (!HasParkingSpaces(services, buildingId))
             {
                 _lastSelectedBuildingId = buildingId;
                 _lastPrefabSupported = false;
@@ -75,7 +79,7 @@ namespace PickyParking.UI
                 return;
             }
 
-            bool prefabSupported = IsSupportedParkingLot(runtime, info);
+            bool prefabSupported = IsSupportedParkingLot(services, info);
             if (_panel != null)
                 _panel.SetPrefabSupported(prefabSupported);
 
@@ -85,10 +89,11 @@ namespace PickyParking.UI
             UpdatePanels(prefabSupported);
         }
 
-        private static bool HasParkingSpaces(ModRuntime runtime, ushort buildingId)
+        private static bool HasParkingSpaces(UiServices services, ushort buildingId)
         {
             int totalSpaces;
-            bool hasParkingSpaces = runtime.GameAccess.TryGetParkingSpaceCount(buildingId, out totalSpaces) && totalSpaces > 0;
+            bool hasParkingSpaces = services.Game.TryGetParkingSpaceCount(buildingId, out totalSpaces)
+                && totalSpaces > 0;
             return hasParkingSpaces;
         }
 
@@ -97,28 +102,28 @@ namespace PickyParking.UI
             if (_panel != null)
                 return;
 
-            GameObject panelObject = GameObject.Find(CityServicePanelLibraryName);
+            GameObject panelObject = GameObject.Find(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelLibraryName);
             if (panelObject == null)
-                panelObject = GameObject.Find(CityServicePanelName);
+                panelObject = GameObject.Find(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelName);
             if (panelObject == null)
             {
                 UIView view = UIView.GetAView();
                 if (view != null)
                 {
-                    UIComponent found = view.FindUIComponent<UIComponent>(CityServicePanelLibraryName);
+                    UIComponent found = view.FindUIComponent<UIComponent>(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelLibraryName);
                     if (found == null)
-                        found = view.FindUIComponent<UIComponent>(CityServicePanelName);
+                        found = view.FindUIComponent<UIComponent>(BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelName);
                     if (found != null)
                         panelObject = found.gameObject;
 
                     if (panelObject == null)
                     {
-                        UIComponent prefixMatch = FindComponentByContains(view, CityServicePanelName);
+                        UIComponent prefixMatch = FindComponentByContains(view, BuildingOptionsPanelUiValues.AttachPanel.CityServicePanelName);
                         if (prefixMatch != null)
                         {
                             panelObject = prefixMatch.gameObject;
                             if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                                Log.Info("[UI] CityServiceWorldInfoPanel found by prefix: " + prefixMatch.name);
+                                Log.Info("[BuildingOptionsPanel] CityServiceWorldInfoPanel found by prefix: " + prefixMatch.name);
                         }
                     }
 
@@ -132,7 +137,7 @@ namespace PickyParking.UI
                 if (panelObject == null)
                 {
                     if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                        Log.Info("[UI] CityServiceWorldInfoPanel not found yet.");
+                        Log.Info("[BuildingOptionsPanel] CityServiceWorldInfoPanel not found yet.");
                     return;
                 }
             }
@@ -141,7 +146,7 @@ namespace PickyParking.UI
             if (root == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] CityServiceWorldInfoPanel has no UIComponent.");
+                    Log.Info("[BuildingOptionsPanel] CityServiceWorldInfoPanel has no UIComponent.");
                 return;
             }
 
@@ -151,14 +156,14 @@ namespace PickyParking.UI
                 _hostPanel.eventVisibilityChanged += HandleHostVisibilityChanged;
                 _isVisibilitySubscribed = true;
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Subscribed to CityServiceWorldInfoPanel visibility.");
+                    Log.Info("[BuildingOptionsPanel] Subscribed to CityServiceWorldInfoPanel visibility.");
             }
 
-            Transform wrapperTransform = root.transform.Find(WrapperContainerPath);
+            Transform wrapperTransform = root.transform.Find(BuildingOptionsPanelUiValues.AttachPanel.WrapperContainerPath);
             if (wrapperTransform == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Wrapper container path not found: " + WrapperContainerPath);
+                    Log.Info("[BuildingOptionsPanel] Wrapper container path not found: " + BuildingOptionsPanelUiValues.AttachPanel.WrapperContainerPath);
                 return;
             }
 
@@ -166,7 +171,7 @@ namespace PickyParking.UI
             if (wrapper == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Wrapper transform has no UIComponent.");
+                    Log.Info("[BuildingOptionsPanel] Wrapper transform has no UIComponent.");
                 return;
             }
 
@@ -176,45 +181,49 @@ namespace PickyParking.UI
             {
                 wrapperPanel.autoFitChildrenVertically = true;
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Wrapper autoFitChildrenVertically enabled.");
+                    Log.Info("[BuildingOptionsPanel] Wrapper autoFitChildrenVertically enabled.");
             }
             EnsureWrapperPaddingSpacer();
             var existing = wrapper.GetComponentInChildren<ParkingRulesConfigPanel>();
             if (existing != null)
             {
                 _panel = existing;
+                _panel.Initialize(_services);
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Reusing existing ParkingRulesConfigPanel.");
+                    Log.Info("[BuildingOptionsPanel] Reusing existing ParkingRulesConfigPanel.");
             }
             else
             {
                 _panel = wrapper.AddUIComponent<ParkingRulesConfigPanel>();
+                _panel.Initialize(_services);
                 _panel.relativePosition = Vector3.zero;
                 _panel.size = wrapper.size;
                 int targetIndex = Mathf.Min(3, wrapper.childCount - 1);
                 _panel.zOrder = targetIndex;
                 _panel.transform.SetSiblingIndex(targetIndex);
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Injected ParkingRulesConfigPanel into Wrapper container.");
+                    Log.Info("[BuildingOptionsPanel] Injected ParkingRulesConfigPanel into Wrapper container.");
             }
 
             var supportExisting = wrapper.GetComponentInChildren<ParkingPrefabSupportPanel>();
             if (supportExisting != null)
             {
                 _supportPanel = supportExisting;
+                _supportPanel.Initialize(_services);
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Reusing existing ParkingPrefabSupportPanel.");
+                    Log.Info("[BuildingOptionsPanel] Reusing existing ParkingPrefabSupportPanel.");
                 return;
             }
 
             _supportPanel = wrapper.AddUIComponent<ParkingPrefabSupportPanel>();
+            _supportPanel.Initialize(_services);
             _supportPanel.relativePosition = Vector3.zero;
             _supportPanel.size = wrapper.size;
             int supportIndex = Mathf.Min(3, wrapper.childCount - 1);
             _supportPanel.zOrder = supportIndex;
             _supportPanel.transform.SetSiblingIndex(supportIndex);
             if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[UI] Injected ParkingPrefabSupportPanel into Wrapper container.");
+                Log.Info("[BuildingOptionsPanel] Injected ParkingPrefabSupportPanel into Wrapper container.");
         }
 
         public void OnDestroy()
@@ -287,7 +296,7 @@ namespace PickyParking.UI
             _supportPanel.isVisible = visible;
         }
 
-        private void BindPanelsForSelection(ushort buildingId, BuildingInfo info, bool prefabSupported, bool supportChanged)
+        private void BindPanelsForSelection(ushort buildingId, BuildingUiInfo info, bool prefabSupported, bool supportChanged)
         {
             if (_lastSelectedBuildingId != buildingId)
             {
@@ -310,16 +319,15 @@ namespace PickyParking.UI
             }
         }
 
-        private static bool IsSupportedParkingLot(ModRuntime runtime, BuildingInfo info)
+        private static bool IsSupportedParkingLot(UiServices services, BuildingUiInfo info)
         {
-            if (runtime == null || info == null)
+            if (services == null)
                 return false;
 
-            if (runtime.SupportedParkingLotRegistry == null)
+            if (services.SupportedParkingLotRegistry == null)
                 return false;
 
-            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
-            return runtime.SupportedParkingLotRegistry.Contains(key);
+            return services.SupportedParkingLotRegistry.Contains(info.PrefabKey);
         }
 
         private void HandleHostVisibilityChanged(UIComponent component, bool isVisible)
@@ -359,14 +367,14 @@ namespace PickyParking.UI
                 if (bottom > maxBottom)
                     maxBottom = bottom;
                 if (Log.IsVerboseEnabled)
-                    Log.Info("[UI] Wrapper child '" + child.name + "' y=" + child.relativePosition.y + " height=" + child.height + " bottom=" + bottom);
+                    Log.Info("[BuildingOptionsPanel] Wrapper child '" + child.name + "' y=" + child.relativePosition.y + " height=" + child.height + " bottom=" + bottom);
 
             }
 
             if (maxBottom <= 0f)
             {
                 if (Log.IsVerboseEnabled)
-                    Log.Info("[UI] Wrapper resize skipped. maxBottom=" + maxBottom + " childCount=" + childCount);
+                    Log.Info("[BuildingOptionsPanel] Wrapper resize skipped. maxBottom=" + maxBottom + " childCount=" + childCount);
                 return;
             }
 
@@ -374,7 +382,7 @@ namespace PickyParking.UI
             if (!Mathf.Approximately(_wrapperContainer.height, paddedBottom))
             {
                 if (Log.IsVerboseEnabled)
-                    Log.Info("[UI] Wrapper resize: maxBottom=" + maxBottom + " paddedBottom=" + paddedBottom + " prevHeight=" + _wrapperContainer.height);
+                    Log.Info("[BuildingOptionsPanel] Wrapper resize: maxBottom=" + maxBottom + " paddedBottom=" + paddedBottom + " prevHeight=" + _wrapperContainer.height);
                 _wrapperContainer.height = paddedBottom;
             }
         }
@@ -391,7 +399,7 @@ namespace PickyParking.UI
             UIPanel spacer = _wrapperContainer.AddUIComponent<UIPanel>();
             spacer.name = "PickyParkingWrapperPadding";
             spacer.width = _wrapperContainer.width;
-            spacer.height = WrapperPadding;
+            spacer.height = BuildingOptionsPanelUiValues.AttachPanel.WrapperPadding;
             spacer.isVisible = true;
             spacer.autoLayout = false;
             spacer.backgroundSprite = string.Empty;
@@ -399,7 +407,7 @@ namespace PickyParking.UI
             _paddingSpacer = spacer;
 
             if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[UI] Added wrapper padding spacer.");
+                Log.Info("[BuildingOptionsPanel] Added wrapper padding spacer.");
         }
 
         private static UIComponent FindComponentByContains(UIView view, string token)
@@ -435,7 +443,7 @@ namespace PickyParking.UI
 
                 string path = GetTransformPath(component.transform);
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] Panel candidate: " + component.name + " Path=" + path);
+                    Log.Info("[BuildingOptionsPanel] Panel candidate: " + component.name + " Path=" + path);
                 if (++logged >= 25)
                     break;
             }
@@ -443,7 +451,7 @@ namespace PickyParking.UI
             if (logged == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                    Log.Info("[UI] No WorldInfoPanel candidates found in UIView.");
+                    Log.Info("[BuildingOptionsPanel] No WorldInfoPanel candidates found in UIView.");
             }
         }
 
@@ -468,3 +476,9 @@ namespace PickyParking.UI
         }
     }
 }
+
+
+
+
+
+

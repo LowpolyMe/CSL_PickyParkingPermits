@@ -2,6 +2,7 @@ using ICities;
 using UnityEngine;
 using PickyParking.UI;
 using PickyParking.Settings;
+using PickyParking.UI.ModOptions;
 
 namespace PickyParking.ModEntry
 {
@@ -20,8 +21,10 @@ namespace PickyParking.ModEntry
             
             var storage = new ModSettingsStorage();
             var controller = ModSettingsController.Load(storage);
-            OptionsUI.Build(helper, controller.Current, () => controller.Save("OptionsUI"));
+            var services = new UiServices(() => ModRuntime.Current, controller);
+            OptionsUI.Build(helper, controller.Current, () => controller.Save("OptionsUI"), services);
         }
     }
 }
+
 

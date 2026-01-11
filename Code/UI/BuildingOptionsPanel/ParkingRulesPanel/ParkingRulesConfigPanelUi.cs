@@ -3,29 +3,63 @@ using UnityEngine;
 using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
+using PickyParking.UI.BuildingOptionsPanel;
 
-namespace PickyParking.UI
+namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
-    internal sealed class PickyParkingPanelVisuals
+    internal sealed class ParkingRulesConfigPanelUi
     {
-        #region readonly
+        private sealed class ParkingRulesConfigPanelUiArgs
+        {
+            public ParkingRulesConfigPanel Panel { get; set; }
+            public ParkingPanelTheme Theme { get; set; }
+            public ParkingRulesConfigUiConfig UiConfig { get; set; }
+            public Func<float> GetDefaultSliderValue { get; set; }
+            public Action OnToggleRestrictions { get; set; }
+            public Action<ParkingRulesSliderRow> OnToggleSlider { get; set; }
+            public Action<ParkingRulesSliderRow, float> OnSliderValueChanged { get; set; }
+            public Action OnToggleVisitors { get; set; }
+            public Action OnApplyChanges { get; set; }
+        }
+
+        private struct PanelLayout
+        {
+            public float RowHeight;
+            public float HorizontalPadding;
+            public float VerticalPadding;
+            public float RowPanelHeight;
+            public float IconSize;
+            public float SliderHeight;
+            public float SliderWidth;
+            public Color32 ResidentsFillColor;
+            public Color32 WorkSchoolFillColor;
+        }
+
+        private struct ToggleButtonWithIconArgs
+        {
+            public UIPanel RowPanel;
+            public string IconSpriteName;
+            public string FallbackText;
+            public PanelLayout Layout;
+        }
+
+        private struct ToggleButtonWithIconResult
+        {
+            public UIButton Button;
+            public UISprite Icon;
+            public UISprite DisabledOverlay;
+        }
+
+
         private readonly ParkingRulesConfigPanel _panel;
         private readonly ParkingPanelTheme _theme;
-        private readonly float _sliderMinValue;
-        private readonly float _sliderMaxValue;
-        private readonly float _sliderStep;
+        private readonly ParkingRulesConfigUiConfig _uiConfig;
         private readonly Func<float> _getDefaultSliderValue;
-        private readonly float _distanceSliderMinValue;
-        private readonly float _distanceSliderMaxValue;
-        private readonly ushort _minDistanceMeters;
-        private readonly ushort _midDistanceMeters;
-        private readonly ushort _maxDistanceMeters;
         private readonly Action _onToggleRestrictions;
         private readonly Action<ParkingRulesSliderRow> _onToggleSlider;
         private readonly Action<ParkingRulesSliderRow, float> _onSliderValueChanged;
         private readonly Action _onToggleVisitors;
         private readonly Action _onApplyChanges;
-#endregion
 
         public UIButton RestrictionsToggleButton { get; private set; }
         public ParkingRulesSliderRow ResidentsRow { get; private set; }
@@ -34,68 +68,46 @@ namespace PickyParking.UI
         public UIPanel FooterRow { get; private set; }
         public UILabel ParkingSpacesLabel { get; private set; }
 
-        public PickyParkingPanelVisuals(
+        public static ParkingRulesConfigPanelUi Create(
             ParkingRulesConfigPanel panel,
             ParkingPanelTheme theme,
-            float sliderMinValue,
-            float sliderMaxValue,
-            float sliderStep,
+            ParkingRulesConfigUiConfig uiConfig,
             Func<float> getDefaultSliderValue,
-            float distanceSliderMinValue,
-            float distanceSliderMaxValue,
-            ushort minDistanceMeters,
-            ushort midDistanceMeters,
-            ushort maxDistanceMeters,
             Action onToggleRestrictions,
             Action<ParkingRulesSliderRow> onToggleSlider,
             Action<ParkingRulesSliderRow, float> onSliderValueChanged,
             Action onToggleVisitors,
             Action onApplyChanges)
         {
-            _panel = panel;
-            _theme = theme;
-            _sliderMinValue = sliderMinValue;
-            _sliderMaxValue = sliderMaxValue;
-            _sliderStep = sliderStep;
-            _getDefaultSliderValue = getDefaultSliderValue;
-            _distanceSliderMinValue = distanceSliderMinValue;
-            _distanceSliderMaxValue = distanceSliderMaxValue;
-            _minDistanceMeters = minDistanceMeters;
-            _midDistanceMeters = midDistanceMeters;
-            _maxDistanceMeters = maxDistanceMeters;
-            _onToggleRestrictions = onToggleRestrictions;
-            _onToggleSlider = onToggleSlider;
-            _onSliderValueChanged = onSliderValueChanged;
-            _onToggleVisitors = onToggleVisitors;
-            _onApplyChanges = onApplyChanges;
+            var args = new ParkingRulesConfigPanelUiArgs
+            {
+                Panel = panel,
+                Theme = theme,
+                UiConfig = uiConfig,
+                GetDefaultSliderValue = getDefaultSliderValue,
+                OnToggleRestrictions = onToggleRestrictions,
+                OnToggleSlider = onToggleSlider,
+                OnSliderValueChanged = onSliderValueChanged,
+                OnToggleVisitors = onToggleVisitors,
+                OnApplyChanges = onApplyChanges
+            };
+
+            return new ParkingRulesConfigPanelUi(args);
         }
 
-        public void BuildUi()
+        private ParkingRulesConfigPanelUi(ParkingRulesConfigPanelUiArgs args)
         {
-            float rowHeight = _theme.RowHeight;
-            float horizontalPadding = _theme.HorizontalPadding;
-            float verticalPadding = _theme.VerticalPadding;
-            float rowPanelHeight = _theme.RowPanelHeight;
-            float iconSize = _theme.IconSize;
-            float sliderHeight = _theme.SliderHeight;
-            float sliderWidth = Mathf.Max(_theme.MinSliderWidth, _panel.width - (horizontalPadding * 3f + iconSize));
-            Color32 residentsFillColor = _theme.ResidentsFillColor;
-            Color32 workSchoolFillColor = _theme.WorkSchoolFillColor;
+            if (args == null) throw new ArgumentNullException(nameof(args));
 
-            SetupPanelLayout(rowPanelHeight);
-            CreateHeader(rowPanelHeight, rowHeight, verticalPadding);
-            CreateRestrictionsToggleRow(rowPanelHeight, rowHeight, horizontalPadding, verticalPadding);
-            CreateRows(
-                rowPanelHeight,
-                rowHeight,
-                horizontalPadding,
-                verticalPadding,
-                iconSize,
-                sliderWidth,
-                sliderHeight,
-                residentsFillColor,
-                workSchoolFillColor);
-            CreateFooter(horizontalPadding, verticalPadding, rowPanelHeight);
+            _panel = args.Panel;
+            _theme = args.Theme;
+            _uiConfig = args.UiConfig ?? ParkingRulesConfigUiConfig.Default;
+            _getDefaultSliderValue = args.GetDefaultSliderValue;
+            _onToggleRestrictions = args.OnToggleRestrictions;
+            _onToggleSlider = args.OnToggleSlider;
+            _onSliderValueChanged = args.OnSliderValueChanged;
+            _onToggleVisitors = args.OnToggleVisitors;
+            _onApplyChanges = args.OnApplyChanges;
         }
 
         public void ConfigurePanel()
@@ -109,6 +121,17 @@ namespace PickyParking.UI
                 _panel.width = 300f;
 
             _panel.backgroundSprite = string.Empty;
+        }
+
+        public void BuildUi()
+        {
+            PanelLayout layout = BuildLayout();
+
+            SetupPanelLayout(layout);
+            CreateHeader(layout);
+            CreateRestrictionsToggleRow(layout);
+            CreateRows(layout);
+            CreateFooter(layout);
         }
 
         public void UpdateSliderRowLabel(ParkingRulesSliderRow row)
@@ -189,342 +212,6 @@ namespace PickyParking.UI
             UpdateSliderRowVisuals(row);
         }
 
-        private void SetupPanelLayout(float rowPanelHeight)
-        {
-            _panel.height = rowPanelHeight * _theme.PanelRowCount + _theme.PanelExtraHeight;
-            _panel.autoLayout = true;
-            _panel.autoLayoutDirection = LayoutDirection.Vertical;
-            _panel.autoLayoutStart = LayoutStart.TopLeft;
-            _panel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
-            _panel.autoFitChildrenVertically = true;
-        }
-
-        private void CreateHeader(float rowPanelHeight, float rowHeight, float verticalPadding)
-        {
-            CreateHeaderRow(rowPanelHeight, rowHeight, verticalPadding);
-            CreateParkingStatsRow(rowPanelHeight, rowHeight, verticalPadding);
-        }
-
-        private void CreateRestrictionsToggleRow(float rowPanelHeight, float rowHeight, float horizontalPadding, float verticalPadding)
-        {
-            UIPanel row = CreateRowContainer("RestrictionsToggleRow", rowPanelHeight);
-            UIButton toggle = row.AddUIComponent<UIButton>();
-            toggle.textScale = _theme.RestrictionsToggleTextScale;
-            float height = Mathf.Max(_theme.MinButtonHeight, rowHeight - verticalPadding * 2f);
-            toggle.size = new Vector2(row.width - horizontalPadding * 2f, height);
-            toggle.pivot = UIPivotPoint.TopLeft;
-            toggle.relativePosition = new Vector3(
-                horizontalPadding,
-                (row.height - toggle.height) * 0.5f);
-            toggle.atlas = UIView.GetAView().defaultAtlas;
-            toggle.normalBgSprite = "LevelBarBackground";
-            toggle.hoveredBgSprite = "LevelBarForeground";
-            toggle.pressedBgSprite = "LevelBarForeground";
-            toggle.eventClicked += (_, __) => _onToggleRestrictions();
-
-            RestrictionsToggleButton = toggle;
-        }
-
-        private void CreateRows(
-            float rowPanelHeight,
-            float rowHeight,
-            float horizontalPadding,
-            float verticalPadding,
-            float iconSize,
-            float sliderWidth,
-            float sliderHeight,
-            Color32 residentsFillColor,
-            Color32 workSchoolFillColor)
-        {
-            ResidentsRow = CreateSliderRow(
-                CreateRowContainer("ResidentsRow", rowPanelHeight),
-                ParkingRulesIconAtlas.ResidentsSpriteName,
-                "R",
-                rowHeight,
-                horizontalPadding,
-                verticalPadding,
-                iconSize,
-                sliderWidth,
-                sliderHeight,
-                residentsFillColor);
-            WorkSchoolRow = CreateSliderRow(
-                CreateRowContainer("WorkSchoolRow", rowPanelHeight),
-                ParkingRulesIconAtlas.WorkSchoolSpriteName,
-                "W",
-                rowHeight,
-                horizontalPadding,
-                verticalPadding,
-                iconSize,
-                sliderWidth,
-                sliderHeight,
-                workSchoolFillColor);
-            VisitorsRow = CreateToggleRow(
-                CreateRowContainer("VisitorsRow", rowPanelHeight),
-                ParkingRulesIconAtlas.VisitorsSpriteName,
-                "V",
-                rowHeight,
-                horizontalPadding,
-                verticalPadding,
-                iconSize);
-        }
-
-        private void CreateFooter(float horizontalPadding, float verticalPadding, float rowPanelHeight)
-        {
-            FooterRow = CreateRowContainer("FooterRow", rowPanelHeight);
-            CreateApplyButton(FooterRow, horizontalPadding, verticalPadding);
-        }
-
-        private ParkingRulesSliderRow CreateSliderRow(
-            UIPanel rowPanel,
-            string iconSpriteName,
-            string fallbackText,
-            float rowHeight,
-            float horizontalPadding,
-            float verticalPadding,
-            float iconSize,
-            float sliderWidth,
-            float sliderHeight,
-            Color32 fillColor
-             )
-        {
-            var row = new ParkingRulesSliderRow();
-            row.RowPanel = rowPanel;
-
-            UISprite icon;
-            UISprite disabledOverlay;
-            UIButton button = CreateToggleButtonWithIcon(
-                rowPanel,
-                iconSpriteName,
-                fallbackText,
-                rowHeight,
-                horizontalPadding,
-                verticalPadding,
-                iconSize,
-                out icon,
-                out disabledOverlay);
-
-            float sliderX = horizontalPadding * 2f + iconSize;
-            UISlider slider = CreateSlider(rowPanel, sliderWidth, sliderHeight, sliderX, rowHeight, verticalPadding);
-            UISprite thumb = CreateSliderThumb(slider);
-            UISlicedSprite fill = CreateSliderFill(slider, fillColor, thumb);
-            UILabel valueLabel = CreateValueLabel(rowPanel, slider, sliderX, rowHeight, horizontalPadding, verticalPadding, sliderHeight);
-
-            row.ToggleButton = button;
-            row.IconSprite = icon;
-            row.DisabledOverlay = disabledOverlay;
-            row.Slider = slider;
-            row.FillSprite = fill;
-            row.FillColor = fillColor;
-            row.Thumb = thumb;
-            row.ValueLabel = valueLabel;
-            row.LastNonZeroValue = _getDefaultSliderValue();
-
-            button.eventClicked += (_, __) => _onToggleSlider(row);
-            slider.eventValueChanged += (_, value) =>
-            {
-                _onSliderValueChanged(row, value);
-                UpdateSliderFill(row);
-            };
-
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled && thumb.spriteInfo == null)
-                Log.Info("[UI] Slider thumb sprite missing: " + thumb.spriteName);
-
-            UpdateSliderFill(row);
-            return row;
-        }
-
-        private ParkingRulesToggleRow CreateToggleRow(
-            UIPanel rowPanel,
-            string iconSpriteName,
-            string fallbackText,
-            float rowHeight,
-            float horizontalPadding,
-            float verticalPadding,
-            float iconSize)
-        {
-            var row = new ParkingRulesToggleRow();
-            row.RowPanel = rowPanel;
-
-            UISprite icon;
-            UISprite disabledOverlay;
-            UIButton button = CreateToggleButtonWithIcon(
-                rowPanel,
-                iconSpriteName,
-                fallbackText,
-                rowHeight,
-                horizontalPadding,
-                verticalPadding,
-                iconSize,
-                out icon,
-                out disabledOverlay);
-
-            row.ToggleButton = button;
-            row.IconSprite = icon;
-            row.DisabledOverlay = disabledOverlay;
-
-            button.eventClicked += (_, __) => _onToggleVisitors();
-
-            return row;
-        }
-
-        private UISlider CreateSlider(
-            UIPanel rowPanel,
-            float sliderWidth,
-            float sliderHeight,
-            float sliderX,
-            float rowHeight,
-            float verticalPadding)
-        {
-            UISlider slider = rowPanel.AddUIComponent<UISlider>();
-            slider.orientation = UIOrientation.Horizontal;
-            slider.minValue = _sliderMinValue;
-            slider.maxValue = _sliderMaxValue;
-            slider.stepSize = _sliderStep;
-            slider.size = new Vector2(sliderWidth, sliderHeight);
-            slider.pivot = UIPivotPoint.TopLeft;
-            slider.relativePosition = new Vector3(sliderX, verticalPadding + (rowHeight - sliderHeight) * 0.5f);
-            slider.backgroundSprite = "LevelBarBackground";
-            slider.color = _theme.SliderTrackColor;
-            return slider;
-        }
-
-        private UISprite CreateSliderThumb(UISlider slider)
-        {
-            UISprite thumb = slider.AddUIComponent<UISprite>();
-            thumb.spriteName = "SliderBudget";
-            thumb.size = new Vector2(_theme.SliderThumbSize, _theme.SliderThumbSize);
-            thumb.color = _theme.ThumbColor;
-            thumb.atlas = UIView.GetAView().defaultAtlas;
-            thumb.zOrder = 5;
-            slider.thumbObject = thumb;
-            return thumb;
-        }
-
-        private UISlicedSprite CreateSliderFill(UISlider slider, Color32 fillColor, UISprite thumb)
-        {
-            UISlicedSprite fill = slider.AddUIComponent<UISlicedSprite>();
-            fill.atlas = UIView.GetAView().defaultAtlas;
-            fill.spriteName = "LevelBarForeground";
-            fill.color = fillColor;
-            fill.relativePosition = new Vector3(0f, 0f);
-            fill.size = new Vector2(0f, slider.height);
-            fill.isInteractive = false;
-            fill.zOrder = 1;
-            if (thumb != null && thumb.zOrder <= fill.zOrder)
-                thumb.zOrder = fill.zOrder + 1;
-            return fill;
-        }
-
-        private UILabel CreateValueLabel(
-            UIPanel rowPanel,
-            UISlider slider,
-            float sliderX,
-            float rowHeight,
-            float horizontalPadding,
-            float verticalPadding,
-            float sliderHeight)
-        {
-            UILabel valueLabel = rowPanel.AddUIComponent<UILabel>();
-            valueLabel.textScale = _theme.ValueLabelTextScale;
-            valueLabel.autoSize = false;
-            valueLabel.size = new Vector2(_theme.ValueLabelWidth, _theme.ValueLabelHeight);
-            valueLabel.textColor = _theme.ValueLabelColor;
-            valueLabel.backgroundSprite = "LevelBarBackground";
-            valueLabel.color = _theme.SliderTrackColor;
-            valueLabel.atlas = UIView.GetAView().defaultAtlas;
-            float labelX = rowPanel.width - horizontalPadding - valueLabel.width;
-            float sliderMaxWidth = labelX - sliderX - horizontalPadding;
-            if (slider != null && sliderMaxWidth < slider.width)
-                slider.size = new Vector2(Mathf.Max(_theme.MinSliderWidth, sliderMaxWidth), sliderHeight);
-            valueLabel.relativePosition = new Vector3(
-                labelX,
-                verticalPadding + (rowHeight - valueLabel.height) * 0.5f);
-            valueLabel.textAlignment = UIHorizontalAlignment.Center;
-            valueLabel.verticalAlignment = UIVerticalAlignment.Bottom;
-            valueLabel.pivot = UIPivotPoint.TopLeft;
-            return valueLabel;
-        }
-
-        private UIButton CreateToggleButtonWithIcon(
-            UIPanel rowPanel,
-            string iconSpriteName,
-            string fallbackText,
-            float rowHeight,
-            float horizontalPadding,
-            float verticalPadding,
-            float iconSize,
-            out UISprite icon,
-            out UISprite disabledOverlay)
-        {
-            UIButton button = rowPanel.AddUIComponent<UIButton>();
-            button.text = fallbackText;
-            button.textScale = _theme.ToggleTextScale;
-            button.size = new Vector2(iconSize, iconSize);
-            button.pivot = UIPivotPoint.TopLeft;
-            button.relativePosition = new Vector3(
-                horizontalPadding,
-                verticalPadding + (rowHeight - iconSize) * 0.5f);
-            button.normalBgSprite = "OptionBase";
-            button.hoveredBgSprite = "OptionBaseHovered";
-            button.pressedBgSprite = "OptionBasePressed";
-
-            icon = TryAttachIcon(button, iconSpriteName, fallbackText);
-            if (icon != null)
-            {
-                icon.isInteractive = false;
-                icon.zOrder = 20;
-                icon.BringToFront();
-            }
-
-            disabledOverlay = TryAttachDisabledOverlay(button);
-            if (disabledOverlay != null)
-            {
-                disabledOverlay.zOrder = 21;
-                disabledOverlay.BringToFront();
-            }
-
-            return button;
-        }
-
-        private UIPanel CreateRowContainer(string name, float rowHeight)
-        {
-            UIPanel rowPanel = _panel.AddUIComponent<UIPanel>();
-            rowPanel.name = name;
-            rowPanel.width = _panel.width;
-            rowPanel.height = rowHeight;
-            rowPanel.autoLayout = false;
-            return rowPanel;
-        }
-
-        private void CreateHeaderRow(float rowPanelHeight, float rowHeight, float verticalPadding)
-        {
-            UIPanel headerRow = CreateRowContainer("HeaderRow", rowPanelHeight);
-            UILabel title = headerRow.AddUIComponent<UILabel>();
-            title.text = "Picky Parking Restrictions";
-            title.textScale = _theme.HeaderTextScale;
-            title.textColor = _theme.EnabledColor;
-            title.autoSize = false;
-            title.size = new Vector2(headerRow.width, rowHeight);
-            title.textAlignment = UIHorizontalAlignment.Center;
-            title.verticalAlignment = UIVerticalAlignment.Middle;
-            title.relativePosition = new Vector3(0f, verticalPadding);
-        }
-
-        private void CreateParkingStatsRow(float rowPanelHeight, float rowHeight, float verticalPadding)
-        {
-            UIPanel statsRow = CreateRowContainer("ParkingStatsRow", rowPanelHeight);
-            UILabel stats = statsRow.AddUIComponent<UILabel>();
-            stats.text = "Spaces: n/a";
-            stats.textScale = _theme.ParkingStatsTextScale;
-            stats.textColor = _theme.EnabledColor;
-            stats.autoSize = false;
-            stats.size = new Vector2(statsRow.width, rowHeight);
-            stats.textAlignment = UIHorizontalAlignment.Center;
-            stats.verticalAlignment = UIVerticalAlignment.Middle;
-            stats.relativePosition = new Vector3(0f, verticalPadding);
-            ParkingSpacesLabel = stats;
-        }
-
         public void UpdateRestrictionsToggleVisuals(bool enabled)
         {
             if (RestrictionsToggleButton == null)
@@ -564,7 +251,311 @@ namespace PickyParking.UI
             ParkingSpacesLabel.text = "Spaces: n/a";
         }
 
-        private void CreateApplyButton(UIPanel footerRow, float horizontalPadding, float verticalPadding)
+        private PanelLayout BuildLayout()
+        {
+            float rowHeight = _theme.RowHeight;
+            float horizontalPadding = _theme.HorizontalPadding;
+            float verticalPadding = _theme.VerticalPadding;
+            float rowPanelHeight = _theme.RowPanelHeight;
+            float iconSize = _theme.IconSize;
+            float sliderHeight = _theme.SliderHeight;
+            float sliderWidth = Mathf.Max(_theme.MinSliderWidth, _panel.width - (horizontalPadding * 3f + iconSize));
+
+            return new PanelLayout
+            {
+                RowHeight = rowHeight,
+                HorizontalPadding = horizontalPadding,
+                VerticalPadding = verticalPadding,
+                RowPanelHeight = rowPanelHeight,
+                IconSize = iconSize,
+                SliderHeight = sliderHeight,
+                SliderWidth = sliderWidth,
+                ResidentsFillColor = _theme.ResidentsFillColor,
+                WorkSchoolFillColor = _theme.WorkSchoolFillColor
+            };
+        }
+
+        private void SetupPanelLayout(PanelLayout layout)
+        {
+            _panel.height = layout.RowPanelHeight * _theme.PanelRowCount + _theme.PanelExtraHeight;
+            _panel.autoLayout = true;
+            _panel.autoLayoutDirection = LayoutDirection.Vertical;
+            _panel.autoLayoutStart = LayoutStart.TopLeft;
+            _panel.autoLayoutPadding = new RectOffset(0, 0, 0, 0);
+            _panel.autoFitChildrenVertically = true;
+        }
+
+        private void CreateHeader(PanelLayout layout)
+        {
+            CreateHeaderRow(layout);
+            CreateParkingStatsRow(layout);
+        }
+
+        private void CreateRestrictionsToggleRow(PanelLayout layout)
+        {
+            UIPanel row = CreateRowContainer("RestrictionsToggleRow", layout.RowPanelHeight);
+            UIButton toggle = row.AddUIComponent<UIButton>();
+            toggle.textScale = _theme.RestrictionsToggleTextScale;
+            float height = Mathf.Max(_theme.MinButtonHeight, layout.RowHeight - layout.VerticalPadding * 2f);
+            toggle.size = new Vector2(row.width - layout.HorizontalPadding * 2f, height);
+            toggle.pivot = UIPivotPoint.TopLeft;
+            toggle.relativePosition = new Vector3(
+                layout.HorizontalPadding,
+                (row.height - toggle.height) * 0.5f);
+            toggle.atlas = UIView.GetAView().defaultAtlas;
+            toggle.normalBgSprite = "LevelBarBackground";
+            toggle.hoveredBgSprite = "LevelBarForeground";
+            toggle.pressedBgSprite = "LevelBarForeground";
+            toggle.eventClicked += (_, __) => _onToggleRestrictions();
+
+            RestrictionsToggleButton = toggle;
+        }
+
+        private void CreateRows(PanelLayout layout)
+        {
+            ResidentsRow = CreateSliderRow(
+                CreateRowContainer("ResidentsRow", layout.RowPanelHeight),
+                ParkingRulesIconAtlasUiValues.ResidentsSpriteName,
+                "R",
+                layout.ResidentsFillColor,
+                layout);
+            WorkSchoolRow = CreateSliderRow(
+                CreateRowContainer("WorkSchoolRow", layout.RowPanelHeight),
+                ParkingRulesIconAtlasUiValues.WorkSchoolSpriteName,
+                "W",
+                layout.WorkSchoolFillColor,
+                layout);
+            VisitorsRow = CreateToggleRow(
+                CreateRowContainer("VisitorsRow", layout.RowPanelHeight),
+                ParkingRulesIconAtlasUiValues.VisitorsSpriteName,
+                "V",
+                layout);
+        }
+
+        private void CreateFooter(PanelLayout layout)
+        {
+            FooterRow = CreateRowContainer("FooterRow", layout.RowPanelHeight);
+            CreateApplyButton(FooterRow, layout);
+        }
+
+        private ParkingRulesSliderRow CreateSliderRow(
+            UIPanel rowPanel,
+            string iconSpriteName,
+            string fallbackText,
+            Color32 fillColor,
+            PanelLayout layout)
+        {
+            var row = new ParkingRulesSliderRow();
+            row.RowPanel = rowPanel;
+
+            ToggleButtonWithIconResult toggle = CreateToggleButtonWithIcon(new ToggleButtonWithIconArgs
+            {
+                RowPanel = rowPanel,
+                IconSpriteName = iconSpriteName,
+                FallbackText = fallbackText,
+                Layout = layout
+            });
+
+            float sliderX = layout.HorizontalPadding * 2f + layout.IconSize;
+            UISlider slider = CreateSlider(rowPanel, layout, sliderX);
+            UISprite thumb = CreateSliderThumb(slider);
+            UISlicedSprite fill = CreateSliderFill(slider, fillColor, thumb);
+            UILabel valueLabel = CreateValueLabel(rowPanel, slider, layout, sliderX);
+
+            row.ToggleButton = toggle.Button;
+            row.IconSprite = toggle.Icon;
+            row.DisabledOverlay = toggle.DisabledOverlay;
+            row.Slider = slider;
+            row.FillSprite = fill;
+            row.FillColor = fillColor;
+            row.Thumb = thumb;
+            row.ValueLabel = valueLabel;
+            row.LastNonZeroValue = _getDefaultSliderValue();
+
+            toggle.Button.eventClicked += (_, __) => _onToggleSlider(row);
+            slider.eventValueChanged += (_, value) =>
+            {
+                _onSliderValueChanged(row, value);
+                UpdateSliderFill(row);
+            };
+
+            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled && thumb.spriteInfo == null)
+                Log.Info("[ParkingRulesPanel] Slider thumb sprite missing: " + thumb.spriteName);
+
+            UpdateSliderFill(row);
+            return row;
+        }
+
+        private ParkingRulesToggleRow CreateToggleRow(
+            UIPanel rowPanel,
+            string iconSpriteName,
+            string fallbackText,
+            PanelLayout layout)
+        {
+            var row = new ParkingRulesToggleRow();
+            row.RowPanel = rowPanel;
+
+            ToggleButtonWithIconResult toggle = CreateToggleButtonWithIcon(new ToggleButtonWithIconArgs
+            {
+                RowPanel = rowPanel,
+                IconSpriteName = iconSpriteName,
+                FallbackText = fallbackText,
+                Layout = layout
+            });
+
+            row.ToggleButton = toggle.Button;
+            row.IconSprite = toggle.Icon;
+            row.DisabledOverlay = toggle.DisabledOverlay;
+
+            toggle.Button.eventClicked += (_, __) => _onToggleVisitors();
+
+            return row;
+        }
+
+        private UISlider CreateSlider(UIPanel rowPanel, PanelLayout layout, float sliderX)
+        {
+            UISlider slider = rowPanel.AddUIComponent<UISlider>();
+            slider.orientation = UIOrientation.Horizontal;
+            slider.minValue = _uiConfig.SliderMinValue;
+            slider.maxValue = _uiConfig.SliderMaxValue;
+            slider.stepSize = _uiConfig.SliderStep;
+            slider.size = new Vector2(layout.SliderWidth, layout.SliderHeight);
+            slider.pivot = UIPivotPoint.TopLeft;
+            slider.relativePosition = new Vector3(
+                sliderX,
+                layout.VerticalPadding + (layout.RowHeight - layout.SliderHeight) * 0.5f);
+            slider.backgroundSprite = "LevelBarBackground";
+            slider.color = _theme.SliderTrackColor;
+            return slider;
+        }
+
+        private UISprite CreateSliderThumb(UISlider slider)
+        {
+            UISprite thumb = slider.AddUIComponent<UISprite>();
+            thumb.spriteName = "SliderBudget";
+            thumb.size = new Vector2(_theme.SliderThumbSize, _theme.SliderThumbSize);
+            thumb.color = _theme.ThumbColor;
+            thumb.atlas = UIView.GetAView().defaultAtlas;
+            thumb.zOrder = 5;
+            slider.thumbObject = thumb;
+            return thumb;
+        }
+
+        private UISlicedSprite CreateSliderFill(UISlider slider, Color32 fillColor, UISprite thumb)
+        {
+            UISlicedSprite fill = slider.AddUIComponent<UISlicedSprite>();
+            fill.atlas = UIView.GetAView().defaultAtlas;
+            fill.spriteName = "LevelBarForeground";
+            fill.color = fillColor;
+            fill.relativePosition = new Vector3(0f, 0f);
+            fill.size = new Vector2(0f, slider.height);
+            fill.isInteractive = false;
+            fill.zOrder = 1;
+            if (thumb != null && thumb.zOrder <= fill.zOrder)
+                thumb.zOrder = fill.zOrder + 1;
+            return fill;
+        }
+
+        private UILabel CreateValueLabel(UIPanel rowPanel, UISlider slider, PanelLayout layout, float sliderX)
+        {
+            UILabel valueLabel = rowPanel.AddUIComponent<UILabel>();
+            valueLabel.textScale = _theme.ValueLabelTextScale;
+            valueLabel.autoSize = false;
+            valueLabel.size = new Vector2(_theme.ValueLabelWidth, _theme.ValueLabelHeight);
+            valueLabel.textColor = _theme.ValueLabelColor;
+            valueLabel.backgroundSprite = "LevelBarBackground";
+            valueLabel.color = _theme.SliderTrackColor;
+            valueLabel.atlas = UIView.GetAView().defaultAtlas;
+            float labelX = rowPanel.width - layout.HorizontalPadding - valueLabel.width;
+            float sliderMaxWidth = labelX - sliderX - layout.HorizontalPadding;
+            if (slider != null && sliderMaxWidth < slider.width)
+                slider.size = new Vector2(Mathf.Max(_theme.MinSliderWidth, sliderMaxWidth), layout.SliderHeight);
+            valueLabel.relativePosition = new Vector3(
+                labelX,
+                layout.VerticalPadding + (layout.RowHeight - valueLabel.height) * 0.5f);
+            valueLabel.textAlignment = UIHorizontalAlignment.Center;
+            valueLabel.verticalAlignment = UIVerticalAlignment.Bottom;
+            valueLabel.pivot = UIPivotPoint.TopLeft;
+            return valueLabel;
+        }
+
+        private ToggleButtonWithIconResult CreateToggleButtonWithIcon(ToggleButtonWithIconArgs args)
+        {
+            UIButton button = args.RowPanel.AddUIComponent<UIButton>();
+            button.text = args.FallbackText;
+            button.textScale = _theme.ToggleTextScale;
+            button.size = new Vector2(args.Layout.IconSize, args.Layout.IconSize);
+            button.pivot = UIPivotPoint.TopLeft;
+            button.relativePosition = new Vector3(
+                args.Layout.HorizontalPadding,
+                args.Layout.VerticalPadding + (args.Layout.RowHeight - args.Layout.IconSize) * 0.5f);
+            button.normalBgSprite = "OptionBase";
+            button.hoveredBgSprite = "OptionBaseHovered";
+            button.pressedBgSprite = "OptionBasePressed";
+
+            UISprite icon = TryAttachIcon(button, args.IconSpriteName, args.FallbackText);
+            if (icon != null)
+            {
+                icon.isInteractive = false;
+                icon.zOrder = 20;
+                icon.BringToFront();
+            }
+
+            UISprite disabledOverlay = TryAttachDisabledOverlay(button);
+            if (disabledOverlay != null)
+            {
+                disabledOverlay.zOrder = 21;
+                disabledOverlay.BringToFront();
+            }
+
+            return new ToggleButtonWithIconResult
+            {
+                Button = button,
+                Icon = icon,
+                DisabledOverlay = disabledOverlay
+            };
+        }
+
+        private UIPanel CreateRowContainer(string name, float rowHeight)
+        {
+            UIPanel rowPanel = _panel.AddUIComponent<UIPanel>();
+            rowPanel.name = name;
+            rowPanel.width = _panel.width;
+            rowPanel.height = rowHeight;
+            rowPanel.autoLayout = false;
+            return rowPanel;
+        }
+
+        private void CreateHeaderRow(PanelLayout layout)
+        {
+            UIPanel headerRow = CreateRowContainer("HeaderRow", layout.RowPanelHeight);
+            UILabel title = headerRow.AddUIComponent<UILabel>();
+            title.text = "Picky Parking Restrictions";
+            title.textScale = _theme.HeaderTextScale;
+            title.textColor = _theme.EnabledColor;
+            title.autoSize = false;
+            title.size = new Vector2(headerRow.width, layout.RowHeight);
+            title.textAlignment = UIHorizontalAlignment.Center;
+            title.verticalAlignment = UIVerticalAlignment.Middle;
+            title.relativePosition = new Vector3(0f, layout.VerticalPadding);
+        }
+
+        private void CreateParkingStatsRow(PanelLayout layout)
+        {
+            UIPanel statsRow = CreateRowContainer("ParkingStatsRow", layout.RowPanelHeight);
+            UILabel stats = statsRow.AddUIComponent<UILabel>();
+            stats.text = "Spaces: n/a";
+            stats.textScale = _theme.ParkingStatsTextScale;
+            stats.textColor = _theme.EnabledColor;
+            stats.autoSize = false;
+            stats.size = new Vector2(statsRow.width, layout.RowHeight);
+            stats.textAlignment = UIHorizontalAlignment.Center;
+            stats.verticalAlignment = UIVerticalAlignment.Middle;
+            stats.relativePosition = new Vector3(0f, layout.VerticalPadding);
+            ParkingSpacesLabel = stats;
+        }
+
+        private void CreateApplyButton(UIPanel footerRow, PanelLayout layout)
         {
             if (footerRow == null)
                 return;
@@ -574,11 +565,11 @@ namespace PickyParking.UI
             UIButton applyButton = footerRow.AddUIComponent<UIButton>();
             applyButton.text = "Apply";
             applyButton.textScale = _theme.ApplyButtonTextScale;
-            float height = Mathf.Max(_theme.MinButtonHeight, footerRow.height - verticalPadding * 2f);
-            applyButton.size = new Vector2(footerRow.width - horizontalPadding * 2f, height);
+            float height = Mathf.Max(_theme.MinButtonHeight, footerRow.height - layout.VerticalPadding * 2f);
+            applyButton.size = new Vector2(footerRow.width - layout.HorizontalPadding * 2f, height);
             applyButton.pivot = UIPivotPoint.TopLeft;
             applyButton.relativePosition = new Vector3(
-                horizontalPadding,
+                layout.HorizontalPadding,
                 (footerRow.height - applyButton.height) * 0.5f);
             applyButton.atlas = UIView.GetAView().defaultAtlas;
             applyButton.normalBgSprite = "LevelBarBackground";
@@ -588,8 +579,6 @@ namespace PickyParking.UI
             applyButton.eventClicked += (_, __) => _onApplyChanges();
         }
 
-        
-
         private float GetRowDisplayValue(ParkingRulesSliderRow row)
         {
             return row.LastNonZeroValue > 0f ? row.LastNonZeroValue : _getDefaultSliderValue();
@@ -598,26 +587,20 @@ namespace PickyParking.UI
         private string FormatDistanceDisplay(float t)
         {
             float meters = 0f;
-            if (t > 0f && t < _distanceSliderMaxValue)
+            if (t > 0f && t < _uiConfig.DistanceSliderMaxValue)
             {
-                meters = DistanceSliderMapping.SliderToDistanceMeters(
-                    t,
-                    _distanceSliderMinValue,
-                    _distanceSliderMaxValue,
-                    _minDistanceMeters,
-                    _midDistanceMeters,
-                    _maxDistanceMeters);
+                meters = DistanceSliderMapping.SliderToDistanceMeters(t, _uiConfig);
             }
-            else if (t >= _distanceSliderMaxValue)
+            else if (t >= _uiConfig.DistanceSliderMaxValue)
             {
-                meters = _maxDistanceMeters;
+                meters = ParkingRulesLimits.MaxRadiusMeters;
             }
 
             return DistanceDisplayFormatter.FormatDisplay(
                 t,
-                _distanceSliderMaxValue,
-                _minDistanceMeters,
-                _maxDistanceMeters,
+                _uiConfig.DistanceSliderMaxValue,
+                ParkingRulesLimits.MinRadiusMeters,
+                ParkingRulesLimits.MaxRadiusMeters,
                 meters);
         }
 
@@ -649,7 +632,7 @@ namespace PickyParking.UI
 
             var overlay = parent.AddUIComponent<UISprite>();
             overlay.atlas = atlas;
-            overlay.spriteName = ParkingRulesIconAtlas.CrossedOutSpriteName;
+            overlay.spriteName = ParkingRulesIconAtlasUiValues.CrossedOutSpriteName;
             overlay.size = new Vector2(parent.width, parent.height);
             overlay.relativePosition = new Vector3(0f, 0f);
             overlay.isInteractive = false;
@@ -670,28 +653,11 @@ namespace PickyParking.UI
             row.FillSprite.size = new Vector2(width, row.Slider.height);
         }
     }
-
-    internal sealed class ParkingRulesSliderRow
-    {
-        public UIPanel RowPanel;
-        public UIButton ToggleButton;
-        public UISprite IconSprite;
-        public UISprite DisabledOverlay;
-        public UISlider Slider;
-        public UISprite FillSprite;
-        public Color32 FillColor;
-        public UISprite Thumb;
-        public UILabel ValueLabel;
-        public float LastNonZeroValue;
-        public bool IsEnabled;
-    }
-
-    internal sealed class ParkingRulesToggleRow
-    {
-        public UIPanel RowPanel;
-        public UIButton ToggleButton;
-        public UISprite IconSprite;
-        public UISprite DisabledOverlay;
-        public bool IsEnabled;
-    }
 }
+
+
+
+
+
+
+
