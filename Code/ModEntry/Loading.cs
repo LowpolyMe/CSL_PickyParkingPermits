@@ -125,16 +125,17 @@ namespace PickyParking.ModEntry
 
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
-            Log.SetUiDebugEnabled(false);
+            Log.SetRuleUiDebugEnabled(false);
+            Log.SetLotDebugEnabled(false);
+            Log.SetDecisionDebugEnabled(false);
+            Log.SetEnforcementDebugEnabled(false);
             Log.SetTmpeDebugEnabled(false);
-            Log.SetPermissionDebugEnabled(false);
             ParkingSearchContext.EnableEpisodeLogs = false;
             ParkingSearchContext.LogMinCandidates = ParkingSearchContext.DefaultLogMinCandidates;
             ParkingSearchContext.LogMinDurationMs = ParkingSearchContext.DefaultLogMinDurationMs;
-            ParkingCandidateBlocker.EnableCandidateBlockerLogs = false;
-            ParkingDebugSettings.EnableCreateParkedVehicleLogs = false;
-            ParkingDebugSettings.EnableGameAccessLogs = false;
-            ParkingDebugSettings.EnableBuildingDebugLogs = false;
+            ParkingDebugSettings.EnableLotInspectionLogs = false;
+            ParkingDebugSettings.DisableTMPECandidateBlocking = false;
+            ParkingDebugSettings.DisableClearKnownParkingOnDenied = false;
             ParkingDebugSettings.BuildingDebugId = 0;
 
             SimThread.Dispatch(() =>

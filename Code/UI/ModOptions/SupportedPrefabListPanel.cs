@@ -332,7 +332,7 @@ namespace PickyParking.UI.ModOptions
 
             if (RefreshVisibilityFlags())
                 RebuildPanelUi();
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[SupportedPrefabs] Populate list start: showThumbnails=" + _showThumbnails + " showInstances=" + _showInstances);
 
             ClearRowComponents();
@@ -342,7 +342,7 @@ namespace PickyParking.UI.ModOptions
 
             Dictionary<string, int> rulesByPrefabName = null;
             bool hasCounts = _showInstances && TryBuildRulesCountByPrefabName(out rulesByPrefabName);
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled && !hasCounts)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled && !hasCounts)
             {
                 string reason = _showInstances
                     ? "registry or building manager unavailable"
@@ -383,14 +383,14 @@ namespace PickyParking.UI.ModOptions
 
             if (_services == null || _services.ParkingRulesConfigRegistry == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[SupportedPrefabs] Rules count build skipped: runtime or registry missing.");
                 return false;
             }
 
             if (_services == null || !_services.Game.IsBuildingManagerReadyForUi())
             {
-                if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[SupportedPrefabs] Rules count build skipped: building data unavailable.");
                 return false;
             }
@@ -415,7 +415,7 @@ namespace PickyParking.UI.ModOptions
             }
 
             counts = map;
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[SupportedPrefabs] Rules count build ok: rules=" + totalRules + " prefabs=" + map.Count);
             return true;
         }
@@ -461,7 +461,7 @@ namespace PickyParking.UI.ModOptions
             if (removed && _saveSettings != null)
                 _saveSettings();
 
-            if (removed && Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+            if (removed && Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[SupportedPrefabs] Removed supported prefab " + key);
 
             return removed;
@@ -618,4 +618,5 @@ namespace PickyParking.UI.ModOptions
 
     }
 }
+
 

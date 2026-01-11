@@ -87,7 +87,7 @@ namespace PickyParking.GameAdapters
 
             if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info($"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
                 return false;
             }
@@ -96,7 +96,7 @@ namespace PickyParking.GameAdapters
             VehicleAI ai = info?.m_vehicleAI;
             if (ai == null)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info($"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
                 return false;
             }
@@ -105,7 +105,7 @@ namespace PickyParking.GameAdapters
             uint citizenId = owner.Citizen;
             if (citizenId == 0)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info(
                         "[Parking] TryGetDriverInfo failed: owner citizenId=0 " +
                         $"vehicleId={vehicleId} citizenUnits={vehicle.m_citizenUnits}"
@@ -133,7 +133,7 @@ namespace PickyParking.GameAdapters
             context = default;
             if (citizenId == 0)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info("[Parking] TryGetCitizenInfo failed: citizenId=0");
                 return false;
             }
@@ -224,3 +224,4 @@ namespace PickyParking.GameAdapters
         }
     }
 }
+

@@ -66,20 +66,20 @@ namespace PickyParking.GameAdapters
             BuildingInfo buildingInfo = building.Info;
             if (buildingInfo == null)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info($"[Parking] Parking spaces missing: building info null buildingId={buildingId}");
                 return false;
             }
             if (buildingInfo.m_props == null)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info($"[Parking] Parking spaces missing: building props null buildingId={buildingId} prefab={buildingInfo.name}");
                 return false;
             }
 
             if ((buildingInfo.m_hasParkingSpaces & VehicleInfo.VehicleType.Car) == VehicleInfo.VehicleType.None)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs &&
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                     ShouldLogForBuilding(buildingId, buildingInfo))
                 {
                     Log.Info($"[Parking] Parking spaces missing: m_hasParkingSpaces=0 buildingId={buildingId} prefab={buildingInfo.name}");
@@ -136,7 +136,7 @@ namespace PickyParking.GameAdapters
                 }
             }
 
-            if (outPositions.Count == 0 && Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+            if (outPositions.Count == 0 && Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                 Log.Info($"[Parking] Parking spaces missing: no parking space props buildingId={buildingId} prefab={buildingInfo.name}");
 
             return outPositions.Count > 0;
@@ -233,7 +233,7 @@ namespace PickyParking.GameAdapters
 
                     if (++safety > ParkedGridSafetyLimit)
                     {
-                        if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                        if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                             Log.Info($"[Parking] Parked grid safety limit hit buildingId={buildingId} space=({spacePos.x:F1},{spacePos.y:F1},{spacePos.z:F1})");
                         break;
                     }
@@ -244,13 +244,13 @@ namespace PickyParking.GameAdapters
             if (outParkedVehicleIds == null)
                 _foundParkedVehicleIds.Clear();
 
-            if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs &&
+            if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                 totalSpaces > 0 && occupiedSpaces == totalSpaces && ShouldLogForBuilding(buildingId, null))
             {
                 Log.Info($"[Parking] Parking space stats show no free spaces buildingId={buildingId} total={totalSpaces} maxSnapDistance={maxSnapDistance}");
             }
 
-            if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs &&
+            if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                 ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
             {
                 LogIndustryStats(buildingId, maxSnapDistance, totalSpaces, occupiedSpaces);
@@ -297,7 +297,7 @@ namespace PickyParking.GameAdapters
             Matrix4x4 buildingMatrix = default;
             _uniqueSpaceKeys.Clear();
 
-            bool logTmpeSpaceDetails = Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs &&
+            bool logTmpeSpaceDetails = Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                                       ParkingDebugSettings.IsBuildingDebugEnabled(buildingId);
             List<string> blockedSamples = null;
             List<string> freeSamples = null;
@@ -375,7 +375,7 @@ namespace PickyParking.GameAdapters
                     }
                     catch (Exception e)
                     {
-                        if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
+                        if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                             Log.Warn("[Parking] TMPE occupancy check failed: " + e);
                         return false;
                     }
@@ -494,7 +494,7 @@ namespace PickyParking.GameAdapters
 
             occupiedSpaces = totalSpaces - tmpeFreeSpaces;
 
-            if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs &&
+            if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                 ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
             {
                 Log.Info(
@@ -636,3 +636,4 @@ namespace PickyParking.GameAdapters
         }
     }
 }
+

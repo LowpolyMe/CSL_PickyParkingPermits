@@ -164,11 +164,12 @@ namespace PickyParking.UI.BuildingOptionsPanel
                 Log.Warn("[SupportedPrefabs] Settings controller missing; prefab add not persisted.");
             }
 
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[SupportedPrefabs] Added supported prefab " + _prefabKey);
         }
     }
 }
+
 
 
 

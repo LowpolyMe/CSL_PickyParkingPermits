@@ -55,7 +55,7 @@ namespace PickyParking.Features.Debug
                 new List<PrefabKey>(_supportedParkingLotRegistry.EnumerateKeys());
             _settingsController.Save("DebugHotkeyController.ToggleSupportedPrefabForSelection");
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info(enabled ? $"[DebugHotkeys] Enabled for prefab {key}" : $"[DebugHotkeys] Disabled for prefab {key}");
 
             return true;
@@ -72,7 +72,7 @@ namespace PickyParking.Features.Debug
                 return false;
             }
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[DebugHotkeys] Reevaluation requested for building " + buildingId);
 
             SimThread.Dispatch(() => _parkedVehicleReevaluation.RequestForBuilding(buildingId));
@@ -89,14 +89,14 @@ namespace PickyParking.Features.Debug
                 if (_parkingRulesRepository.TryGet(buildingId, out _))
                 {
                     _parkingRulesRepository.Remove(buildingId);
-                    if (Log.IsVerboseEnabled)
+                    if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                         Log.Info($"[DebugHotkeys] Removed rule for building {buildingId}");
                     return;
                 }
 
                 ParkingRulesConfigDefinition rule = CreateDefaultRule();
                 _parkingRulesRepository.Set(buildingId, rule);
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info($"[DebugHotkeys] Created default rule for building {buildingId}: {FormatRule(rule)}");
             });
 
@@ -119,7 +119,7 @@ namespace PickyParking.Features.Debug
                     current.VisitorsAllowed);
 
                 SetOrRemove(buildingId, updated);
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info($"[DebugHotkeys] Residents restriction toggled for building {buildingId}: {FormatRule(updated)}");
             });
 
@@ -142,7 +142,7 @@ namespace PickyParking.Features.Debug
                     current.VisitorsAllowed);
 
                 SetOrRemove(buildingId, updated);
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info($"[DebugHotkeys] Work/School restriction toggled for building {buildingId}: {FormatRule(updated)}");
             });
 
@@ -165,7 +165,7 @@ namespace PickyParking.Features.Debug
                     !current.VisitorsAllowed);
 
                 SetOrRemove(buildingId, updated);
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info($"[DebugHotkeys] Visitor restriction toggled for building {buildingId}: {FormatRule(updated)}");
             });
 
@@ -184,7 +184,7 @@ namespace PickyParking.Features.Debug
                 ? FormatRule(rule)
                 : "<none>";
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info($"[DebugHotkeys] Selected building {buildingId} | Prefab={key} | SupportedPrefab={supported} | Rule={ruleText}");
 
             return true;
@@ -200,14 +200,14 @@ namespace PickyParking.Features.Debug
 
             if (!_gameAccess.TryGetSelectedBuilding(out buildingId, out info))
             {
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[DebugHotkeys] No selected building.");
                 return false;
             }
 
             if (info == null)
             {
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[DebugHotkeys] Selected building has no info.");
                 return false;
             }
@@ -247,3 +247,4 @@ namespace PickyParking.Features.Debug
                + $"VisitorsAllowed={rule.VisitorsAllowed}";
     }
 }
+

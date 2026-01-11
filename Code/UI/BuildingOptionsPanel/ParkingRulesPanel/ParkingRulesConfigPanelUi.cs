@@ -379,7 +379,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 UpdateSliderFill(row);
             };
 
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled && thumb.spriteInfo == null)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled && thumb.spriteInfo == null)
                 Log.Info("[ParkingRulesPanel] Slider thumb sprite missing: " + thumb.spriteName);
 
             UpdateSliderFill(row);
@@ -654,6 +654,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         }
     }
 }
+
 
 
 

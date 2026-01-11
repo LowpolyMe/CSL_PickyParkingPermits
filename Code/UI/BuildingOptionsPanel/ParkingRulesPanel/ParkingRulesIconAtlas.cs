@@ -83,7 +83,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         {
             if (_atlas == null && !_attempted)
             {
-                if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[ParkingRulesPanel] Icon atlas cleanup skipped (never created).");
                 return;
             }
@@ -94,7 +94,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             if (atlas == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[ParkingRulesPanel] Icon atlas cache reset (load attempt only).");
                 return;
             }
@@ -108,7 +108,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             }
 
             Object.Destroy(atlas);
-            if (Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[ParkingRulesPanel] Icon atlas cache cleared.");
         }
 
@@ -132,6 +132,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         }
     }
 }
+
 
 
 

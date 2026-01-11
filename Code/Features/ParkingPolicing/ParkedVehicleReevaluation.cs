@@ -56,7 +56,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (_disposed) return;
             if (!_isFeatureActive.IsActive) return;
 
-            if (ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (Log.IsEnforcementDebugEnabled && ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
                 Log.Warn("[Parking] Reevaluation requested for buildingId=" +
                          buildingId + "\n" + Environment.StackTrace);
 
@@ -64,7 +64,7 @@ namespace PickyParking.Features.ParkingPolicing
                 return;
 
             _pendingBuildings.Enqueue(buildingId);
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                 Log.Info("[Parking] Reevaluation queued buildingId=" + buildingId);
             Schedule();
         }
@@ -74,7 +74,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (_disposed) return;
             if (_scheduled) return;
             _scheduled = true;
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                 Log.Info("[Parking] Reevaluation scheduled");
             SimThread.Dispatch(Step);
         }
@@ -153,7 +153,7 @@ namespace PickyParking.Features.ParkingPolicing
                 movedThisTick++;
             }
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                 Log.Info("[Parking] Reevaluation tick moved=" + movedThisTick + " buildingId=" + _activeBuilding);
             Schedule();
         }
@@ -166,7 +166,7 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (!_rules.TryGet(next, out _))
                 {
-                    if (Log.IsVerboseEnabled)
+                    if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                         Log.Info("[Parking] Reevaluation skipped (rule missing) buildingId=" + next);
                     _pendingSet.Remove(next);
                     continue;
@@ -186,14 +186,14 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (_parkedBuffer.Count == 0)
                 {
-                    if (Log.IsVerboseEnabled)
+                    if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                         Log.Info("[Parking] Reevaluation skipped (no parked vehicles) buildingId=" + next);
                     _pendingSet.Remove(next);
                     _activeBuilding = 0;
                     continue;
                 }
 
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                     Log.Info("[Parking] Reevaluation start buildingId=" + _activeBuilding + " parkedCount=" + _parkedBuffer.Count);
 
                 return true;
@@ -207,7 +207,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (_activeBuilding == 0)
                 return;
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
             {
                 Log.Info("[Parking] Reevaluation done buildingId=" + _activeBuilding
                          + " parkedCount=" + _activeParkedCount
@@ -247,3 +247,4 @@ namespace PickyParking.Features.ParkingPolicing
         }
     }
 }
+

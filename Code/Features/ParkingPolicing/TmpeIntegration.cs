@@ -143,12 +143,8 @@ namespace PickyParking.Features.ParkingPolicing
                 return !result.Allowed;
             }
             
-            if (Log.IsVerboseEnabled)
-            {
-                Log.Info(
-                    $"[Parking] No context candidateBuildingId={candidateBuildingId}"
-                );
-            }
+            if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+                Log.Info($"[Parking] No context candidateBuildingId={candidateBuildingId}");
 
             return false;
         }
@@ -236,7 +232,7 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             info = _defaultPassengerCarInfo;
-            if (info == null && Log.IsVerboseEnabled)
+            if (info == null && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
                 Log.Info("[TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
 
             return info != null;

@@ -26,7 +26,7 @@ namespace PickyParking.Features.Debug
 
         public void Start()
         {
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[DebugHotkeys] Listener started");
         }
 

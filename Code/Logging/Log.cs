@@ -9,9 +9,11 @@ namespace PickyParking.Logging
         private const string Prefix = "[PickyParking] ";
 
         public static bool IsVerboseEnabled { get; private set; }
-        public static bool IsUiDebugEnabled { get; private set; }
+        public static bool IsRuleUiDebugEnabled { get; private set; }
+        public static bool IsLotDebugEnabled { get; private set; }
+        public static bool IsDecisionDebugEnabled { get; private set; }
+        public static bool IsEnforcementDebugEnabled { get; private set; }
         public static bool IsTmpeDebugEnabled { get; private set; }
-        public static bool IsPermissionDebugEnabled { get; private set; }
 
         public static void Info(string message) => Write(PluginManager.MessageType.Message, message, false);
         public static void Warn(string message) => Write(PluginManager.MessageType.Warning, message, true);
@@ -22,19 +24,29 @@ namespace PickyParking.Logging
             IsVerboseEnabled = isEnabled;
         }
 
-        public static void SetUiDebugEnabled(bool isEnabled)
+        public static void SetRuleUiDebugEnabled(bool isEnabled)
         {
-            IsUiDebugEnabled = isEnabled;
+            IsRuleUiDebugEnabled = isEnabled;
+        }
+
+        public static void SetLotDebugEnabled(bool isEnabled)
+        {
+            IsLotDebugEnabled = isEnabled;
+        }
+
+        public static void SetDecisionDebugEnabled(bool isEnabled)
+        {
+            IsDecisionDebugEnabled = isEnabled;
+        }
+
+        public static void SetEnforcementDebugEnabled(bool isEnabled)
+        {
+            IsEnforcementDebugEnabled = isEnabled;
         }
 
         public static void SetTmpeDebugEnabled(bool isEnabled)
         {
             IsTmpeDebugEnabled = isEnabled;
-        }
-
-        public static void SetPermissionDebugEnabled(bool isEnabled)
-        {
-            IsPermissionDebugEnabled = isEnabled;
         }
 
         private static void Write(PluginManager.MessageType type, string message, bool stacktrace)

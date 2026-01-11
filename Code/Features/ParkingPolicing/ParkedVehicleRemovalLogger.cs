@@ -15,7 +15,7 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfMatchesLot(ushort parkedVehicleId, ushort buildingId, string source)
         {
-            if (!ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (!Log.IsEnforcementDebugEnabled || !ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
                 return;
 
             float lotDistSqr = 0f;
@@ -28,7 +28,9 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfNearDebugLot(ushort parkedVehicleId, string source)
         {
-            if (!ParkingDebugSettings.EnableBuildingDebugLogs || ParkingDebugSettings.BuildingDebugId == 0)
+            if (!Log.IsEnforcementDebugEnabled ||
+                !ParkingDebugSettings.EnableLotInspectionLogs ||
+                ParkingDebugSettings.BuildingDebugId == 0)
                 return;
 
             if (!TryGetParkedPosition(parkedVehicleId, out var pos))
@@ -65,7 +67,9 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             List<Vector3> spaces = GetSpacePositions();
-            if (!ParkingDebugSettings.EnableBuildingDebugLogs || ParkingDebugSettings.BuildingDebugId == 0)
+            if (!Log.IsEnforcementDebugEnabled ||
+                !ParkingDebugSettings.EnableLotInspectionLogs ||
+                ParkingDebugSettings.BuildingDebugId == 0)
                 return false;
             if (!context.GameAccess.TryCollectParkingSpacePositions(ParkingDebugSettings.BuildingDebugId, spaces))
                 return false;
@@ -143,3 +147,5 @@ namespace PickyParking.Features.ParkingPolicing
         }
     }
 }
+
+

@@ -1,4 +1,5 @@
 using System;
+using PickyParking.Features.Debug;
 using UnityEngine;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
@@ -7,17 +8,31 @@ namespace PickyParking.Patching
 {
     internal static class ParkingCandidateBlockerPatchHandler
     {
-        public static bool HandleFindParkingSpacePropAtBuildingPrefix(ref bool result, object[] args)
+        private static bool _noContextLogged;
+
+        public static bool HandleFindParkingSpacePropAtBuildingPrefix(
+            VehicleInfo vehicleInfo,
+            ushort buildingId,
+            ref Vector3 parkPos,
+            ref Quaternion parkRot,
+            ref float parkOffset,
+            ref bool result)
         {
             try
             {
-                if (args == null || args.Length < 12)
-                    return true;
+                if (!ParkingSearchContext.HasContext &&
+                    !ParkingDebugSettings.DisableParkingEnforcement &&
+                    IsPassengerCarInfo(vehicleInfo))
+                {
+                    if (!_noContextLogged && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+                    {
+                        _noContextLogged = true;
+                        Log.Warn("[Parking] FindParkingSpacePropAtBuilding missing context; passenger car candidates may be skipped.");
+                    }
+                    result = false;
+                    return false;
+                }
 
-                if (!(args[3] is ushort))
-                    return true;
-
-                ushort buildingId = (ushort)args[3];
                 bool denied;
                 if (!ParkingCandidateBlocker.TryGetCandidateDecision(buildingId, out denied))
                     return true;
@@ -25,9 +40,9 @@ namespace PickyParking.Patching
                 if (!denied)
                     return true;
 
-                args[9] = Vector3.zero;
-                args[10] = Quaternion.identity;
-                args[11] = -1f;
+                parkPos = Vector3.zero;
+                parkRot = Quaternion.identity;
+                parkOffset = -1f;
 
                 result = false;
                 return false;
@@ -37,6 +52,21 @@ namespace PickyParking.Patching
                 Log.Error("[Parking] Exception\n" + ex);
                 return true;
             }
+        }
+
+        private static bool IsPassengerCarInfo(VehicleInfo info)
+        {
+            if (info == null || info.m_vehicleAI == null)
+                return false;
+
+            if (!(info.m_vehicleAI is PassengerCarAI))
+            {
+                string aiName = info.m_vehicleAI.GetType().Name ?? string.Empty;
+                if (!string.Equals(aiName, "CustomPassengerCarAI", StringComparison.Ordinal))
+                    return false;
+            }
+
+            return true;
         }
 
         public static bool HandleCreateParkedVehiclePrefix(

@@ -115,7 +115,7 @@ namespace PickyParking.ParkingRulesSaving
 
                 PruneInvalidEntries(repository);
 
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                     Log.Info("[Persistence] Normalized rules: " + normalizedCount);
             }
             catch (Exception ex)
@@ -158,12 +158,13 @@ namespace PickyParking.ParkingRulesSaving
             for (int i = 0; i < toRemove.Count; i++)
                 repository.Remove(toRemove[i]);
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[Persistence] Pruned invalid rules: " + toRemove.Count);
         }
 
     }
 }
+
 
 
 

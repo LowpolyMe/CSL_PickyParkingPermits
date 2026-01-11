@@ -5,6 +5,7 @@ using ColossalFramework;
 using UnityEngine;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing.Runtime;
@@ -14,8 +15,6 @@ namespace PickyParking.Features.ParkingPolicing
     public static class ParkingCandidateBlocker
     {
         private const float MaxSnapDistanceSqr = 4f;
-        // Toggle to reduce log noise between episode logs.
-        public static bool EnableCandidateBlockerLogs = false;
         [ThreadStatic] private static List<Vector3> _spacePositions;
         private static int _wrongThreadLogged;
 
@@ -23,13 +22,16 @@ namespace PickyParking.Features.ParkingPolicing
         {
             denied = false;
 
+            if (ParkingDebugSettings.DisableParkingEnforcement)
+                return false;
+
             if (!EnsureSimulationThread("TryGetCandidateDecision"))
                 return false;
 
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetCandidateDecision");
             if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
             {
-                if (Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info($"[Parking] Candidate decision skipped: runtime inactive buildingId={buildingId}");
                 return false;
             }
@@ -43,8 +45,8 @@ namespace PickyParking.Features.ParkingPolicing
             DecisionReason reason;
             denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
 
-            if (EnableCandidateBlockerLogs &&
-                Log.IsVerboseEnabled &&
+            if (Log.IsVerboseEnabled &&
+                Log.IsDecisionDebugEnabled &&
                 context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule) &&
                 rule.WorkSchoolWithinRadiusOnly)
             {
@@ -83,27 +85,30 @@ namespace PickyParking.Features.ParkingPolicing
             if (!EnsureSimulationThread("ShouldBlockCreateParkedVehicle"))
                 return false;
 
+            if (ParkingDebugSettings.DisableParkingEnforcement)
+                return false;
+
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.ShouldBlockCreateParkedVehicle");
             if (context == null || !context.FeatureGate.IsActive)
                 return false;
 
             if (!ParkingSearchContext.HasContext)
             {
-                if (EnableCandidateBlockerLogs && Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info("[Parking] CreateParkedVehicle check skipped: no parking search context");
                 return false;
             }
 
             if (ownerCitizenId == 0u)
             {
-                if (EnableCandidateBlockerLogs && Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info("[Parking] CreateParkedVehicle check skipped: ownerCitizenId=0");
                 return false;
             }
 
             if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRulesConfigDefinition rule))
             {
-                if (EnableCandidateBlockerLogs && Log.IsVerboseEnabled)
+                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info($"[Parking] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
                 return false;
             }
@@ -112,8 +117,8 @@ namespace PickyParking.Features.ParkingPolicing
             if (eval.Allowed)
                 return false;
 
-            if (EnableCandidateBlockerLogs &&
-                Log.IsVerboseEnabled &&
+            if (Log.IsVerboseEnabled &&
+                Log.IsDecisionDebugEnabled &&
                 rule.WorkSchoolWithinRadiusOnly)
             {
                 Log.Info(

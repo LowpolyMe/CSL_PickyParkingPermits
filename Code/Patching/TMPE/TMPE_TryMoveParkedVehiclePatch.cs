@@ -5,14 +5,6 @@ using PickyParking.Logging;
 
 namespace PickyParking.Patching.TMPE
 {
-    
-    
-    
-    
-    
-    
-    
-    
     internal static class TMPE_TryMoveParkedVehiclePatch
     {
         private const string TargetTypeName = "TrafficManager.Manager.Impl.AdvancedParkingManager, TrafficManager";
@@ -43,9 +35,9 @@ namespace PickyParking.Patching.TMPE
             Log.Info("[TMPE] Patched TryMoveParkedVehicle (context injection).");
         }
 
-        private static void Prefix(MethodBase __originalMethod, object[] __args, ref bool __state)
+        private static void Prefix([HarmonyArgument(1)] ref VehicleParked parkedVehicle, ref bool __state)
         {
-            ParkingSearchContextPatchHandler.BeginTryMoveParkedVehicle(__originalMethod, __args, ref __state);
+            ParkingSearchContextPatchHandler.BeginTryMoveParkedVehicle(ref parkedVehicle, ref __state);
         }
 
         private static Exception Finalizer(Exception __exception, bool __state)

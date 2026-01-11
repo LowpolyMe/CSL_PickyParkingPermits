@@ -1,30 +1,22 @@
 using System;
 using System.Reflection;
-using ColossalFramework;
 using HarmonyLib;
 using PickyParking.Logging;
-using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingPolicing;
-using PickyParking.Features.ParkingPolicing.Runtime;
-using PickyParking.Patching;
+using PickyParking.Features.Debug;
+using UnityEngine;
 
 namespace PickyParking.Patching.TMPE
 {
-    
-    
-    
-    
-    
-    
-    
     internal static class TMPE_FindParkingSpacePropAtBuildingPatch
     {
         private const string TargetTypeName = "TrafficManager.Manager.Impl.AdvancedParkingManager, TrafficManager";
         private const string TargetMethodName = "FindParkingSpacePropAtBuilding";
+        [ThreadStatic] private static bool _suppressDiagnostics;
 
         public static void Apply(Harmony harmony)
         {
-            Type type = Type.GetType(TargetTypeName, throwOnError: false);
+            var type = System.Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
                 Log.Info("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding patch.");
@@ -40,84 +32,42 @@ namespace PickyParking.Patching.TMPE
 
             harmony.Patch(
                 method,
-                prefix: new HarmonyMethod(typeof(TMPE_FindParkingSpacePropAtBuildingPatch), nameof(Prefix)),
-                postfix: new HarmonyMethod(typeof(TMPE_FindParkingSpacePropAtBuildingPatch), nameof(Postfix))
+                prefix: new HarmonyMethod(typeof(TMPE_FindParkingSpacePropAtBuildingPatch), nameof(Prefix))
             );
 
             Log.Info("[TMPE] Patched FindParkingSpacePropAtBuilding (enforcement).");
         }
 
-        private static bool Prefix(ref bool __result, object[] __args, ref bool __state)
+        internal static bool ConsumeSuppressDiagnostics()
         {
-            bool callOriginal = ParkingCandidateBlockerPatchHandler.HandleFindParkingSpacePropAtBuildingPrefix(ref __result, __args);
-            __state = !callOriginal;
+            bool value = _suppressDiagnostics;
+            _suppressDiagnostics = false;
+            return value;
+        }
+
+        private static bool Prefix(
+            ref bool __result,
+            [HarmonyArgument(0)] VehicleInfo vehicleInfo,
+            [HarmonyArgument(3)] ushort buildingId,
+            [HarmonyArgument(9)] ref Vector3 parkPos,
+            [HarmonyArgument(10)] ref Quaternion parkRot,
+            [HarmonyArgument(11)] ref float parkOffset)
+        {
+            _suppressDiagnostics = false;
+            if (ParkingDebugSettings.DisableTMPECandidateBlocking)
+                return true;
+            bool callOriginal = ParkingCandidateBlockerPatchHandler.HandleFindParkingSpacePropAtBuildingPrefix(
+                vehicleInfo,
+                buildingId,
+                ref parkPos,
+                ref parkRot,
+                ref parkOffset,
+                ref __result);
+            if (!callOriginal)
+                _suppressDiagnostics = true;
             return callOriginal;
-        }
-
-        private static void Postfix(bool __result, object[] __args, bool __state)
-        {
-            if (__state)
-                return;
-
-            if (__result)
-                return;
-
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
-                return;
-
-            if (__args == null || __args.Length < 4)
-                return;
-
-            if (!(__args[3] is ushort))
-                return;
-
-            ushort buildingId = (ushort)__args[3];
-
-            var context = ParkingRuntimeContext.GetCurrentOrLog("TMPE_FindParkingSpacePropAtBuildingPatch.Postfix");
-            if (context == null)
-                return;
-
-            if (!IsSupportedParkingLot(context, buildingId))
-                return;
-
-            string buildingName = "NONE";
-            try
-            {
-                buildingName = Singleton<BuildingManager>.instance.GetBuildingName(buildingId, default(InstanceID));
-                if (string.IsNullOrEmpty(buildingName))
-                    buildingName = "NONE";
-            }
-            catch
-            {
-                buildingName = "NAME_LOOKUP_FAILED";
-            }
-
-            int totalSpaces;
-            int occupiedSpaces;
-            bool hasStats = context.GameAccess.TryGetParkingSpaceStats(buildingId, out totalSpaces, out occupiedSpaces);
-            string stats = hasStats ? $"spaces={totalSpaces} occupied={occupiedSpaces}" : "spaces=n/a";
-
-            Log.Info(
-                "[TMPE] FindParkingSpacePropAtBuilding failed " +
-                $"buildingId={buildingId} name={buildingName} {stats} " +
-                $"isVisitor={ParkingSearchContext.IsVisitor} vehicleId={ParkingSearchContext.VehicleId} " +
-                $"citizenId={ParkingSearchContext.CitizenId} source={ParkingSearchContext.Source ?? "NULL"}"
-            );
-        }
-
-        private static bool IsSupportedParkingLot(ParkingRuntimeContext context, ushort buildingId)
-        {
-            if (context == null || context.SupportedParkingLotRegistry == null)
-                return false;
-
-            if (!context.GameAccess.TryGetBuildingInfo(buildingId, out var info))
-                return false;
-
-            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
-            return context.SupportedParkingLotRegistry.Contains(key);
         }
     }
 }
-
 
 

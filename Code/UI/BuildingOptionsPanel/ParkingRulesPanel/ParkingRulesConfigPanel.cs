@@ -274,7 +274,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             UpdatePreviewRule();
             UpdateParkingSpaceStats();
 
-            if (hasStoredRule && Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
+            if (hasStoredRule && Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
         }
 
@@ -614,6 +614,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         }
     }
 }
+
 
 
 

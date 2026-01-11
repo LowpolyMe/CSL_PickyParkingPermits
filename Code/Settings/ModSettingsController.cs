@@ -32,7 +32,7 @@ namespace PickyParking.Settings
         public void Save(string reason = null)
         {
             _storage.Save(Current);
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
             {
                 Log.Info(reason == null
                     ? "[Settings] Saved settings."
@@ -43,7 +43,7 @@ namespace PickyParking.Settings
         public void Reload(string reason = null)
         {
             Current = _storage.LoadOrCreate();
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
             {
                 Log.Info(reason == null
                     ? "[Settings] Reloaded settings."
@@ -52,3 +52,4 @@ namespace PickyParking.Settings
         }
     }
 }
+

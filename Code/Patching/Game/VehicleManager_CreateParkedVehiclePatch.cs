@@ -1,11 +1,8 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
-using PickyParking.Features.Debug;
-using PickyParking.Features.ParkingPolicing;
 using UnityEngine;
 using PickyParking.Logging;
-using PickyParking.Patching;
 
 namespace PickyParking.Patching.Game
 {
@@ -27,11 +24,10 @@ namespace PickyParking.Patching.Game
 
             harmony.Patch(
                 method,
-                prefix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Prefix)),
-                postfix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Postfix))
+                prefix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Prefix))
             );
 
-            Log.Info("[Parking] Patched CreateParkedVehicle (parking violation logging).");
+            Log.Info("[Parking] Patched CreateParkedVehicle (parking enforcement).");
         }
 
         private static MethodInfo FindTargetMethod()
@@ -83,33 +79,6 @@ namespace PickyParking.Patching.Game
                 rotation,
                 ownerCitizen,
                 ref __result);
-        }
-
-        private static void Postfix(
-            bool __result,
-            ushort parked,
-            VehicleInfo info,
-            Vector3 position,
-            uint ownerCitizen)
-        {
-            if (!ParkingDebugSettings.EnableCreateParkedVehicleLogs || !__result || parked == 0 || !Log.IsVerboseEnabled)
-                return;
-
-            if (!ParkingCandidateBlocker.TryGetRuleBuildingAtPosition(position, out ushort buildingId))
-                return;
-
-            if (!ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
-                return;
-
-            string prefabName = info != null ? info.name : "UNKNOWN";
-            string source = ParkingSearchContext.Source ?? "NULL";
-
-            Log.Info(
-                "[Parking] CreateParkedVehicle created " +
-                $"buildingId={buildingId} parkedId={parked} prefab={prefabName} ownerCitizen={ownerCitizen} " +
-                $"pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
-                $"source={source} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"
-            );
         }
     }
 }

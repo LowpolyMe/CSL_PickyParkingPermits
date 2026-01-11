@@ -66,7 +66,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (CandidateChecks < minCandidates && duration < minDurationMs)
                 return;
 
-            if (Log.IsVerboseEnabled)
+            if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
             {
                 Log.Info(
                     $"[Parking] ParkingSearchEpisode " +

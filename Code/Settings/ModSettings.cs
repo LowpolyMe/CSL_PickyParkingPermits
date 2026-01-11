@@ -13,15 +13,15 @@ namespace PickyParking.Settings
     {
         public List<PrefabKey> SupportedParkingLotPrefabs { get; set; }
         public bool EnableVerboseLogging { get; set; }
-        public bool EnableDebugParkingSearchEpisodes { get; set; }
-        public bool EnableDebugGameAccessLogs { get; set; }
-        public bool EnableDebugCandidateBlockerLogs { get; set; }
-        public bool EnableDebugCreateParkedVehicleLogs { get; set; }
-        public bool EnableDebugBuildingLogs { get; set; }
-        public ushort DebugBuildingId { get; set; }
-        public bool EnableDebugUiLogs { get; set; }
+        public bool EnableDebugRuleUiLogs { get; set; }
+        public bool EnableDebugLotInspectionLogs { get; set; }
+        public bool EnableDebugDecisionPipelineLogs { get; set; }
+        public bool EnableDebugEnforcementLogs { get; set; }
         public bool EnableDebugTmpeLogs { get; set; }
-        public bool EnableDebugPermissionEvaluatorLogs { get; set; }
+        public bool DisableTMPECandidateBlocking { get; set; }
+        public bool DisableClearKnownParkingOnDenied { get; set; }
+        public bool DisableParkingEnforcement { get; set; }
+        public ushort DebugBuildingId { get; set; }
         public float ResidentsRadiusHue { get; set; }
         public float WorkSchoolRadiusHue { get; set; }
 
@@ -29,15 +29,15 @@ namespace PickyParking.Settings
         {
             SupportedParkingLotPrefabs = new List<PrefabKey>();
             EnableVerboseLogging = false;
-            EnableDebugParkingSearchEpisodes = false;
-            EnableDebugGameAccessLogs = false;
-            EnableDebugCandidateBlockerLogs = false;
-            EnableDebugCreateParkedVehicleLogs = false;
-            EnableDebugBuildingLogs = false;
-            DebugBuildingId = 0;
-            EnableDebugUiLogs = false;
+            EnableDebugRuleUiLogs = false;
+            EnableDebugLotInspectionLogs = false;
+            EnableDebugDecisionPipelineLogs = false;
+            EnableDebugEnforcementLogs = false;
             EnableDebugTmpeLogs = false;
-            EnableDebugPermissionEvaluatorLogs = false;
+            DisableTMPECandidateBlocking = false;
+            DisableClearKnownParkingOnDenied = false;
+            DisableParkingEnforcement = false;
+            DebugBuildingId = 0;
             ResidentsRadiusHue = 0.35f;
             WorkSchoolRadiusHue = 0.1f;
         }

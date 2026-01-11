@@ -63,7 +63,8 @@ namespace PickyParking.Settings
             if (settings.SupportedParkingLotPrefabs == null)
             {
                 settings.SupportedParkingLotPrefabs = new List<PrefabKey>();
-                Log.Info("[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info("[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
             }
 
             bool normalizedHue = NormalizeHueValues(settings);
@@ -86,13 +87,27 @@ namespace PickyParking.Settings
             }
 
             if (cleaned.Count != settings.SupportedParkingLotPrefabs.Count)
-                Log.Info("[Settings] Normalized settings: removed invalid or duplicate prefabs.");
+            {
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info("[Settings] Normalized settings: removed invalid or duplicate prefabs.");
+            }
 
             if (normalizedHue)
-                Log.Info("[Settings] Normalized settings: clamped overlay hue values.");
+            {
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info("[Settings] Normalized settings: clamped overlay hue values.");
+            }
 
             settings.SupportedParkingLotPrefabs = cleaned;
             return settings;
+        }
+
+        public void ResetToDefaults()
+        {
+            string path = GetSettingsPath();
+            if (File.Exists(path))
+                File.Delete(path);
+            Save(new ModSettings());
         }
 
         private static bool NormalizeHueValues(ModSettings settings)
