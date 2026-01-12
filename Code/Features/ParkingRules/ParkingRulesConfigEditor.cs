@@ -126,7 +126,7 @@ namespace PickyParking.Features.ParkingRules
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[ParkingRules] Reevaluation requested for building " + buildingId);
 
-            SimThread.Dispatch(() => _reevaluation.RequestForBuilding(buildingId));
+            SimThread.Dispatch(() => { _reevaluation.RequestForBuilding(buildingId); });
         }
 
         public string FormatRule(ParkingRulesConfigDefinition rule)

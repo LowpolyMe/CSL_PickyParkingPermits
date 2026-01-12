@@ -98,6 +98,13 @@ namespace PickyParking.Settings
                     Log.Info("[Settings] Normalized settings: clamped overlay hue values.");
             }
 
+            bool normalizedReevaluation = NormalizeReevaluationValues(settings);
+            if (normalizedReevaluation)
+            {
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info("[Settings] Normalized settings: clamped reevaluation limits.");
+            }
+
             settings.SupportedParkingLotPrefabs = cleaned;
             return settings;
         }
@@ -144,5 +151,40 @@ namespace PickyParking.Settings
 
         private static bool AreEqual(float a, float b)
             => Math.Abs(a - b) < 0.0001f;
+
+        private static bool NormalizeReevaluationValues(ModSettings settings)
+        {
+            bool changed = false;
+
+            int evals = ClampInt(settings.ReevaluationMaxEvaluationsPerTick, 1, 4096);
+            if (evals != settings.ReevaluationMaxEvaluationsPerTick)
+            {
+                settings.ReevaluationMaxEvaluationsPerTick = evals;
+                changed = true;
+            }
+
+            int relocations = ClampInt(settings.ReevaluationMaxRelocationsPerTick, 1, 512);
+            if (relocations != settings.ReevaluationMaxRelocationsPerTick)
+            {
+                settings.ReevaluationMaxRelocationsPerTick = relocations;
+                changed = true;
+            }
+
+            int buildingsPerDay = ClampInt(settings.ReevaluationSweepBuildingsPerDay, 0, 4096);
+            if (buildingsPerDay != settings.ReevaluationSweepBuildingsPerDay)
+            {
+                settings.ReevaluationSweepBuildingsPerDay = buildingsPerDay;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private static int ClampInt(int value, int min, int max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
     }
 }

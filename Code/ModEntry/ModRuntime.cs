@@ -145,7 +145,7 @@ namespace PickyParking.ModEntry
                 policy);
 
             var tmpe = new TmpeIntegration(featureGate, evaluator);
-            var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe);
+            var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe, settingsController);
             var previewState = new ParkingRulePreviewState();
             var debugHotkeys = new DebugHotkeyController(
                 gameAccess,

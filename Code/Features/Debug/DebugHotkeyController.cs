@@ -75,7 +75,7 @@ namespace PickyParking.Features.Debug
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[DebugHotkeys] Reevaluation requested for building " + buildingId);
 
-            SimThread.Dispatch(() => _parkedVehicleReevaluation.RequestForBuilding(buildingId));
+            SimThread.Dispatch(() => { _parkedVehicleReevaluation.RequestForBuilding(buildingId); });
             return true;
         }
 

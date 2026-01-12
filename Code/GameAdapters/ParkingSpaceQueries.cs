@@ -16,11 +16,17 @@ namespace PickyParking.GameAdapters
         private const int ParkedGridSafetyLimit = 32768;
         private const float TmpeSpaceMatchEpsilon = 0.25f;
         private const float ParkingSpaceDedupScale = 4f;
+        private const int MaxParkingSpaceCacheEntries = 512;
+        private const float CachePositionEpsilon = 0.01f;
+        private const float CacheAngleEpsilon = 0.0001f;
+        private const int GridDebugVehicleLogLimit = 64;
         private readonly List<Vector3> _parkingSpacePositions = new List<Vector3>(64);
         private readonly HashSet<ushort> _foundParkedVehicleIds = new HashSet<ushort>();
         private readonly HashSet<long> _debugUniquePositions = new HashSet<long>();
         private readonly HashSet<PositionKey> _uniqueSpaceKeys = new HashSet<PositionKey>();
         private readonly ParkedVehicleQueries _parkedVehicleQueries;
+        private readonly Dictionary<ushort, ParkingSpaceCacheEntry> _parkingSpaceCache =
+            new Dictionary<ushort, ParkingSpaceCacheEntry>();
 
         public ParkingSpaceQueries(ParkedVehicleQueries parkedVehicleQueries)
         {
@@ -63,10 +69,16 @@ namespace PickyParking.GameAdapters
 
             var bm = Singleton<BuildingManager>.instance;
             ref Building building = ref bm.m_buildings.m_buffer[buildingId];
+            if ((building.m_flags & Building.Flags.Created) == 0)
+            {
+                _parkingSpaceCache.Remove(buildingId);
+                return false;
+            }
 
             BuildingInfo buildingInfo = building.Info;
             if (buildingInfo == null)
             {
+                _parkingSpaceCache.Remove(buildingId);
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info($"[Parking] Parking spaces missing: building info null buildingId={buildingId}");
                 return false;
@@ -87,6 +99,9 @@ namespace PickyParking.GameAdapters
                 }
                 return false;
             }
+
+            if (TryGetCachedParkingSpaces(buildingId, ref building, buildingInfo, outPositions))
+                return true;
 
             bool transformMatrixCalculated = false;
             Matrix4x4 buildingMatrix = default;
@@ -140,6 +155,9 @@ namespace PickyParking.GameAdapters
             if (outPositions.Count == 0 && Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                 Log.Info($"[Parking] Parking spaces missing: no parking space props buildingId={buildingId} prefab={buildingInfo.name}");
 
+            if (outPositions.Count > 0)
+                CacheParkingSpaces(buildingId, ref building, buildingInfo, outPositions);
+
             return outPositions.Count > 0;
         }
 
@@ -176,7 +194,7 @@ namespace PickyParking.GameAdapters
             out int occupiedSpaces,
             float maxSnapDistance = 2f)
         {
-            return TryCollectParkingSpaceUsage(buildingId, maxSnapDistance, null, out totalSpaces, out occupiedSpaces);
+            return TryCollectParkingSpaceUsage(buildingId, maxSnapDistance, null, out totalSpaces, out occupiedSpaces, allowTmpeLookup: false);
         }
 
         private bool TryCollectParkingSpaceUsage(
@@ -184,12 +202,14 @@ namespace PickyParking.GameAdapters
             float maxSnapDistance,
             HashSet<ushort> outParkedVehicleIds,
             out int totalSpaces,
-            out int occupiedSpaces)
+            out int occupiedSpaces,
+            bool allowTmpeLookup = true)
         {
             totalSpaces = 0;
             occupiedSpaces = 0;
 
-            if (outParkedVehicleIds == null &&
+            if (allowTmpeLookup &&
+                outParkedVehicleIds == null &&
                 SimThread.IsSimulationThread() &&
                 TryCollectParkingSpaceUsageUsingTmpe(buildingId, out totalSpaces, out occupiedSpaces))
                 return true;
@@ -200,6 +220,7 @@ namespace PickyParking.GameAdapters
             if (!TryCollectParkingSpacePositions(buildingId, _parkingSpacePositions))
                 return false;
 
+            HashSet<ushort> loggedGridVehicles = null;
             totalSpaces = _parkingSpacePositions.Count;
             float maxSnapDistSqr = maxSnapDistance * maxSnapDistance;
 
@@ -211,34 +232,80 @@ namespace PickyParking.GameAdapters
 
                 int gx = Mathf.Clamp((int)(spacePos.x / 32f + 270f), 0, 539);
                 int gz = Mathf.Clamp((int)(spacePos.z / 32f + 270f), 0, 539);
+                float cellOriginX = (gx - 270) * 32f;
+                float cellOriginZ = (gz - 270) * 32f;
+                float localX = spacePos.x - cellOriginX;
+                float localZ = spacePos.z - cellOriginZ;
+                bool nearMinX = localX < maxSnapDistance;
+                bool nearMaxX = localX > 32f - maxSnapDistance;
+                bool nearMinZ = localZ < maxSnapDistance;
+                bool nearMaxZ = localZ > 32f - maxSnapDistance;
+                bool matched = false;
 
-                ushort parkedId = vm.m_parkedGrid[gz * 540 + gx];
-                int safety = 0;
-                while (parkedId != 0)
+                for (int dx = -1; dx <= 1; dx++)
                 {
-                    ref VehicleParked pv = ref vm.m_parkedVehicles.m_buffer[parkedId];
-                    ushort next = pv.m_nextGridParked;
+                    if (dx == -1 && !nearMinX) continue;
+                    if (dx == 1 && !nearMaxX) continue;
 
-                    if (pv.m_flags != 0)
+                    int cx = gx + dx;
+                    if (cx < 0 || cx > 539) continue;
+
+                    for (int dz = -1; dz <= 1; dz++)
                     {
-                        float dx = pv.m_position.x - spacePos.x;
-                        float dz = pv.m_position.z - spacePos.z;
+                        if (dz == -1 && !nearMinZ) continue;
+                        if (dz == 1 && !nearMaxZ) continue;
 
-                        if (dx * dx + dz * dz <= maxSnapDistSqr)
+                        int cz = gz + dz;
+                        if (cz < 0 || cz > 539) continue;
+
+                        ushort parkedId = vm.m_parkedGrid[cz * 540 + cx];
+                        int safety = 0;
+                        while (parkedId != 0)
                         {
-                            uniqueParked.Add(parkedId);
-                            break;
+                            ref VehicleParked pv = ref vm.m_parkedVehicles.m_buffer[parkedId];
+                            ushort next = pv.m_nextGridParked;
+
+                            if (pv.m_flags != 0)
+                            {
+                                float dxp = pv.m_position.x - spacePos.x;
+                                float dzp = pv.m_position.z - spacePos.z;
+
+                                if (dxp * dxp + dzp * dzp <= maxSnapDistSqr)
+                                {
+                                    uniqueParked.Add(parkedId);
+                                    if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
+                                        ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+                                    {
+                                        if (loggedGridVehicles == null)
+                                            loggedGridVehicles = new HashSet<ushort>();
+
+                                        if (loggedGridVehicles.Count < GridDebugVehicleLogLimit &&
+                                            loggedGridVehicles.Add(parkedId))
+                                        {
+                                            LogParkedVehicleDetails(parkedId, buildingId);
+                                        }
+                                    }
+                                    matched = true;
+                                    break;
+                                }
+                            }
+
+                            parkedId = next;
+
+                            if (++safety > ParkedGridSafetyLimit)
+                            {
+                                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
+                                    Log.Info($"[Parking] Parked grid safety limit hit buildingId={buildingId} space=({spacePos.x:F1},{spacePos.y:F1},{spacePos.z:F1})");
+                                break;
+                            }
                         }
+
+                        if (matched)
+                            break;
                     }
 
-                    parkedId = next;
-
-                    if (++safety > ParkedGridSafetyLimit)
-                    {
-                        if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                            Log.Info($"[Parking] Parked grid safety limit hit buildingId={buildingId} space=({spacePos.x:F1},{spacePos.y:F1},{spacePos.z:F1})");
+                    if (matched)
                         break;
-                    }
                 }
             }
 
@@ -255,6 +322,11 @@ namespace PickyParking.GameAdapters
             if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                 ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
             {
+                Log.Info(
+                    "[Parking] Building debug grid occupancy " +
+                    $"buildingId={buildingId} spaces={totalSpaces} occupied={occupiedSpaces} " +
+                    $"maxSnapDistance={maxSnapDistance:F2}"
+                );
                 LogIndustryStats(buildingId, maxSnapDistance, totalSpaces, occupiedSpaces);
             }
 
@@ -634,6 +706,82 @@ namespace PickyParking.GameAdapters
                     Mathf.RoundToInt(pos.x * scale),
                     Mathf.RoundToInt(pos.y * scale),
                     Mathf.RoundToInt(pos.z * scale));
+            }
+        }
+
+        private bool TryGetCachedParkingSpaces(
+            ushort buildingId,
+            ref Building building,
+            BuildingInfo info,
+            List<Vector3> outPositions)
+        {
+            if (!_parkingSpaceCache.TryGetValue(buildingId, out var entry))
+                return false;
+
+            if (!IsCacheValid(entry, ref building, info))
+            {
+                _parkingSpaceCache.Remove(buildingId);
+                return false;
+            }
+
+            outPositions.Clear();
+            outPositions.AddRange(entry.Positions);
+            return outPositions.Count > 0;
+        }
+
+        private void CacheParkingSpaces(
+            ushort buildingId,
+            ref Building building,
+            BuildingInfo info,
+            List<Vector3> positions)
+        {
+            if (positions == null || positions.Count == 0 || info == null)
+                return;
+
+            if (_parkingSpaceCache.Count >= MaxParkingSpaceCacheEntries)
+                _parkingSpaceCache.Clear();
+
+            var cached = new List<Vector3>(positions);
+            _parkingSpaceCache[buildingId] = new ParkingSpaceCacheEntry(
+                cached,
+                building.m_position,
+                building.m_angle,
+                building.Length,
+                info.name);
+        }
+
+        private static bool IsCacheValid(ParkingSpaceCacheEntry entry, ref Building building, BuildingInfo info)
+        {
+            if (info == null || entry.PrefabName != info.name)
+                return false;
+
+            Vector3 pos = building.m_position;
+            if (Mathf.Abs(entry.Position.x - pos.x) > CachePositionEpsilon ||
+                Mathf.Abs(entry.Position.y - pos.y) > CachePositionEpsilon ||
+                Mathf.Abs(entry.Position.z - pos.z) > CachePositionEpsilon)
+                return false;
+
+            if (Mathf.Abs(entry.Angle - building.m_angle) > CacheAngleEpsilon)
+                return false;
+
+            return entry.Length == building.Length;
+        }
+
+        private sealed class ParkingSpaceCacheEntry
+        {
+            public readonly List<Vector3> Positions;
+            public readonly Vector3 Position;
+            public readonly float Angle;
+            public readonly int Length;
+            public readonly string PrefabName;
+
+            public ParkingSpaceCacheEntry(List<Vector3> positions, Vector3 position, float angle, int length, string prefabName)
+            {
+                Positions = positions;
+                Position = position;
+                Angle = angle;
+                Length = length;
+                PrefabName = prefabName;
             }
         }
     }

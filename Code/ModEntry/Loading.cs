@@ -33,6 +33,7 @@ namespace PickyParking.ModEntry
         public override void OnCreated(ILoading loading)
         {
             base.OnCreated(loading);
+            Log.InitializeMainThread();
             LogAssemblyVersionLoadedOnce();
         }
 
@@ -60,6 +61,7 @@ namespace PickyParking.ModEntry
             OverlayRenderer.SetServices(_uiServices);
             CreateRuntimeObjects(mode);
 
+            Log.MarkDebugPanelReady();
             Log.Info("[Parking] Loaded.");
         }
 
@@ -69,12 +71,14 @@ namespace PickyParking.ModEntry
 
             Unload(clearLevelContext: true);
             Log.Info("[Parking] Unloaded.");
+            Log.MarkDebugPanelNotReady();
         }
 
         public override void OnReleased()
         {
             base.OnReleased();
             Unload(clearLevelContext: true);
+            Log.MarkDebugPanelNotReady();
         }
 
         private void CreateRuntimeObjects(LoadMode mode)
@@ -88,6 +92,7 @@ namespace PickyParking.ModEntry
             _runtimeObject = new GameObject("PickyParking.Runtime");
             UnityEngine.Object.DontDestroyOnLoad(_runtimeObject);
 
+            _runtimeObject.AddComponent<Logging.LogFlushPump>();
             _runtimeObject.AddComponent<DebugHotkeyListener>();
             _runtimeObject.AddComponent<ParkingStatsTicker>();
             var attachPanel = _runtimeObject.AddComponent<AttachPanelToBuildingInfo>();

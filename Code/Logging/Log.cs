@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using ColossalFramework.Plugins;
 using Debug = UnityEngine.Debug;
 
@@ -7,6 +9,11 @@ namespace PickyParking.Logging
     public static class Log
     {
         private const string Prefix = "[PickyParking] ";
+        private const int MaxQueuedMessages = 500;
+        private static readonly Queue<QueuedMessage> PendingMessages = new Queue<QueuedMessage>();
+        private static readonly object QueueLock = new object();
+        private static volatile bool _debugPanelReady;
+        private static int _mainThreadId;
 
         public static bool IsVerboseEnabled { get; private set; }
         public static bool IsRuleUiDebugEnabled { get; private set; }
@@ -18,6 +25,33 @@ namespace PickyParking.Logging
         public static void Info(string message) => Write(PluginManager.MessageType.Message, message, false);
         public static void Warn(string message) => Write(PluginManager.MessageType.Warning, message, true);
         public static void Error(string message) => Write(PluginManager.MessageType.Error, message, true);
+
+        public static void MarkDebugPanelReady()
+        {
+            _debugPanelReady = true;
+            InitializeMainThread();
+            FlushQueuedMessagesFromMainThread();
+        }
+
+        public static void MarkDebugPanelNotReady()
+        {
+            _debugPanelReady = false;
+            ClearQueuedMessages();
+        }
+
+        public static void InitializeMainThread()
+        {
+            if (_mainThreadId == 0)
+                _mainThreadId = Thread.CurrentThread.ManagedThreadId;
+        }
+
+        public static void FlushQueuedMessagesFromMainThread()
+        {
+            if (!CanWriteToDebugPanel())
+                return;
+
+            FlushQueuedMessagesInternal();
+        }
 
         public static void SetVerboseEnabled(bool isEnabled)
         {
@@ -77,16 +111,94 @@ namespace PickyParking.Logging
                     Debug.Log(line);
                     break;
             }
-            
+
+            if (ShouldQueueDebugPanelMessage())
+            {
+                EnqueueMessage(type, line);
+                return;
+            }
+
+            FlushQueuedMessagesInternal();
+            AddToDebugPanel(type, line);
+        }
+
+        private static bool ShouldQueueDebugPanelMessage()
+        {
+            return !CanWriteToDebugPanel();
+        }
+
+        private static bool CanWriteToDebugPanel()
+        {
+            if (!_debugPanelReady)
+                return false;
+
+            if (_mainThreadId == 0)
+                return false;
+
+            return Thread.CurrentThread.ManagedThreadId == _mainThreadId;
+        }
+
+        private static void EnqueueMessage(PluginManager.MessageType type, string line)
+        {
+            lock (QueueLock)
+            {
+                while (PendingMessages.Count >= MaxQueuedMessages)
+                    PendingMessages.Dequeue();
+
+                PendingMessages.Enqueue(new QueuedMessage(type, line));
+            }
+        }
+
+        private static void ClearQueuedMessages()
+        {
+            lock (QueueLock)
+            {
+                PendingMessages.Clear();
+            }
+        }
+
+        private static void FlushQueuedMessagesInternal()
+        {
+            List<QueuedMessage> drained = null;
+            lock (QueueLock)
+            {
+                if (PendingMessages.Count == 0)
+                    return;
+
+                drained = new List<QueuedMessage>(PendingMessages.Count);
+                while (PendingMessages.Count > 0)
+                    drained.Add(PendingMessages.Dequeue());
+            }
+
+            for (int i = 0; i < drained.Count; i++)
+            {
+                var queued = drained[i];
+                AddToDebugPanel(queued.Type, queued.Line);
+            }
+        }
+
+        private static void AddToDebugPanel(PluginManager.MessageType type, string line)
+        {
             try
             {
                 DebugOutputPanel.AddMessage(type, line);
             }
             catch
             {
-                
             }
         }
-    }
-}
 
+        private readonly struct QueuedMessage
+        {
+            public QueuedMessage(PluginManager.MessageType type, string line)
+            {
+                Type = type;
+                Line = line;
+            }
+
+            public PluginManager.MessageType Type { get; }
+            public string Line { get; }
+        }
+    }
+    
+}
