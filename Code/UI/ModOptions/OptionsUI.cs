@@ -16,6 +16,7 @@ namespace PickyParking.UI.ModOptions
 
             CustomizationOptions.Build(helper, settings, saveSettings, services);
             CreateSupportedPrefabList(helper, settings, saveSettings, services);
+            ReevaluationOptions.Build(helper, settings, saveSettings, services);
             LoggingOptions.Build(helper, settings, saveSettings, services);
             BuildResetOptions(helper, services);
         }

@@ -24,6 +24,7 @@ namespace PickyParking.Settings
         public ushort DebugBuildingId { get; set; }
         public float ResidentsRadiusHue { get; set; }
         public float WorkSchoolRadiusHue { get; set; }
+        public bool EnableParkingRuleSweeps { get; set; }
 
         public ModSettings()
         {
@@ -40,6 +41,7 @@ namespace PickyParking.Settings
             DebugBuildingId = 0;
             ResidentsRadiusHue = 0.35f;
             WorkSchoolRadiusHue = 0.1f;
+            EnableParkingRuleSweeps = true;
         }
 
         internal const string FileName = "PickyParking.xml";
