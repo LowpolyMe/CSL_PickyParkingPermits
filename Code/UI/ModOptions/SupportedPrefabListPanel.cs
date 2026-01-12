@@ -49,7 +49,11 @@ namespace PickyParking.UI.ModOptions
             eventVisibilityChanged += (_, isVisible) =>
             {
                 if (isVisible)
+                {
+                    if (_services != null && !_services.HasRuntime)
+                        _services.ReloadSettings("SupportedPrefabs.Visible");
                     RequestRefreshNextFrame();
+                }
             };
         }
 
@@ -335,10 +339,17 @@ namespace PickyParking.UI.ModOptions
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info("[SupportedPrefabs] Populate list start: showThumbnails=" + _showThumbnails + " showInstances=" + _showInstances);
 
+            var settings = _services != null ? _services.SettingsController?.Current : null;
+            if (settings != null)
+                _prefabKeys = settings.SupportedParkingLotPrefabs;
+
             ClearRowComponents();
 
             if (_prefabKeys == null || _prefabKeys.Count == 0)
                 return;
+
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                Log.Info("[SupportedPrefabs] Supported list count=" + _prefabKeys.Count);
 
             Dictionary<string, int> rulesByPrefabName = null;
             bool hasCounts = _showInstances && TryBuildRulesCountByPrefabName(out rulesByPrefabName);
@@ -416,7 +427,7 @@ namespace PickyParking.UI.ModOptions
 
             counts = map;
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Rules count build ok: rules=" + totalRules + " prefabs=" + map.Count);
+                Log.Info("[SupportedPrefabs] Rules count build ok: rules=" + totalRules + " prefabsWithRules=" + map.Count);
             return true;
         }
 

@@ -155,8 +155,17 @@ namespace PickyParking.UI.BuildingOptionsPanel
 
             if (_services.SettingsController != null && _services.SettingsController.Current != null)
             {
-                _services.SettingsController.Current.SupportedParkingLotPrefabs =
-                    new System.Collections.Generic.List<PrefabKey>(_services.SupportedParkingLotRegistry.EnumerateKeys());
+                var settings = _services.SettingsController.Current;
+                var list = settings.SupportedParkingLotPrefabs;
+                if (list == null)
+                {
+                    list = new System.Collections.Generic.List<PrefabKey>();
+                    settings.SupportedParkingLotPrefabs = list;
+                }
+
+                if (!list.Contains(_prefabKey))
+                    list.Add(_prefabKey);
+
                 _services.SettingsController.Save("UI.AddSupportedPrefab");
             }
             else
