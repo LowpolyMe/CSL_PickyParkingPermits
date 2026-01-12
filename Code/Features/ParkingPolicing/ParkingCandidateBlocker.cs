@@ -204,7 +204,7 @@ namespace PickyParking.Features.ParkingPolicing
             return false;
         }
 
-        private static bool IsInScope(ParkingRuntimeContext services, ushort buildingId)
+        internal static bool IsInScope(ParkingRuntimeContext services, ushort buildingId)
         {
             if (services == null) return false;
             if (!services.GameAccess.TryGetBuildingInfo(buildingId, out var info)) return false;

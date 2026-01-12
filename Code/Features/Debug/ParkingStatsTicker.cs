@@ -10,6 +10,7 @@ namespace PickyParking.Features.Debug
         private static ParkingStatsTicker _instance;
         private static bool _desiredEnabled = true;
         private static int _missingInstanceLogged;
+        private static int _dayChangedRequested;
 
         private float _nextLogTime;
         private float _lastLogTime;
@@ -26,6 +27,13 @@ namespace PickyParking.Features.Debug
                 ParkingStatsCounter.ResetAll();
             else if (_instance == null && Interlocked.Exchange(ref _missingInstanceLogged, 1) == 0)
                 Log.Warn("[Parking] Stats ticker enabled but no instance exists yet.");
+        }
+
+        public static void NotifyDayChanged()
+        {
+            if (_instance == null)
+                return;
+            Interlocked.Exchange(ref _dayChangedRequested, 1);
         }
 
         private void OnEnable()
@@ -60,23 +68,15 @@ namespace PickyParking.Features.Debug
                 return;
             }
 
-            if (!_wasLogging)
-            {
-                ParkingStatsCounter.ResetAll();
-                _lastLogTime = Time.unscaledTime;
-                _nextLogTime = _lastLogTime + ParkingStatsCounter.DefaultIntervalSeconds;
-                _wasLogging = true;
-                Log.Info("[Parking] Stats ticker active (interval=60s).");
-            }
-
             float now = Time.unscaledTime;
-            if (now < _nextLogTime)
+            if (Interlocked.Exchange(ref _dayChangedRequested, 0) == 1)
+            {
+                float dayWindowSeconds = Mathf.Max(1f, now - _lastLogTime);
+                ParkingStatsCounter.LogAndReset(dayWindowSeconds);
+                _lastLogTime = now;
+                _wasLogging = true;
                 return;
-
-            float windowSeconds = Mathf.Max(1f, now - _lastLogTime);
-            ParkingStatsCounter.LogAndReset(windowSeconds);
-            _lastLogTime = now;
-            _nextLogTime = now + ParkingStatsCounter.DefaultIntervalSeconds;
+            }
         }
 
         private static void TryEnsureInstance()

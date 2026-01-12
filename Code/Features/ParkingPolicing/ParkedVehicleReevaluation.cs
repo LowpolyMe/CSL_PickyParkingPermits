@@ -7,6 +7,7 @@ using PickyParking.Features.Debug;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
+using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -18,17 +19,23 @@ namespace PickyParking.Features.ParkingPolicing
         private readonly ParkingRulesConfigRegistry _rules;
         private readonly ParkingPermissionEvaluator _evaluator;
         private readonly GameAccess _game;
+        private readonly SupportedParkingLotRegistry _supportedLots;
         private readonly TmpeIntegration _tmpe;
 
         private readonly Queue<ushort> _pendingBuildings = new Queue<ushort>();
         private readonly HashSet<ushort> _pendingSet = new HashSet<ushort>();
 
         private readonly List<ushort> _parkedBuffer = new List<ushort>(512);
+        private readonly List<ushort> _sweepBuildings = new List<ushort>(256);
+        private readonly List<ushort> _unsupportedBuffer = new List<ushort>(32);
 
         private ushort _activeBuilding;
         private int _activeIndex;
         private bool _scheduled;
         private bool _disposed;
+        private int _rulesVersionSeen = -1;
+        private int _sweepIndex;
+        private bool _resetSweepPending;
         private int _activeParkedCount;
         private int _activeAllowedCount;
         private int _activeDeniedCount;
@@ -41,20 +48,29 @@ namespace PickyParking.Features.ParkingPolicing
             ParkingRulesConfigRegistry rules,
             ParkingPermissionEvaluator evaluator,
             GameAccess game,
+            SupportedParkingLotRegistry supportedLots,
             TmpeIntegration tmpe)
         {
             _isFeatureActive = featureGate;
             _rules = rules;
             _evaluator = evaluator;
             _game = game;
+            _supportedLots = supportedLots;
             _tmpe = tmpe;
         }
+
+        public bool HasPendingWork => _activeBuilding != 0 || _pendingBuildings.Count > 0;
 
         public void RequestForBuilding(ushort buildingId)
         {
             if (buildingId == 0) return;
             if (_disposed) return;
             if (!_isFeatureActive.IsActive) return;
+            if (!IsBuildingSupported(buildingId))
+            {
+                CleanupRuleIfUnsupported(buildingId);
+                return;
+            }
 
             if (Log.IsEnforcementDebugEnabled && ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
                 Log.Warn("[Parking] Reevaluation requested for buildingId=" +
@@ -67,6 +83,34 @@ namespace PickyParking.Features.ParkingPolicing
             if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                 Log.Info("[Parking] Reevaluation queued buildingId=" + buildingId);
             Schedule();
+        }
+
+        public bool TryRequestNextScheduledBuilding(bool resetSweep)
+        {
+            if (_disposed) return false;
+
+            if (resetSweep || _resetSweepPending)
+            {
+                EnsureSweepList();
+                _sweepIndex = 0;
+                _resetSweepPending = false;
+            }
+
+            if (!_isFeatureActive.IsActive) return false;
+            if (HasPendingWork) return false;
+
+            EnsureSweepList();
+            if (_sweepIndex >= _sweepBuildings.Count)
+                return false;
+
+            ushort buildingId = _sweepBuildings[_sweepIndex++];
+            RequestForBuilding(buildingId);
+            return true;
+        }
+
+        public void NotifyDayChanged()
+        {
+            _resetSweepPending = true;
         }
 
         private void Schedule()
@@ -172,6 +216,15 @@ namespace PickyParking.Features.ParkingPolicing
                     continue;
                 }
 
+                if (!IsBuildingSupported(next))
+                {
+                    if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
+                        Log.Info("[Parking] Reevaluation skipped (prefab unsupported) buildingId=" + next);
+                    CleanupRuleIfUnsupported(next);
+                    _pendingSet.Remove(next);
+                    continue;
+                }
+
                 _activeBuilding = next;
                 _activeIndex = 0;
                 _parkedBuffer.Clear();
@@ -236,7 +289,11 @@ namespace PickyParking.Features.ParkingPolicing
             _activeBuilding = 0;
             _activeIndex = 0;
             _parkedBuffer.Clear();
+            _sweepBuildings.Clear();
+            _sweepIndex = 0;
+            _rulesVersionSeen = -1;
             _scheduled = false;
+            _resetSweepPending = false;
         }
 
         public void Dispose()
@@ -244,6 +301,56 @@ namespace PickyParking.Features.ParkingPolicing
             if (_disposed) return;
             _disposed = true;
             ClearAll();
+        }
+
+        private void EnsureSweepList()
+        {
+            int currentVersion = _rules.Version;
+            if (currentVersion == _rulesVersionSeen)
+                return;
+
+            _sweepBuildings.Clear();
+            _unsupportedBuffer.Clear();
+            foreach (var kvp in _rules.Enumerate())
+            {
+                if (kvp.Key == 0)
+                    continue;
+
+                if (!IsBuildingSupported(kvp.Key))
+                {
+                    _unsupportedBuffer.Add(kvp.Key);
+                    continue;
+                }
+
+                _sweepBuildings.Add(kvp.Key);
+            }
+
+            for (int i = 0; i < _unsupportedBuffer.Count; i++)
+                CleanupRuleIfUnsupported(_unsupportedBuffer[i]);
+
+            _rulesVersionSeen = _rules.Version;
+            if (_sweepIndex > _sweepBuildings.Count)
+                _sweepIndex = 0;
+        }
+
+        private bool IsBuildingSupported(ushort buildingId)
+        {
+            if (_supportedLots == null)
+                return false;
+
+            if (!_game.TryGetBuildingInfo(buildingId, out var info))
+                return false;
+
+            var key = ParkingLotPrefabKeyFactory.CreateKey(info);
+            return _supportedLots.Contains(key);
+        }
+
+        private void CleanupRuleIfUnsupported(ushort buildingId)
+        {
+            if (_rules == null || buildingId == 0)
+                return;
+
+            _rules.RemoveIf(kvp => kvp.Key == buildingId);
         }
     }
 }
