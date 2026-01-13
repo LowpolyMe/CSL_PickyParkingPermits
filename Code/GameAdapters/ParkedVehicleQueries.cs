@@ -6,6 +6,7 @@ namespace PickyParking.GameAdapters
     internal sealed class ParkedVehicleQueries
     {
         private const int ParkedGridSafetyLimit = 32768;
+        private const ushort StuckFlagsMask = (ushort)(VehicleParked.Flags.Created | VehicleParked.Flags.Parking);
 
         public bool TryGetParkedVehicleInfo(
             ushort parkedVehicleId,
@@ -34,6 +35,75 @@ namespace PickyParking.GameAdapters
                 ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[ownerCitizenId];
 
             homeId = citizen.m_homeBuilding;
+            return true;
+        }
+
+        public bool TryGetParkedVehicleReevaluationInfo(
+            ushort parkedVehicleId,
+            out uint ownerCitizenId,
+            out ushort homeId,
+            out Vector3 position,
+            out ushort flags,
+            out bool ownerRoundTrip,
+            out bool isStuckCandidate)
+        {
+            ownerCitizenId = 0;
+            homeId = 0;
+            position = default;
+            flags = 0;
+            ownerRoundTrip = false;
+            isStuckCandidate = false;
+
+            if (parkedVehicleId == 0) return false;
+
+            ref VehicleParked pv =
+                ref Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[parkedVehicleId];
+
+            flags = pv.m_flags;
+            if (flags == 0) return false;
+
+            ownerCitizenId = pv.m_ownerCitizen;
+            position = pv.m_position;
+
+            if (ownerCitizenId == 0)
+                return false;
+
+            ref Citizen citizen =
+                ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[ownerCitizenId];
+
+            homeId = citizen.m_homeBuilding;
+            if ((citizen.m_flags & Citizen.Flags.Created) != 0)
+                ownerRoundTrip = citizen.m_parkedVehicle == parkedVehicleId;
+            isStuckCandidate = ownerRoundTrip && (flags & StuckFlagsMask) == StuckFlagsMask;
+            return true;
+        }
+
+        public bool TryFinalizeStuckOwnedParkedVehicle(ushort parkedVehicleId)
+        {
+            if (!TryGetParkedVehicleReevaluationInfo(
+                    parkedVehicleId,
+                    out _,
+                    out _,
+                    out _,
+                    out var flags,
+                    out bool ownerRoundTrip,
+                    out bool isStuckCandidate))
+            {
+                return false;
+            }
+
+            if (!ownerRoundTrip || !isStuckCandidate)
+                return false;
+
+            ref VehicleParked pv =
+                ref Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[parkedVehicleId];
+
+            pv.m_flags = (ushort)(pv.m_flags & unchecked((ushort)~(ushort)VehicleParked.Flags.Parking));
+            pv.m_flags = (ushort)(pv.m_flags | (ushort)VehicleParked.Flags.Updated);
+
+            VehicleAI ai = pv.Info?.m_vehicleAI;
+            if (ai != null)
+                ai.UpdateParkedVehicle(parkedVehicleId, ref pv);
             return true;
         }
 

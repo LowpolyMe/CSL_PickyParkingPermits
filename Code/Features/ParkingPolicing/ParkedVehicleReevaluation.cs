@@ -16,6 +16,7 @@ namespace PickyParking.Features.ParkingPolicing
     {
         private const int DefaultMaxEvaluationsPerTick = 128; //evals per building per tick
         private const int DefaultMaxRelocationsPerTick = 8; //resulting relocations (only violating vehicles) per tick per building
+        private const int DefaultMaxFinalizationsPerTick = 4; //stuck parked vehicles finalized per tick per building
 
         private readonly FeatureGate _isFeatureActive;
         private readonly ParkingRulesConfigRegistry _rules;
@@ -32,6 +33,8 @@ namespace PickyParking.Features.ParkingPolicing
         private readonly List<ushort> _parkedBuffer = new List<ushort>(512);
         private readonly List<ushort> _sweepBuildings = new List<ushort>(256);
         private readonly List<ushort> _unsupportedBuffer = new List<ushort>(32);
+        private readonly Dictionary<ushort, uint> _stuckSeenToday = new Dictionary<ushort, uint>();
+        private readonly Dictionary<ushort, uint> _stuckSeenYesterday = new Dictionary<ushort, uint>();
 
         private ushort _activeBuilding;
         private int _activeIndex;
@@ -40,13 +43,12 @@ namespace PickyParking.Features.ParkingPolicing
         private int _rulesVersionSeen = -1;
         private int _sweepIndex;
         private bool _resetSweepPending;
-        private int _dailySweepRemaining = -1;
         private int _activeParkedCount;
         private int _activeAllowedCount;
         private int _activeDeniedCount;
         private int _activeMovedCount;
         private int _activeReleasedCount;
-        private int _activeLoggedDenied;
+        private int _activeFixedCount;
 
         public ParkedVehicleReevaluation(
             FeatureGate featureGate,
@@ -107,19 +109,9 @@ namespace PickyParking.Features.ParkingPolicing
             if (!_isFeatureActive.IsActive) return false;
             if (HasPendingWork) return false;
 
-            if (_dailySweepRemaining < 0)
-            {
-                int perDay = GetSweepBuildingsPerDay();
-                if (perDay > 0)
-                    _dailySweepRemaining = perDay;
-            }
-
             EnsureSweepList();
             while (_sweepIndex < _sweepBuildings.Count)
             {
-                if (_dailySweepRemaining == 0)
-                    return false;
-
                 ushort buildingId = _sweepBuildings[_sweepIndex++];
                 if (_pendingSet.Contains(buildingId))
                     continue;
@@ -127,9 +119,6 @@ namespace PickyParking.Features.ParkingPolicing
                 bool queued = RequestForBuilding(buildingId);
                 if (!queued)
                     continue;
-
-                if (_dailySweepRemaining > 0)
-                    _dailySweepRemaining--;
                 return true;
             }
 
@@ -138,15 +127,7 @@ namespace PickyParking.Features.ParkingPolicing
 
         public void NotifyDayChanged()
         {
-            int maxPerDay = GetSweepBuildingsPerDay();
-            if (maxPerDay > 0)
-            {
-                _dailySweepRemaining = maxPerDay;
-                return;
-            }
-
-            _resetSweepPending = true;
-            _dailySweepRemaining = -1;
+            SimThread.Dispatch(ApplyDayChanged);
         }
 
         private void Schedule()
@@ -184,16 +165,43 @@ namespace PickyParking.Features.ParkingPolicing
             ushort logBuildingId = _activeBuilding;
             int evaluationsThisTick = 0;
             int relocationsThisTick = 0;
+            int finalizationsThisTick = 0;
             int maxEvaluations = GetMaxEvaluationsPerTick();
             int maxRelocations = GetMaxRelocationsPerTick();
+            int maxFinalizations = GetMaxFinalizationsPerTick();
+            bool stuckFixEnabled = IsStuckFixEnabled();
 
             while (evaluationsThisTick < maxEvaluations && _activeIndex < _parkedBuffer.Count)
             {
                 ushort parkedId = _parkedBuffer[_activeIndex++];
-                if (!_game.TryGetParkedVehicleInfo(parkedId, out uint ownerCitizenId, out ushort homeId, out Vector3 parkedPos))
+                if (!_game.TryGetParkedVehicleReevaluationInfo(
+                        parkedId,
+                        out uint ownerCitizenId,
+                        out ushort homeId,
+                        out Vector3 parkedPos,
+                        out ushort flags,
+                        out bool ownerRoundTrip,
+                        out bool isStuckCandidate))
                 {
                     evaluationsThisTick++;
                     continue;
+                }
+
+                if (stuckFixEnabled && isStuckCandidate)
+                {
+                    _stuckSeenToday[parkedId] = ownerCitizenId;
+                    bool sameOwnerPersisted =
+                        _stuckSeenYesterday.TryGetValue(parkedId, out uint prevOwner) &&
+                        prevOwner == ownerCitizenId;
+                    if (finalizationsThisTick < maxFinalizations && sameOwnerPersisted)
+                    {
+                        if (_game.TryFinalizeStuckOwnedParkedVehicle(parkedId))
+                        {
+                            finalizationsThisTick++;
+                            _activeFixedCount++;
+                            ParkingStatsCounter.IncrementInvisiblesFixed();
+                        }
+                    }
                 }
 
                 var eval = _evaluator.EvaluateCitizen(ownerCitizenId, _activeBuilding);
@@ -215,15 +223,15 @@ namespace PickyParking.Features.ParkingPolicing
                 }
 
                 _activeDeniedCount++;
-                if (Log.IsVerboseEnabled && _activeLoggedDenied < 5)
+                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
                 {
-                    _activeLoggedDenied++;
-                    Log.Info("[Parking] Reevaluation denied parkedId=" + parkedId
+                    Log.Info("[Parking] Reevaluation: vehicle denied (queue relocate/release) parkedId=" + parkedId
                              + " citizenId=" + ownerCitizenId
                              + " reason=" + eval.Reason);
                 }
 
                 _deniedQueue.Enqueue(new DeniedParkedVehicle(parkedId, ownerCitizenId, homeId, parkedPos));
+                ParkingStatsCounter.IncrementReevalDeniedQueued();
                 evaluationsThisTick++;
             }
 
@@ -245,19 +253,22 @@ namespace PickyParking.Features.ParkingPolicing
                         source: "Reevaluation.ReleaseParkedVehicle");
                     Singleton<VehicleManager>.instance.ReleaseParkedVehicle(denied.ParkedVehicleId);
                     _activeReleasedCount++;
+                    ParkingStatsCounter.IncrementReevalReleased();
                 }
                 else
                 {
                     _activeMovedCount++;
+                    ParkingStatsCounter.IncrementReevalMoved();
                 }
 
                 relocationsThisTick++;
             }
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info("[Parking] Reevaluation tick eval=" + evaluationsThisTick +
-                         " relocate=" + relocationsThisTick +
-                         " buildingId=" + logBuildingId);
+                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
+                    Log.Info("[Parking] Reevaluation tick eval=" + evaluationsThisTick +
+                             " relocate=" + relocationsThisTick +
+                             " finalize=" + finalizationsThisTick +
+                             " buildingId=" + logBuildingId);
             if (_activeIndex >= _parkedBuffer.Count && _deniedQueue.Count == 0)
                 FinishActiveBuilding();
             if (HasPendingWork || _deniedQueue.Count > 0)
@@ -295,7 +306,7 @@ namespace PickyParking.Features.ParkingPolicing
                 _activeDeniedCount = 0;
                 _activeMovedCount = 0;
                 _activeReleasedCount = 0;
-                _activeLoggedDenied = 0;
+                _activeFixedCount = 0;
 
                 _game.CollectParkedVehiclesOnLot(next, _parkedBuffer);
                 _activeParkedCount = _parkedBuffer.Count;
@@ -330,7 +341,8 @@ namespace PickyParking.Features.ParkingPolicing
                          + " allowed=" + _activeAllowedCount
                          + " denied=" + _activeDeniedCount
                          + " moved=" + _activeMovedCount
-                         + " released=" + _activeReleasedCount);
+                         + " released=" + _activeReleasedCount
+                         + " fixed=" + _activeFixedCount);
             }
 
             _pendingSet.Remove(_activeBuilding);
@@ -343,7 +355,7 @@ namespace PickyParking.Features.ParkingPolicing
             _activeDeniedCount = 0;
             _activeMovedCount = 0;
             _activeReleasedCount = 0;
-            _activeLoggedDenied = 0;
+            _activeFixedCount = 0;
         }
 
         private void ClearAll()
@@ -359,7 +371,8 @@ namespace PickyParking.Features.ParkingPolicing
             _rulesVersionSeen = -1;
             _scheduled = false;
             _resetSweepPending = false;
-            _dailySweepRemaining = -1;
+            _stuckSeenToday.Clear();
+            _stuckSeenYesterday.Clear();
         }
 
         public void Dispose()
@@ -433,12 +446,46 @@ namespace PickyParking.Features.ParkingPolicing
             return Math.Max(1, value);
         }
 
-        private int GetSweepBuildingsPerDay()
+        private int GetMaxFinalizationsPerTick()
+        {
+            return Math.Max(1, DefaultMaxFinalizationsPerTick);
+        }
+
+        private bool IsStuckFixEnabled()
         {
             var settings = _settingsController?.Current;
-            if (settings == null)
-                return 0;
-            return Math.Max(0, settings.ReevaluationSweepBuildingsPerDay);
+            return settings == null || settings.EnableStuckParkedVehicleFix;
+        }
+
+        private void RollStuckSeenForward()
+        {
+            if (_stuckSeenToday.Count == 0)
+            {
+                _stuckSeenYesterday.Clear();
+                return;
+            }
+
+            _stuckSeenYesterday.Clear();
+            foreach (var kvp in _stuckSeenToday)
+                _stuckSeenYesterday[kvp.Key] = kvp.Value;
+            _stuckSeenToday.Clear();
+        }
+
+        private void ApplyDayChanged()
+        {
+            if (_disposed)
+                return;
+
+            _resetSweepPending = IsSweepComplete();
+            RollStuckSeenForward();
+        }
+
+        private bool IsSweepComplete()
+        {
+            EnsureSweepList();
+            if (HasPendingWork)
+                return false;
+            return _sweepIndex >= _sweepBuildings.Count;
         }
 
         private readonly struct DeniedParkedVehicle

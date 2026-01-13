@@ -170,13 +170,6 @@ namespace PickyParking.Settings
                 changed = true;
             }
 
-            int buildingsPerDay = ClampInt(settings.ReevaluationSweepBuildingsPerDay, 0, 4096);
-            if (buildingsPerDay != settings.ReevaluationSweepBuildingsPerDay)
-            {
-                settings.ReevaluationSweepBuildingsPerDay = buildingsPerDay;
-                changed = true;
-            }
-
             return changed;
         }
 

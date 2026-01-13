@@ -166,6 +166,30 @@ namespace PickyParking.GameAdapters
                 out position);
         }
 
+        public bool TryGetParkedVehicleReevaluationInfo(
+            ushort parkedVehicleId,
+            out uint ownerCitizenId,
+            out ushort homeId,
+            out Vector3 position,
+            out ushort flags,
+            out bool ownerRoundTrip,
+            out bool isStuckCandidate)
+        {
+            return _parkedVehicleQueries.TryGetParkedVehicleReevaluationInfo(
+                parkedVehicleId,
+                out ownerCitizenId,
+                out homeId,
+                out position,
+                out flags,
+                out ownerRoundTrip,
+                out isStuckCandidate);
+        }
+
+        public bool TryFinalizeStuckOwnedParkedVehicle(ushort parkedVehicleId)
+        {
+            return _parkedVehicleQueries.TryFinalizeStuckOwnedParkedVehicle(parkedVehicleId);
+        }
+
         public bool TryGetApproxParkingArea(ushort buildingId, out Vector3 center, out float radius)
         {
             return _parkingSpaceQueries.TryGetApproxParkingArea(buildingId, out center, out radius);

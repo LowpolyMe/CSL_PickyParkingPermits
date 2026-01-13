@@ -10,8 +10,6 @@ namespace PickyParking.ParkingRulesSaving
 {
     
     
-    
-    
     public sealed class SavegameRulesStorage
     {
         
@@ -32,9 +30,8 @@ namespace PickyParking.ParkingRulesSaving
                         var entries = new List<KeyValuePair<ushort, ParkingRulesConfigDefinition>>(repository.Enumerate());
                         writer.Write(entries.Count);
 
-                        for (int i = 0; i < entries.Count; i++)
+                        foreach (KeyValuePair<ushort, ParkingRulesConfigDefinition> kv in entries)
                         {
-                            KeyValuePair<ushort, ParkingRulesConfigDefinition> kv = entries[i];
                             writer.Write(kv.Key);
                             kv.Value.Write(writer);
                         }
@@ -105,8 +102,7 @@ namespace PickyParking.ParkingRulesSaving
                                 return;
                         }
 
-                        bool normalized;
-                        rule = ParkingRulesLimits.ClampRule(rule, out normalized);
+                        rule = ParkingRulesLimits.ClampRule(rule, out bool normalized);
                         if (normalized)
                             normalizedCount++;
                         repository.Set(buildingId, rule);
@@ -132,7 +128,7 @@ namespace PickyParking.ParkingRulesSaving
 
             try
             {
-                var bm = Singleton<BuildingManager>.instance;
+                BuildingManager bm = Singleton<BuildingManager>.instance;
                 int maxSize = (int)bm.m_buildings.m_size;
 
                 foreach (var kvp in repository.Enumerate())

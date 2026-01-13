@@ -35,11 +35,9 @@ namespace PickyParking.ModEntry
 
             _lastDayStamp = dayStamp;
             ParkingStatsTicker.NotifyDayChanged();
+            runtime.ParkedVehicleReevaluation?.NotifyDayChanged();
             if (sweepsEnabled)
-            {
-                runtime.ParkedVehicleReevaluation?.NotifyDayChanged();
                 runtime.ParkedVehicleReevaluation?.TryRequestNextScheduledBuilding(resetSweep: false);
-            }
         }
 
         private static DateTime GetCurrentGameTime()

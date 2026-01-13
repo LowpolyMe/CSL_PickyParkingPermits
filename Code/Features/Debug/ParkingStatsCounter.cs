@@ -39,6 +39,10 @@ namespace PickyParking.Features.Debug
         private static long _createCheckNoRuleBuilding;
 
         private static long _vanillaFallbackFlipped;
+        private static long _invisiblesFixed;
+        private static long _reevalDeniedQueued;
+        private static long _reevalMoved;
+        private static long _reevalReleased;
 
         public static bool ShouldLog =>
             Log.IsVerboseEnabled;
@@ -72,6 +76,10 @@ namespace PickyParking.Features.Debug
             Interlocked.Exchange(ref _createCheckNoOwner, 0);
             Interlocked.Exchange(ref _createCheckNoRuleBuilding, 0);
             Interlocked.Exchange(ref _vanillaFallbackFlipped, 0);
+            Interlocked.Exchange(ref _invisiblesFixed, 0);
+            Interlocked.Exchange(ref _reevalDeniedQueued, 0);
+            Interlocked.Exchange(ref _reevalMoved, 0);
+            Interlocked.Exchange(ref _reevalReleased, 0);
         }
 
         public static void IncrementContextPush(ushort vehicleId, uint citizenId, string source)
@@ -229,6 +237,38 @@ namespace PickyParking.Features.Debug
             Interlocked.Increment(ref _vanillaFallbackFlipped);
         }
 
+        public static void IncrementInvisiblesFixed()
+        {
+            if (!ShouldCount)
+                return;
+
+            Interlocked.Increment(ref _invisiblesFixed);
+        }
+
+        public static void IncrementReevalDeniedQueued()
+        {
+            if (!ShouldCount)
+                return;
+
+            Interlocked.Increment(ref _reevalDeniedQueued);
+        }
+
+        public static void IncrementReevalMoved()
+        {
+            if (!ShouldCount)
+                return;
+
+            Interlocked.Increment(ref _reevalMoved);
+        }
+
+        public static void IncrementReevalReleased()
+        {
+            if (!ShouldCount)
+                return;
+
+            Interlocked.Increment(ref _reevalReleased);
+        }
+
         public static void LogAndReset(float windowSeconds)
         {
             var snapshot = SnapshotAndReset();
@@ -291,6 +331,14 @@ namespace PickyParking.Features.Debug
             sb.Append(snapshot.CreateCheckNoRuleBuilding);
             sb.Append(" vanillaFlip=");
             sb.Append(snapshot.VanillaFallbackFlipped);
+            sb.Append(" invisiblesFixed=");
+            sb.Append(snapshot.InvisiblesFixed);
+            sb.Append(" reevalQueued=");
+            sb.Append(snapshot.ReevalDeniedQueued);
+            sb.Append(" reevalMoved=");
+            sb.Append(snapshot.ReevalMoved);
+            sb.Append(" reevalReleased=");
+            sb.Append(snapshot.ReevalReleased);
 
             Log.Info(sb.ToString());
         }
@@ -323,7 +371,11 @@ namespace PickyParking.Features.Debug
                 CreateCheckNoContext = Interlocked.Exchange(ref _createCheckNoContext, 0),
                 CreateCheckNoOwner = Interlocked.Exchange(ref _createCheckNoOwner, 0),
                 CreateCheckNoRuleBuilding = Interlocked.Exchange(ref _createCheckNoRuleBuilding, 0),
-                VanillaFallbackFlipped = Interlocked.Exchange(ref _vanillaFallbackFlipped, 0)
+                VanillaFallbackFlipped = Interlocked.Exchange(ref _vanillaFallbackFlipped, 0),
+                InvisiblesFixed = Interlocked.Exchange(ref _invisiblesFixed, 0),
+                ReevalDeniedQueued = Interlocked.Exchange(ref _reevalDeniedQueued, 0),
+                ReevalMoved = Interlocked.Exchange(ref _reevalMoved, 0),
+                ReevalReleased = Interlocked.Exchange(ref _reevalReleased, 0)
             };
         }
 
@@ -354,6 +406,10 @@ namespace PickyParking.Features.Debug
             public long CreateCheckNoOwner;
             public long CreateCheckNoRuleBuilding;
             public long VanillaFallbackFlipped;
+            public long InvisiblesFixed;
+            public long ReevalDeniedQueued;
+            public long ReevalMoved;
+            public long ReevalReleased;
         }
     }
 }

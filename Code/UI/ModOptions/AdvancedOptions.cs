@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace PickyParking.UI.ModOptions
 {
-    internal static class ReevaluationOptions
+    internal static class AdvancedOptions
     {
         public static void Build(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
         {
@@ -20,12 +20,13 @@ namespace PickyParking.UI.ModOptions
                 SaveSettings(saveSettings);
                 ReloadSettings("OptionsUI: Enable background sweeps", services);
             });
+            
 
             AddInfoLabel(group, "Reevaluation limits apply per simulation tick. Lower values smooth CPU spikes but take longer to process.");
 
             AddIntField(
                 group,
-                "Max evaluations per tick",
+                "Max evaluations per tick. Recommended 64-256",
                 settings.ReevaluationMaxEvaluationsPerTick,
                 Mathf.RoundToInt(ModOptionsUiValues.ReevaluationSliders.MaxEvaluationsMin),
                 Mathf.RoundToInt(ModOptionsUiValues.ReevaluationSliders.MaxEvaluationsMax),
@@ -38,7 +39,7 @@ namespace PickyParking.UI.ModOptions
 
             AddIntField(
                 group,
-                "Max relocations per tick",
+                "Max relocations per tick. Recommended 8-32.",
                 settings.ReevaluationMaxRelocationsPerTick,
                 Mathf.RoundToInt(ModOptionsUiValues.ReevaluationSliders.MaxRelocationsMin),
                 Mathf.RoundToInt(ModOptionsUiValues.ReevaluationSliders.MaxRelocationsMax),
@@ -48,21 +49,17 @@ namespace PickyParking.UI.ModOptions
                     SaveSettings(saveSettings);
                     ReloadSettings("OptionsUI: Max relocations per tick", services);
                 });
+            
+            group.AddSpace(10);
+            
+            AddInfoLabel(group, "Attempts to fix rare invisible parked vehicles stuck in a parking-in-progress state by finalizing them if they persist across two daily sweeps.");
 
-            AddInfoLabel(group, "Buildings per day = 0 resets the sweep daily. Any value > 0 spreads sweeps across days.");
-
-            AddIntField(
-                group,
-                "Buildings processed per day",
-                settings.ReevaluationSweepBuildingsPerDay,
-                Mathf.RoundToInt(ModOptionsUiValues.ReevaluationSliders.BuildingsPerDayMin),
-                Mathf.RoundToInt(ModOptionsUiValues.ReevaluationSliders.BuildingsPerDayMax),
-                value =>
-                {
-                    settings.ReevaluationSweepBuildingsPerDay = value;
-                    SaveSettings(saveSettings);
-                    ReloadSettings("OptionsUI: Buildings processed per day", services);
-                });
+            group.AddCheckbox("Fix stuck owned parked vehicles", settings.EnableStuckParkedVehicleFix, isChecked =>
+            {
+                settings.EnableStuckParkedVehicleFix = isChecked;
+                SaveSettings(saveSettings);
+                ReloadSettings("OptionsUI: Fix stuck owned parked vehicles", services);
+            });
         }
 
         private static void SaveSettings(Action saveSettings)
@@ -89,11 +86,12 @@ namespace PickyParking.UI.ModOptions
                 return;
 
             UILabel label = panel.AddUIComponent<UILabel>();
-            label.text = text;
+            label.processMarkup = true;
             label.autoSize = false;
             label.autoHeight = true;
             label.wordWrap = true;
             label.textScale = 0.8f;
+            label.text = "<i>" + text + "</i>";
             float width = panel.width - 20f;
             if (width < 100f)
                 width = ModOptionsUiValues.OptionsPanel.DefaultWidth - 20f;

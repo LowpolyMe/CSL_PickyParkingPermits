@@ -25,9 +25,9 @@ namespace PickyParking.Settings
         public float ResidentsRadiusHue { get; set; }
         public float WorkSchoolRadiusHue { get; set; }
         public bool EnableParkingRuleSweeps { get; set; }
+        public bool EnableStuckParkedVehicleFix { get; set; }
         public int ReevaluationMaxEvaluationsPerTick { get; set; }
         public int ReevaluationMaxRelocationsPerTick { get; set; }
-        public int ReevaluationSweepBuildingsPerDay { get; set; }
 
         public ModSettings()
         {
@@ -45,9 +45,9 @@ namespace PickyParking.Settings
             ResidentsRadiusHue = 0.35f;
             WorkSchoolRadiusHue = 0.1f;
             EnableParkingRuleSweeps = true;
+            EnableStuckParkedVehicleFix = true;
             ReevaluationMaxEvaluationsPerTick = 256;
             ReevaluationMaxRelocationsPerTick = 16;
-            ReevaluationSweepBuildingsPerDay = 0;
         }
 
         internal const string FileName = "PickyParking.xml";
