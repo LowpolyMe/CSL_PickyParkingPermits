@@ -75,6 +75,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (buildingId == 0) return false;
             if (_disposed) return false;
             if (!_isFeatureActive.IsActive) return false;
+            if (ParkingDebugSettings.DisableParkingEnforcement) return false;
             if (!IsBuildingSupported(buildingId))
             {
                 CleanupRuleIfUnsupported(buildingId);
@@ -98,6 +99,7 @@ namespace PickyParking.Features.ParkingPolicing
         public bool TryRequestNextScheduledBuilding(bool resetSweep)
         {
             if (_disposed) return false;
+            if (ParkingDebugSettings.DisableParkingEnforcement) return false;
 
             if (resetSweep || _resetSweepPending)
             {
@@ -150,6 +152,12 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             if (!_isFeatureActive.IsActive)
+            {
+                ClearAll();
+                return;
+            }
+
+            if (ParkingDebugSettings.DisableParkingEnforcement)
             {
                 ClearAll();
                 return;
