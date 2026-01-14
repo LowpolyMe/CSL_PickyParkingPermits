@@ -7,10 +7,6 @@ using PickyParking.ModLifecycle;
 
 namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
-    
     public static class ParkingSearchContext
     {
         private static int _wrongThreadLogged;
@@ -126,16 +122,21 @@ namespace PickyParking.Features.ParkingPolicing
         {
             var stack = GetStackOrNull(createIfMissing: true, requireSimulationThread: true, caller: "Push");
             if (stack == null) return;
-            int startDepth = stack.Count + 1;
 
+
+            ParkingSearchEpisodeDebugHelper episode = null;
             
-            var episode = new ParkingSearchEpisodeDebugHelper(
-                vehicleId,
-                citizenId,
-                isVisitor: false,
-                source: source,
-                startDepth: startDepth
-            );
+            if (EnableEpisodeLogs && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+            {
+                int startDepth = stack.Count + 1;
+                episode = new ParkingSearchEpisodeDebugHelper(
+                    vehicleId,
+                    citizenId,
+                    isVisitor: false,
+                    source: source,
+                    startDepth: startDepth
+                );
+            }
 
             stack.Push(new Frame(vehicleId, citizenId, source, episode));
             ParkingStatsCounter.IncrementContextPush(vehicleId, citizenId, source);
