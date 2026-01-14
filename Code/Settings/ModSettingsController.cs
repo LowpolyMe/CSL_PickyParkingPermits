@@ -42,7 +42,8 @@ namespace PickyParking.Settings
 
         public void Reload(string reason = null)
         {
-            Current = _storage.LoadOrCreate();
+            var reloaded = _storage.LoadOrCreate();
+            Current.CopyFrom(reloaded); 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
             {
                 Log.Info(reason == null

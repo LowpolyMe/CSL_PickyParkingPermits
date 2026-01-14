@@ -5,6 +5,9 @@ using System.Threading;
 using ColossalFramework.Plugins;
 using Debug = UnityEngine.Debug;
 
+//TODO Add overloads and stop “auto-capturing” stack traces by default for warn and error
+
+
 namespace PickyParking.Logging
 {
     public static class Log

@@ -51,5 +51,11 @@ namespace PickyParking.Settings
         }
 
         internal const string FileName = "PickyParking.xml";
+
+        public void CopyFrom(ModSettings reloaded)
+        {
+            throw new NotImplementedException();
+            //TODO:  implement CopyFrom to assign every field to mutate the existing Current instead of replacing it.
+        }
     }
 }

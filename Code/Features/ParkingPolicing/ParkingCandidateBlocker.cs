@@ -20,6 +20,7 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static bool TryGetCandidateDecision(ushort buildingId, out bool denied)
         {
+            //TODO Only compute prefabName/buildingName inside the debug logging block(s). Also don’t swallow lookup exceptions—log once and degrade gracefully.
             denied = false;
 
             if (ParkingDebugSettings.DisableParkingEnforcement)

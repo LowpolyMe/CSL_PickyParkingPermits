@@ -17,11 +17,7 @@ using UnityEngine;
 
 namespace PickyParking.ModEntry
 {
-    
-    
-    
-    
-    
+//TODO On unload, clear static caches (VehicleDespawnReasonCache, stats counters, etc.) on the correct thread.
     public sealed class Loading : LoadingExtensionBase
     {
         private PatchSetup _patches;
@@ -137,6 +133,8 @@ namespace PickyParking.ModEntry
             Log.SetDecisionDebugEnabled(false);
             Log.SetEnforcementDebugEnabled(false);
             Log.SetTmpeDebugEnabled(false);
+            
+            //TODO reset all ParkingDebugSettings.* fields
             ParkingSearchContext.EnableEpisodeLogs = false;
             ParkingSearchContext.LogMinCandidates = ParkingSearchContext.DefaultLogMinCandidates;
             ParkingSearchContext.LogMinDurationMs = ParkingSearchContext.DefaultLogMinDurationMs;
