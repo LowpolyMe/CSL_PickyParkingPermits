@@ -138,8 +138,9 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                         failedAttempts = fa;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Log.WarnOnce("TMPE.ParkPassengerCarDiagnostics.ReadState", "[TMPE] Failed reading ext driver state: " + ex);
                 pathMode = "ERR";
             }
 
@@ -207,8 +208,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (locationIdField != null && locationIdField.GetValue(extDriverInstance) is ushort id)
                     locationId = id;
             }
-            catch
+            catch (Exception ex)
             {
+                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+                    Log.WarnOnce("TMPE.ParkPassengerCarDiagnostics.KnownLocation", "[TMPE] Failed reading known parking location: " + ex);
             }
         }
 
@@ -247,8 +250,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+                    Log.WarnOnce("TMPE.ParkPassengerCarDiagnostics.ExtState", "[TMPE] Failed reading ext driver state: " + ex);
                 return false;
             }
         }

@@ -260,8 +260,9 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 ref Building building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
                 return (building.m_flags & Building.Flags.IncomingOutgoing) != Building.Flags.None;
             }
-            catch
+            catch (Exception ex)
             {
+                Log.WarnOnce("TMPE.StartPassengerCarPathFind.IsOutsideConnection", "[TMPE] Failed to read outside connection flag: " + ex);
                 return false;
             }
         }
@@ -341,8 +342,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (locationIdField != null && locationIdField.GetValue(extDriver) is ushort locId)
                     parkingLocationId = locId;
             }
-            catch
+            catch (Exception ex)
             {
+                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+                    Log.WarnOnce("TMPE.StartPassengerCarPathFind.FinalExtState", "[TMPE] Failed reading final ext state: " + ex);
             }
         }
 

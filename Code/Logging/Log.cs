@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -10,10 +11,15 @@ namespace PickyParking.Logging
     {
         private const string Prefix = "[PickyParking] ";
         private const int MaxQueuedMessages = 500;
+        private static readonly TimeSpan DefaultRateLimit = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan DebugPanelFailureRateLimit = TimeSpan.FromMinutes(5);
         private static readonly Queue<QueuedMessage> PendingMessages = new Queue<QueuedMessage>();
         private static readonly object QueueLock = new object();
+        private static readonly object RateLimitLock = new object();
+        private static readonly Dictionary<string, DateTime> RateLimitedLogs = new Dictionary<string, DateTime>();
         private static volatile bool _debugPanelReady;
         private static int _mainThreadId;
+        private static DateTime _debugPanelFailureLast;
 
         public static bool IsVerboseEnabled { get; private set; }
         public static bool IsRuleUiDebugEnabled { get; private set; }
@@ -25,6 +31,15 @@ namespace PickyParking.Logging
         public static void Info(string message) => Write(PluginManager.MessageType.Message, message, false);
         public static void Warn(string message) => Write(PluginManager.MessageType.Warning, message, true);
         public static void Error(string message) => Write(PluginManager.MessageType.Error, message, true);
+        public static void WarnOnce(string key, string message) => WarnOnce(key, message, DefaultRateLimit);
+
+        public static void WarnOnce(string key, string message, TimeSpan interval)
+        {
+            if (!ShouldLogRateLimited(key, interval))
+                return;
+
+            Warn(message);
+        }
 
         public static void MarkDebugPanelReady()
         {
@@ -183,9 +198,41 @@ namespace PickyParking.Logging
             {
                 DebugOutputPanel.AddMessage(type, line);
             }
-            catch
+            catch (InvalidOperationException ex)
             {
+                LogDebugPanelFailure(ex);
             }
+            catch (ArgumentException ex)
+            {
+                LogDebugPanelFailure(ex);
+            }
+            catch (NullReferenceException ex)
+            {
+                LogDebugPanelFailure(ex);
+            }
+        }
+
+        private static bool ShouldLogRateLimited(string key, TimeSpan interval)
+        {
+            var now = DateTime.UtcNow;
+            lock (RateLimitLock)
+            {
+                if (RateLimitedLogs.TryGetValue(key, out var last) && now - last < interval)
+                    return false;
+
+                RateLimitedLogs[key] = now;
+                return true;
+            }
+        }
+
+        private static void LogDebugPanelFailure(Exception ex)
+        {
+            var now = DateTime.UtcNow;
+            if (now - _debugPanelFailureLast < DebugPanelFailureRateLimit)
+                return;
+
+            _debugPanelFailureLast = now;
+            Debug.LogWarning($"{Prefix}[Logging] DebugOutputPanel.AddMessage failed: {ex}");
         }
 
         private readonly struct QueuedMessage

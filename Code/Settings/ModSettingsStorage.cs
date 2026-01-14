@@ -8,16 +8,14 @@ using PickyParking.Logging;
 
 namespace PickyParking.Settings
 {
-    
-    
-    
+
     public sealed class ModSettingsStorage
     {
         public ModSettings LoadOrCreate()
         {
+            string path = GetSettingsPath();
             try
             {
-                string path = GetSettingsPath();
                 if (!File.Exists(path))
                 {
                     return new ModSettings();
@@ -30,9 +28,9 @@ namespace PickyParking.Settings
                     return NormalizeSettings(settings);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                
+                Log.WarnOnce("Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
                 return new ModSettings();
             }
         }

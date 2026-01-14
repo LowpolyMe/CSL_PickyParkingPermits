@@ -95,8 +95,25 @@ namespace PickyParking.Patching.TMPE
                 if (locationIdField != null)
                     locationIdField.SetValue(extDriverInstance, (ushort)0);
             }
-            catch
+            catch (ArgumentException ex)
             {
+                Log.WarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+            }
+            catch (FieldAccessException ex)
+            {
+                Log.WarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Log.WarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+            }
+            catch (TargetException ex)
+            {
+                Log.WarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+            }
+            catch (TargetInvocationException ex)
+            {
+                Log.WarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
             }
         }
     }
