@@ -348,46 +348,6 @@ namespace PickyParking.UI.BuildingOptionsPanel
             _isVisibilitySubscribed = false;
         }
 
-        /*
-        private void ResizeWrapperToFitChildren()
-        {
-            if (_wrapperContainer == null)
-                return;
-
-            float maxBottom = 0f;
-            int childCount = _wrapperContainer.transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                Transform childTransform = _wrapperContainer.transform.GetChild(i);
-                UIComponent child = childTransform.GetComponent<UIComponent>();
-                if (child == null || !child.isVisible)
-                    continue;
-
-                float bottom = child.relativePosition.y + child.height;
-                if (bottom > maxBottom)
-                    maxBottom = bottom;
-                if (Log.IsVerboseEnabled)
-                    Log.Info("[BuildingOptionsPanel] Wrapper child '" + child.name + "' y=" + child.relativePosition.y + " height=" + child.height + " bottom=" + bottom);
-
-            }
-
-            if (maxBottom <= 0f)
-            {
-                if (Log.IsVerboseEnabled)
-                    Log.Info("[BuildingOptionsPanel] Wrapper resize skipped. maxBottom=" + maxBottom + " childCount=" + childCount);
-                return;
-            }
-
-            float paddedBottom = maxBottom + WrapperPadding;
-            if (!Mathf.Approximately(_wrapperContainer.height, paddedBottom))
-            {
-                if (Log.IsVerboseEnabled)
-                    Log.Info("[BuildingOptionsPanel] Wrapper resize: maxBottom=" + maxBottom + " paddedBottom=" + paddedBottom + " prevHeight=" + _wrapperContainer.height);
-                _wrapperContainer.height = paddedBottom;
-            }
-        }
-        */
-
         private void EnsureWrapperPaddingSpacer()
         {
             if (_wrapperContainer == null)
