@@ -7,8 +7,6 @@ namespace PickyParking.Features.Debug
 {
     public static class ParkingStatsCounter
     {
-        public const float DefaultIntervalSeconds = 60f;
-
         private static long _contextPushTotal;
         private static long _contextPopTotal;
         private static long _contextVehicleOnly;

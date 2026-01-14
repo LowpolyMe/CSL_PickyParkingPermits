@@ -12,7 +12,6 @@ namespace PickyParking.Features.Debug
         private static int _missingInstanceLogged;
         private static int _dayChangedRequested;
 
-        private float _nextLogTime;
         private float _lastLogTime;
         private bool _wasLogging;
 
@@ -45,7 +44,6 @@ namespace PickyParking.Features.Debug
 
             float now = Time.unscaledTime;
             _lastLogTime = now;
-            _nextLogTime = now + ParkingStatsCounter.DefaultIntervalSeconds;
             _wasLogging = false;
         }
 
