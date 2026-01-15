@@ -11,49 +11,22 @@ using PickyParking.Features.Debug;
 
 namespace PickyParking.ModEntry
 {
-    
-    
-    
-    
     public sealed class ModRuntime : IDisposable
     {
         public FeatureGate FeatureGate { get; private set; }
         public SupportedParkingLotRegistry SupportedParkingLotRegistry { get; private set; }
         public ParkingRulesConfigRegistry ParkingRulesConfigRegistry { get; private set; }
         public ModSettingsController SettingsController { get; private set; }
-
         public GameAccess GameAccess { get; private set; }
         public TmpeIntegration TmpeIntegration { get; private set; }
-
         public ParkingRuleEvaluator ParkingRuleEvaluator { get; private set; }
         public ParkingPermissionEvaluator ParkingPermissionEvaluator { get; private set; }
-
         public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; private set; }
         public ParkingRulePreviewState ParkingRulePreviewState { get; private set; }
         public DebugHotkeyController DebugHotkeyController { get; private set; }
         public ParkingRulesConfigEditor ParkingRulesConfigEditor { get; private set; }
 
         private bool _disposed;
-
-        private ModRuntime(RuntimeDependencies dependencies)
-        {
-            FeatureGate = dependencies.FeatureGate;
-            SupportedParkingLotRegistry = dependencies.SupportedParkingLotRegistry;
-            ParkingRulesConfigRegistry = dependencies.ParkingRulesRegistry;
-            SettingsController = dependencies.SettingsController;
-            GameAccess = dependencies.GameAccess;
-            TmpeIntegration = dependencies.TmpeIntegration;
-            ParkingRuleEvaluator = dependencies.ParkingRuleEvaluator;
-            ParkingPermissionEvaluator = dependencies.ParkingPermissionEvaluator;
-            ParkedVehicleReevaluation = dependencies.ParkedVehicleReevaluation;
-            ParkingRulePreviewState = dependencies.ParkingRulePreviewState;
-            DebugHotkeyController = dependencies.DebugHotkeyController;
-            ParkingRulesConfigEditor = dependencies.ParkingRulesConfigEditor;
-        }
-
-        
-        
-        
         
         public static ModRuntime Current { get; private set; }
 
@@ -84,12 +57,12 @@ namespace PickyParking.ModEntry
         
         public static ModRuntime Create(ModSettings settings, ModSettingsController settingsController, LevelContext levelContext = null)
         {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (settingsController == null) throw new ArgumentNullException(nameof(settingsController));
+            
             var featureGate = new FeatureGate();
             var registry = new SupportedParkingLotRegistry(settings.SupportedParkingLotPrefabs);
-
             var rulesRepo = new ParkingRulesConfigRegistry();
-
-            
             
             if (levelContext?.RulesBytes != null && levelContext.RulesBytes.Length > 0)
             {
@@ -106,13 +79,8 @@ namespace PickyParking.ModEntry
                 }
                 finally
                 {
-                    
                     levelContext.Clear();
                 }
-            }
-            else
-            {
-                
             }
 
             var gameAccess = new GameAccess();
@@ -184,7 +152,23 @@ namespace PickyParking.ModEntry
                 ParkedVehicleReevaluation.Dispose();
             }
         }
-
+        
+        private ModRuntime(RuntimeDependencies dependencies)
+        {
+            FeatureGate = dependencies.FeatureGate;
+            SupportedParkingLotRegistry = dependencies.SupportedParkingLotRegistry;
+            ParkingRulesConfigRegistry = dependencies.ParkingRulesRegistry;
+            SettingsController = dependencies.SettingsController;
+            GameAccess = dependencies.GameAccess;
+            TmpeIntegration = dependencies.TmpeIntegration;
+            ParkingRuleEvaluator = dependencies.ParkingRuleEvaluator;
+            ParkingPermissionEvaluator = dependencies.ParkingPermissionEvaluator;
+            ParkedVehicleReevaluation = dependencies.ParkedVehicleReevaluation;
+            ParkingRulePreviewState = dependencies.ParkingRulePreviewState;
+            DebugHotkeyController = dependencies.DebugHotkeyController;
+            ParkingRulesConfigEditor = dependencies.ParkingRulesConfigEditor;
+        }
+        
         private sealed class RuntimeDependencies
         {
             public RuntimeDependencies(
