@@ -6,6 +6,7 @@ using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.TMPE
 {
@@ -43,7 +44,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (type == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] VehicleBehaviorManager not found; skipping StartPassengerCarPathFind diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] VehicleBehaviorManager not found; skipping StartPassengerCarPathFind diagnostics patch.");
                 return;
             }
 
@@ -51,7 +52,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] StartPassengerCarPathFind overload not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] StartPassengerCarPathFind overload not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -62,7 +63,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             );
 
             if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info("[TMPE] Patched StartPassengerCarPathFind (diagnostics).");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched StartPassengerCarPathFind (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod(Type vehicleBehaviorManagerType)
@@ -154,7 +155,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] StartPassengerCarPathFind prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] StartPassengerCarPathFind prefix exception\n" + ex);
             }
         }
 
@@ -166,7 +167,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             {
                 TryGetFinalExtState(__state.DriverInstanceId, out string finalPathMode, out int finalFailedAttempts, out string finalLocation, out ushort finalLocationId);
                 string parkingAi = TryGetParkingAiEnabled(out bool enabled) ? enabled.ToString() : "UNKNOWN";
-                Log.Info(
+                Log.Info(DebugLogCategory.Tmpe,
                     "[TMPE] SPF decision. " +
                     $"vehicleId={__state.VehicleId} driverInstanceId={__state.DriverInstanceId} " +
                     $"parkingAI={parkingAi} outsideConn={__state.IsOutsideConnection} " +
@@ -178,7 +179,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (__state.IsOutsideConnection &&
                     string.Equals(finalPathMode, "CalculatingCarPathToTarget", StringComparison.Ordinal))
                 {
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] SPF branch: outside connection -> CalculatingCarPathToTarget. " +
                         $"targetBuildingId={__state.TargetBuildingId}"
                     );
@@ -187,7 +188,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (string.Equals(__state.PathMode, "ParkingFailed", StringComparison.Ordinal) &&
                     string.Equals(finalPathMode, "CalculatingCarPathToAltParkPos", StringComparison.Ordinal))
                 {
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] SPF branch: ParkingFailed -> CalculatingCarPathToAltParkPos. " +
                         $"failedAttempts={__state.FailedAttempts}"
                     );
@@ -195,7 +196,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
                 if (string.Equals(finalPathMode, "CalculatingCarPathToKnownParkPos", StringComparison.Ordinal))
                 {
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] SPF branch: presearch known parking. " +
                         $"location={finalLocation} locationId={finalLocationId}"
                     );
@@ -215,7 +216,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             int maxAttempts = GetMaxParkingAttempts();
             if (maxAttempts < 0)
             {
-                Log.Info(
+                Log.Info(DebugLogCategory.Tmpe,
                     "[TMPE] StartPassengerCarPathFind returned false after parking failure (maxAttempts unknown). " +
                     $"vehicleId={__state.VehicleId} citizenId={__state.CitizenId} driverInstanceId={__state.DriverInstanceId} " +
                     $"pathMode={pathMode} failedAttempts={__state.FailedAttempts}"
@@ -232,7 +233,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 $"ParkingFailed attempts={__state.FailedAttempts} max={maxAttempts}"
             );
 
-            Log.Warn(
+            Log.Warn(DebugLogCategory.Tmpe,
                 "[TMPE] StartPassengerCarPathFind returned false after parking failure. " +
                 $"vehicleId={__state.VehicleId} citizenId={__state.CitizenId} driverInstanceId={__state.DriverInstanceId} " +
                 $"pathMode={pathMode} failedAttempts={__state.FailedAttempts} maxAttempts={maxAttempts}"
@@ -262,7 +263,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.WarnOnce("TMPE.StartPassengerCarPathFind.IsOutsideConnection", "[TMPE] Failed to read outside connection flag: " + ex);
+                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.StartPassengerCarPathFind.IsOutsideConnection", "[TMPE] Failed to read outside connection flag: " + ex);
                 return false;
             }
         }
@@ -345,7 +346,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             catch (Exception ex)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.WarnOnce("TMPE.StartPassengerCarPathFind.FinalExtState", "[TMPE] Failed reading final ext state: " + ex);
+                    Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.StartPassengerCarPathFind.FinalExtState", "[TMPE] Failed reading final ext state: " + ex);
             }
         }
 
@@ -406,7 +407,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 return;
 
             _parkingAiWarned = true;
-            Log.Info("[TMPE] Parking decision logs: cannot read SavedGameOptions.parkingAI (" + reason + ").");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Parking decision logs: cannot read SavedGameOptions.parkingAI (" + reason + ").");
         }
 
         private static int GetMaxParkingAttempts()
@@ -465,7 +466,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 return;
 
             _maxAttemptsWarned = true;
-            Log.Info("[TMPE] Parking failure stack traces disabled: cannot read MaxParkingAttempts (" + reason + ").");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Parking failure stack traces disabled: cannot read MaxParkingAttempts (" + reason + ").");
         }
     }
 }

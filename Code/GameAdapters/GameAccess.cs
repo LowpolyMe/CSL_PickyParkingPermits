@@ -3,6 +3,7 @@ using ColossalFramework;
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.Features.Debug;
+using PickyParking.Settings;
 
 namespace PickyParking.GameAdapters
 {
@@ -88,7 +89,7 @@ namespace PickyParking.GameAdapters
             if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info($"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
                 return false;
             }
 
@@ -97,7 +98,7 @@ namespace PickyParking.GameAdapters
             if (ai == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info($"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
                 return false;
             }
 
@@ -106,7 +107,7 @@ namespace PickyParking.GameAdapters
             if (citizenId == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(
+                    Log.Info(DebugLogCategory.LotInspection,
                         "[Parking] TryGetDriverInfo failed: owner citizenId=0 " +
                         $"vehicleId={vehicleId} citizenUnits={vehicle.m_citizenUnits}"
                     );
@@ -134,7 +135,7 @@ namespace PickyParking.GameAdapters
             if (citizenId == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info("[Parking] TryGetCitizenInfo failed: citizenId=0");
+                    Log.Info(DebugLogCategory.LotInspection, "[Parking] TryGetCitizenInfo failed: citizenId=0");
                 return false;
             }
 

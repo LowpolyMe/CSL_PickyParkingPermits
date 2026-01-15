@@ -337,7 +337,7 @@ namespace PickyParking.UI.ModOptions
             if (RefreshVisibilityFlags())
                 RebuildPanelUi();
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Populate list start: showThumbnails=" + _showThumbnails + " showInstances=" + _showInstances);
+                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Populate list start: showThumbnails=" + _showThumbnails + " showInstances=" + _showInstances);
 
             var settings = _services != null ? _services.SettingsController?.Current : null;
             if (settings != null)
@@ -349,7 +349,7 @@ namespace PickyParking.UI.ModOptions
                 return;
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Supported list count=" + _prefabKeys.Count);
+                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Supported list count=" + _prefabKeys.Count);
 
             Dictionary<string, int> rulesByPrefabName = null;
             bool hasCounts = _showInstances && TryBuildRulesCountByPrefabName(out rulesByPrefabName);
@@ -358,7 +358,7 @@ namespace PickyParking.UI.ModOptions
                 string reason = _showInstances
                     ? "registry or building manager unavailable"
                     : "instances hidden (not in level)";
-                Log.Info("[SupportedPrefabs] Instances column disabled: " + reason);
+                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Instances column disabled: " + reason);
             }
 
             for (int i = 0; i < _prefabKeys.Count; i++)
@@ -395,14 +395,14 @@ namespace PickyParking.UI.ModOptions
             if (_services == null || _services.ParkingRulesConfigRegistry == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[SupportedPrefabs] Rules count build skipped: runtime or registry missing.");
+                    Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Rules count build skipped: runtime or registry missing.");
                 return false;
             }
 
             if (_services == null || !_services.Game.IsBuildingManagerReadyForUi())
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[SupportedPrefabs] Rules count build skipped: building data unavailable.");
+                    Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Rules count build skipped: building data unavailable.");
                 return false;
             }
 
@@ -427,7 +427,7 @@ namespace PickyParking.UI.ModOptions
 
             counts = map;
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Rules count build ok: rules=" + totalRules + " prefabsWithRules=" + map.Count);
+                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Rules count build ok: rules=" + totalRules + " prefabsWithRules=" + map.Count);
             return true;
         }
 
@@ -473,7 +473,7 @@ namespace PickyParking.UI.ModOptions
                 _saveSettings();
 
             if (removed && Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Removed supported prefab " + key);
+                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Removed supported prefab " + key);
 
             return removed;
         }

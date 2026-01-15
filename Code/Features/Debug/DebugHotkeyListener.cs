@@ -1,6 +1,7 @@
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.ModEntry;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.Debug
 {
@@ -27,7 +28,7 @@ namespace PickyParking.Features.Debug
         public void Start()
         {
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[DebugHotkeys] Listener started");
+                Log.Info(DebugLogCategory.None, "[DebugHotkeys] Listener started");
         }
 
         public void Update()

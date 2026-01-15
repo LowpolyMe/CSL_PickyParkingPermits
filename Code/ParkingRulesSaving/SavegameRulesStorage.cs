@@ -5,6 +5,7 @@ using ColossalFramework;
 using ICities;
 using PickyParking.Logging;
 using PickyParking.Features.ParkingRules;
+using PickyParking.Settings;
 
 namespace PickyParking.ParkingRulesSaving
 {
@@ -42,7 +43,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to save rules: " + ex);
+                Log.Warn(DebugLogCategory.None, "[Persistence] Failed to save rules: " + ex);
             }
         }
 
@@ -55,7 +56,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to load rules: " + ex);
+                Log.Warn(DebugLogCategory.None, "[Persistence] Failed to load rules: " + ex);
             }
         }
 
@@ -98,7 +99,7 @@ namespace PickyParking.ParkingRulesSaving
                                 break;
 
                             default:
-                                Log.Warn("[Persistence] Unknown rules version: " + version + " (skipping load)");
+                                Log.Warn(DebugLogCategory.None, "[Persistence] Unknown rules version: " + version + " (skipping load)");
                                 return;
                         }
 
@@ -112,11 +113,11 @@ namespace PickyParking.ParkingRulesSaving
                 PruneInvalidEntries(repository);
 
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[Persistence] Normalized rules: " + normalizedCount);
+                    Log.Info(DebugLogCategory.RuleUi, "[Persistence] Normalized rules: " + normalizedCount);
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to load rules from bytes: " + ex);
+                Log.Warn(DebugLogCategory.None, "[Persistence] Failed to load rules from bytes: " + ex);
             }
         }
 
@@ -147,7 +148,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to prune invalid rule entries: " + ex);
+                Log.Warn(DebugLogCategory.None, "[Persistence] Failed to prune invalid rule entries: " + ex);
                 return;
             }
 
@@ -155,7 +156,7 @@ namespace PickyParking.ParkingRulesSaving
                 repository.Remove(toRemove[i]);
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[Persistence] Pruned invalid rules: " + toRemove.Count);
+                Log.Info(DebugLogCategory.RuleUi, "[Persistence] Pruned invalid rules: " + toRemove.Count);
         }
 
     }

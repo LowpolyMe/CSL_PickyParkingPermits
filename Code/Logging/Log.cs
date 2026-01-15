@@ -1,122 +1,110 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using ColossalFramework.Plugins;
+using PickyParking.Settings;
 using Debug = UnityEngine.Debug;
-
-//TODO Add overloads and stop “auto-capturing” stack traces by default for warn and error
-
 
 namespace PickyParking.Logging
 {
     public static class Log
     {
         private const string Prefix = "[PickyParking] ";
-        private const int MaxQueuedMessages = 500;
+
+        private static readonly LogPolicy Policy = new LogPolicy();
+        private static readonly LogRateLimiter RateLimiter = new LogRateLimiter(
+            maxKeys: 1000,
+            ttl: TimeSpan.FromMinutes(10));
+
+        private static readonly DebugPanelWriter DebugPanel = new DebugPanelWriter(
+            maxQueuedMessages: 50,
+            failureRateLimit: TimeSpan.FromMinutes(5));
+
         private static readonly TimeSpan DefaultRateLimit = TimeSpan.FromMinutes(5);
-        private static readonly TimeSpan DebugPanelFailureRateLimit = TimeSpan.FromMinutes(5);
-        private static readonly Queue<QueuedMessage> PendingMessages = new Queue<QueuedMessage>();
-        private static readonly object QueueLock = new object();
-        private static readonly object RateLimitLock = new object();
-        private static readonly Dictionary<string, DateTime> RateLimitedLogs = new Dictionary<string, DateTime>();
-        private static volatile bool _debugPanelReady;
-        private static int _mainThreadId;
-        private static DateTime _debugPanelFailureLast;
+        
 
-        public static bool IsVerboseEnabled { get; private set; }
-        public static bool IsRuleUiDebugEnabled { get; private set; }
-        public static bool IsLotDebugEnabled { get; private set; }
-        public static bool IsDecisionDebugEnabled { get; private set; }
-        public static bool IsEnforcementDebugEnabled { get; private set; }
-        public static bool IsTmpeDebugEnabled { get; private set; }
+        public static bool IsVerboseEnabled => Policy.IsVerboseEnabled;
+        public static DebugLogCategory EnabledDebugCategories => Policy.EnabledDebugCategories;
 
-        public static void Info(string message) => Write(PluginManager.MessageType.Message, message, false);
-        public static void Warn(string message) => Write(PluginManager.MessageType.Warning, message, true);
-        public static void Error(string message) => Write(PluginManager.MessageType.Error, message, true);
-        public static void WarnOnce(string key, string message) => WarnOnce(key, message, DefaultRateLimit);
+        public static bool IsRuleUiDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.RuleUi);
+        public static bool IsLotDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.LotInspection);
+        public static bool IsDecisionDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.DecisionPipeline);
+        public static bool IsEnforcementDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.Enforcement);
+        public static bool IsTmpeDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.Tmpe);
 
-        public static void WarnOnce(string key, string message, TimeSpan interval)
+        public static void SetVerboseEnabled(bool isEnabled) => Policy.SetVerboseEnabled(isEnabled);
+        public static void SetEnabledDebugCategories(DebugLogCategory enabledCategories) => Policy.SetEnabledCategories(enabledCategories);
+
+        public static void MarkDebugPanelReady() => DebugPanel.MarkReady();
+        public static void MarkDebugPanelNotReady() => DebugPanel.MarkNotReady();
+        public static void InitializeMainThread() => DebugPanel.InitializeMainThreadIfNeeded();
+        public static void FlushQueuedMessagesFromMainThread() => DebugPanel.FlushFromMainThread();
+
+        public static void Info(DebugLogCategory category, string message)
         {
-            if (!ShouldLogRateLimited(key, interval))
+            if (!Policy.ShouldLog(category))
                 return;
 
-            Warn(message);
+            Write(PluginManager.MessageType.Message, $"[{category}] {message}", stackTraceEnabled: false);
         }
 
-        public static void MarkDebugPanelReady()
+        public static void Warn(DebugLogCategory category, string message, bool stackTraceEnabled = false)
         {
-            _debugPanelReady = true;
-            InitializeMainThread();
-            FlushQueuedMessagesFromMainThread();
-        }
-
-        public static void MarkDebugPanelNotReady()
-        {
-            _debugPanelReady = false;
-            ClearQueuedMessages();
-        }
-
-        public static void InitializeMainThread()
-        {
-            if (_mainThreadId == 0)
-                _mainThreadId = Thread.CurrentThread.ManagedThreadId;
-        }
-
-        public static void FlushQueuedMessagesFromMainThread()
-        {
-            if (!CanWriteToDebugPanel())
+            if (!Policy.ShouldLog(category))
                 return;
 
-            FlushQueuedMessagesInternal();
+            Write(PluginManager.MessageType.Warning, $"[{category}] {message}", stackTraceEnabled);
         }
 
-        public static void SetVerboseEnabled(bool isEnabled)
+        public static void Error(DebugLogCategory category, string message, bool stackTraceEnabled = false)
         {
-            IsVerboseEnabled = isEnabled;
+            if (!Policy.ShouldLog(category))
+                return;
+
+            Write(PluginManager.MessageType.Error, $"[{category}] {message}", stackTraceEnabled);
         }
 
-        public static void SetRuleUiDebugEnabled(bool isEnabled)
+        public static void WarnOnce(DebugLogCategory category, string key, string message) =>
+            WarnOnce(category, key, message, DefaultRateLimit);
+
+        public static void AlwaysWarn(string message, bool stackTraceEnabled = false) =>
+            Write(PluginManager.MessageType.Warning, message, stackTraceEnabled);
+
+        public static void AlwaysError(string message, bool stackTraceEnabled = false) =>
+            Write(PluginManager.MessageType.Error, message, stackTraceEnabled);
+
+        public static void AlwaysWarnOnce(string key, string message) =>
+            AlwaysWarnOnce(key, message, DefaultRateLimit);
+
+
+
+        private static void WarnOnce(DebugLogCategory category, string key, string message, TimeSpan interval)
         {
-            IsRuleUiDebugEnabled = isEnabled;
+            string namespacedKey = key;
+
+            if (!RateLimiter.ShouldLog(namespacedKey, interval))
+                return;
+
+            Warn(category, message);
         }
 
-        public static void SetLotDebugEnabled(bool isEnabled)
+        private static void AlwaysWarnOnce(string key, string message, TimeSpan interval)
         {
-            IsLotDebugEnabled = isEnabled;
+            string namespacedKey = key;
+
+            if (!RateLimiter.ShouldLog(namespacedKey, interval))
+                return;
+
+            AlwaysWarn(message);
         }
 
-        public static void SetDecisionDebugEnabled(bool isEnabled)
+        private static void Write(PluginManager.MessageType type, string message, bool stackTraceEnabled)
         {
-            IsDecisionDebugEnabled = isEnabled;
-        }
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string callerTag = CallerTag(type);
 
-        public static void SetEnforcementDebugEnabled(bool isEnabled)
-        {
-            IsEnforcementDebugEnabled = isEnabled;
-        }
+            string line = $"{Prefix}{callerTag}{message}{stack}";
 
-        public static void SetTmpeDebugEnabled(bool isEnabled)
-        {
-            IsTmpeDebugEnabled = isEnabled;
-        }
-
-        private static void Write(PluginManager.MessageType type, string message, bool stacktrace)
-        {
-            var st = stacktrace ? $"\n{new StackTrace(2, true)}" : string.Empty;
-            var callerTag = string.Empty;
-
-            if (type == PluginManager.MessageType.Message)
-            {
-                var frame = new StackFrame(2, false);
-                var method = frame.GetMethod();
-                var declaringType = method != null ? method.DeclaringType : null;
-                if (declaringType != null)
-                    callerTag = $"[{declaringType.Name}] ";
-            }
-
-            var line = $"{Prefix}{callerTag}{message}{st}";
-
+            // Unity log
             switch (type)
             {
                 case PluginManager.MessageType.Warning:
@@ -129,126 +117,20 @@ namespace PickyParking.Logging
                     Debug.Log(line);
                     break;
             }
-
-            if (ShouldQueueDebugPanelMessage())
-            {
-                EnqueueMessage(type, line);
-                return;
-            }
-
-            FlushQueuedMessagesInternal();
-            AddToDebugPanel(type, line);
+            
+            DebugPanel.EnqueueOrWrite(type, line);
         }
 
-        private static bool ShouldQueueDebugPanelMessage()
+        private static string CallerTag(PluginManager.MessageType type)
         {
-            return !CanWriteToDebugPanel();
-        }
+            if (type != PluginManager.MessageType.Message)
+                return string.Empty;
 
-        private static bool CanWriteToDebugPanel()
-        {
-            if (!_debugPanelReady)
-                return false;
+            var frame = new StackFrame(2, false);
+            var method = frame.GetMethod();
+            var declaringType = method != null ? method.DeclaringType : null;
 
-            if (_mainThreadId == 0)
-                return false;
-
-            return Thread.CurrentThread.ManagedThreadId == _mainThreadId;
-        }
-
-        private static void EnqueueMessage(PluginManager.MessageType type, string line)
-        {
-            lock (QueueLock)
-            {
-                while (PendingMessages.Count >= MaxQueuedMessages)
-                    PendingMessages.Dequeue();
-
-                PendingMessages.Enqueue(new QueuedMessage(type, line));
-            }
-        }
-
-        private static void ClearQueuedMessages()
-        {
-            lock (QueueLock)
-            {
-                PendingMessages.Clear();
-            }
-        }
-
-        private static void FlushQueuedMessagesInternal()
-        {
-            List<QueuedMessage> drained = null;
-            lock (QueueLock)
-            {
-                if (PendingMessages.Count == 0)
-                    return;
-
-                drained = new List<QueuedMessage>(PendingMessages.Count);
-                while (PendingMessages.Count > 0)
-                    drained.Add(PendingMessages.Dequeue());
-            }
-
-            for (int i = 0; i < drained.Count; i++)
-            {
-                var queued = drained[i];
-                AddToDebugPanel(queued.Type, queued.Line);
-            }
-        }
-
-        private static void AddToDebugPanel(PluginManager.MessageType type, string line)
-        {
-            try
-            {
-                DebugOutputPanel.AddMessage(type, line);
-            }
-            catch (InvalidOperationException ex)
-            {
-                LogDebugPanelFailure(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                LogDebugPanelFailure(ex);
-            }
-            catch (NullReferenceException ex)
-            {
-                LogDebugPanelFailure(ex);
-            }
-        }
-
-        private static bool ShouldLogRateLimited(string key, TimeSpan interval)
-        {
-            var now = DateTime.UtcNow;
-            lock (RateLimitLock)
-            {
-                if (RateLimitedLogs.TryGetValue(key, out var last) && now - last < interval)
-                    return false;
-
-                RateLimitedLogs[key] = now;
-                return true;
-            }
-        }
-
-        private static void LogDebugPanelFailure(Exception ex)
-        {
-            var now = DateTime.UtcNow;
-            if (now - _debugPanelFailureLast < DebugPanelFailureRateLimit)
-                return;
-
-            _debugPanelFailureLast = now;
-            Debug.LogWarning($"{Prefix}[Logging] DebugOutputPanel.AddMessage failed: {ex}");
-        }
-
-        private readonly struct QueuedMessage
-        {
-            public QueuedMessage(PluginManager.MessageType type, string line)
-            {
-                Type = type;
-                Line = line;
-            }
-
-            public PluginManager.MessageType Type { get; }
-            public string Line { get; }
+            return declaringType != null ? $"[{declaringType.Name}] " : string.Empty;
         }
     }
-    
 }

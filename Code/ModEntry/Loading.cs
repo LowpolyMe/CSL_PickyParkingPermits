@@ -58,7 +58,7 @@ namespace PickyParking.ModEntry
             CreateRuntimeObjects(mode);
 
             Log.MarkDebugPanelReady();
-            Log.Info("[Parking] Loaded.");
+            Log.Info(DebugLogCategory.None, "[Parking] Loaded.");
         }
 
         public override void OnLevelUnloading()
@@ -66,7 +66,7 @@ namespace PickyParking.ModEntry
             base.OnLevelUnloading();
 
             Unload(clearLevelContext: true);
-            Log.Info("[Parking] Unloaded.");
+            Log.Info(DebugLogCategory.None, "[Parking] Unloaded.");
             Log.MarkDebugPanelNotReady();
         }
 
@@ -113,7 +113,7 @@ namespace PickyParking.ModEntry
             ParkingSearchContext.ClearAll();
             ParkingStatsCounter.ResetAll();
             int unloadId = ++_unloadSequence;
-            Log.Info("[Runtime] Unload started id=" + unloadId);
+            Log.Info(DebugLogCategory.None, "[Runtime] Unload started id=" + unloadId);
             ParkingSearchContextPatchHandler.ClearCaches();
             if (clearLevelContext)
             {
@@ -128,11 +128,7 @@ namespace PickyParking.ModEntry
 
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
-            Log.SetRuleUiDebugEnabled(false);
-            Log.SetLotDebugEnabled(false);
-            Log.SetDecisionDebugEnabled(false);
-            Log.SetEnforcementDebugEnabled(false);
-            Log.SetTmpeDebugEnabled(false);
+            Log.SetEnabledDebugCategories(DebugLogCategory.None);
             
             //TODO reset all ParkingDebugSettings.* fields
             ParkingSearchContext.EnableEpisodeLogs = false;
@@ -147,19 +143,19 @@ namespace PickyParking.ModEntry
             {
                 if (_unloadSequence != unloadId)
                 {
-                    Log.Info("[Runtime] Sim-thread cleanup skipped (newer unload id=" + _unloadSequence + ")");
+                    Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup skipped (newer unload id=" + _unloadSequence + ")");
                     return;
                 }
 
                 if (ModRuntime.Current != null)
                 {
-                    Log.Info("[Runtime] Sim-thread cleanup skipped (new runtime active)");
+                    Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup skipped (new runtime active)");
                     return;
                 }
 
                 ParkingSearchContext.ClearAll();
                 ParkingCandidateBlocker.ClearThreadStatic();
-                Log.Info("[Runtime] Sim-thread cleanup complete id=" + unloadId);
+                Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup complete id=" + unloadId);
             });
         }
 
@@ -211,7 +207,7 @@ namespace PickyParking.ModEntry
             if (previousVersions.Length == 0)
                 previousVersions = "<none>";
 
-            Log.Info(
+            Log.Info(DebugLogCategory.None,
                 "Assembly loaded. Current=" + currentVersion +
                 " Previous=" + previousText +
                 " AllPrevious=[" + previousVersions + "]"

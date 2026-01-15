@@ -5,6 +5,7 @@ using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing.Runtime;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -130,7 +131,7 @@ namespace PickyParking.Features.ParkingPolicing
                     citizenFlags = citizen.m_flags.ToString();
                 }
 
-                Log.Warn(
+                Log.Warn(DebugLogCategory.Enforcement,
                     "[Parking] Parked vehicle removed " +
                     $"source={source} buildingId={buildingId} parkedId={parkedVehicleId} " +
                     $"flags={pv.m_flags} prefab={prefabName} ownerCitizen={ownerCitizenId} " +
@@ -142,7 +143,7 @@ namespace PickyParking.Features.ParkingPolicing
             }
             catch (Exception ex)
             {
-                Log.Error("[Parking] Parked vehicle removal logging failed\n" + ex);
+                Log.Error(DebugLogCategory.Enforcement, "[Parking] Parked vehicle removal logging failed\n" + ex);
             }
         }
     }

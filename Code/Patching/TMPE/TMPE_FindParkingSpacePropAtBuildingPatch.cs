@@ -5,6 +5,7 @@ using PickyParking.Logging;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.Debug;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.TMPE
 {
@@ -19,14 +20,14 @@ namespace PickyParking.Patching.TMPE
             var type = System.Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding patch.");
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                Log.Info("[TMPE] FindParkingSpacePropAtBuilding not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpacePropAtBuilding not found; skipping patch.");
                 return;
             }
 
@@ -35,7 +36,7 @@ namespace PickyParking.Patching.TMPE
                 prefix: new HarmonyMethod(typeof(TMPE_FindParkingSpacePropAtBuildingPatch), nameof(Prefix))
             );
 
-            Log.Info("[TMPE] Patched FindParkingSpacePropAtBuilding (enforcement).");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpacePropAtBuilding (enforcement).");
         }
 
         internal static bool ConsumeSuppressDiagnostics()

@@ -62,14 +62,10 @@ namespace PickyParking.ModEntry
             if (settings == null) return;
 
             Log.SetVerboseEnabled(settings.EnableVerboseLogging);
-            Log.SetRuleUiDebugEnabled(settings.EnableDebugRuleUiLogs);
-            Log.SetLotDebugEnabled(settings.EnableDebugLotInspectionLogs);
-            Log.SetDecisionDebugEnabled(settings.EnableDebugDecisionPipelineLogs);
-            Log.SetEnforcementDebugEnabled(settings.EnableDebugEnforcementLogs);
-            Log.SetTmpeDebugEnabled(settings.EnableDebugTmpeLogs);
+            Log.SetEnabledDebugCategories(settings.EnabledDebugLogCategories);
             ParkingStatsTicker.SetEnabled(settings.EnableVerboseLogging);
 
-            ParkingSearchContext.EnableEpisodeLogs = settings.EnableDebugDecisionPipelineLogs;
+            ParkingSearchContext.EnableEpisodeLogs = settings.IsDebugLogCategoryEnabled(DebugLogCategory.DecisionPipeline);
             ParkingSearchContext.LogMinCandidates = settings.EnableVerboseLogging
                 ? 1
                 : ParkingSearchContext.DefaultLogMinCandidates;
@@ -80,15 +76,11 @@ namespace PickyParking.ModEntry
             ParkingDebugSettings.DisableClearKnownParkingOnDenied = settings.DisableClearKnownParkingOnDenied;
             ParkingDebugSettings.DisableParkingEnforcement = settings.DisableParkingEnforcement;
             ParkingDebugSettings.BuildingDebugId = settings.DebugBuildingId;
-            ParkingDebugSettings.EnableLotInspectionLogs = settings.EnableDebugLotInspectionLogs;
+            ParkingDebugSettings.EnableLotInspectionLogs = settings.IsDebugLogCategoryEnabled(DebugLogCategory.LotInspection);
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[Settings] Patch settings applied.");
+                Log.Info(DebugLogCategory.RuleUi, "[Settings] Patch settings applied.");
         }
-
-        
-        
-        
         
         public static ModRuntime Create(ModSettings settings, ModSettingsController settingsController, LevelContext levelContext = null)
         {
@@ -106,11 +98,11 @@ namespace PickyParking.ModEntry
                     var storage = new SavegameRulesStorage();
                     storage.LoadIntoFromBytes(rulesRepo, levelContext.RulesBytes);
                     if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                        Log.Info($"[Persistence] Applied savegame building rules ({levelContext.RulesBytes.Length} bytes).");
+                        Log.Info(DebugLogCategory.RuleUi, $"[Persistence] Applied savegame building rules ({levelContext.RulesBytes.Length} bytes).");
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn("[Persistence] Failed to apply savegame building rules: " + ex);
+                    Log.Warn(DebugLogCategory.None, "[Persistence] Failed to apply savegame building rules: " + ex);
                 }
                 finally
                 {

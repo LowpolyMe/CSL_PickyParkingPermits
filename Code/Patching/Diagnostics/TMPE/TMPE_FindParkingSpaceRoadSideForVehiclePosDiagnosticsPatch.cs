@@ -4,6 +4,7 @@ using HarmonyLib;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.TMPE
 {
@@ -18,7 +19,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (type == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceRoadSideForVehiclePos diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceRoadSideForVehiclePos diagnostics patch.");
                 return;
             }
 
@@ -26,7 +27,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] FindParkingSpaceRoadSideForVehiclePos overload not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpaceRoadSideForVehiclePos overload not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -36,7 +37,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             );
 
             if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info("[TMPE] Patched FindParkingSpaceRoadSideForVehiclePos (diagnostics).");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpaceRoadSideForVehiclePos (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)
@@ -89,7 +90,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             string prefabName = vehicleInfo != null ? vehicleInfo.name : "UNKNOWN";
 
-            Log.Info(
+            Log.Info(DebugLogCategory.Tmpe,
                 "[TMPE] FindParkingSpaceRoadSideForVehiclePos failed " +
                 $"segmentId={segmentId} refPos=({refPos.x:F1},{refPos.y:F1},{refPos.z:F1}) " +
                 $"vehiclePrefab={prefabName} vehicleId={ParkingSearchContext.VehicleId} " +

@@ -2,6 +2,7 @@ using System;
 using ColossalFramework;
 using UnityEngine;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -68,7 +69,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
             {
-                Log.Info(
+                Log.Info(DebugLogCategory.DecisionPipeline,
                     $"[Parking] ParkingSearchEpisode " +
                     $"src={Source ?? "NULL"} depth={StartDepth} " +
                     $"vehicleId={VehicleId} citizenId={CitizenId} isVisitor={IsVisitor} " +

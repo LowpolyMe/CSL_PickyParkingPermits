@@ -13,11 +13,7 @@ namespace PickyParking.Settings
     {
         public List<PrefabKey> SupportedParkingLotPrefabs { get; set; }
         public bool EnableVerboseLogging { get; set; }
-        public bool EnableDebugRuleUiLogs { get; set; }
-        public bool EnableDebugLotInspectionLogs { get; set; }
-        public bool EnableDebugDecisionPipelineLogs { get; set; }
-        public bool EnableDebugEnforcementLogs { get; set; }
-        public bool EnableDebugTmpeLogs { get; set; }
+        public DebugLogCategory EnabledDebugLogCategories { get; set; }
         public bool DisableTMPECandidateBlocking { get; set; }
         public bool DisableClearKnownParkingOnDenied { get; set; }
         public bool DisableParkingEnforcement { get; set; }
@@ -33,11 +29,7 @@ namespace PickyParking.Settings
         {
             SupportedParkingLotPrefabs = new List<PrefabKey>();
             EnableVerboseLogging = false;
-            EnableDebugRuleUiLogs = false;
-            EnableDebugLotInspectionLogs = false;
-            EnableDebugDecisionPipelineLogs = false;
-            EnableDebugEnforcementLogs = false;
-            EnableDebugTmpeLogs = false;
+            EnabledDebugLogCategories = DebugLogCategory.None;
             DisableTMPECandidateBlocking = false;
             DisableClearKnownParkingOnDenied = false;
             DisableParkingEnforcement = false;
@@ -56,6 +48,25 @@ namespace PickyParking.Settings
         {
             throw new NotImplementedException();
             //TODO:  implement CopyFrom to assign every field to mutate the existing Current instead of replacing it.
+        }
+
+        public bool IsDebugLogCategoryEnabled(DebugLogCategory category)
+        {
+            if (!EnableVerboseLogging)
+                return false;
+
+            return (EnabledDebugLogCategories & category) != 0;
+        }
+
+        public bool IsLotInspectionDebugEnabledForBuilding(ushort buildingId)
+        {
+            if (!IsDebugLogCategoryEnabled(DebugLogCategory.LotInspection))
+                return false;
+
+            if (DebugBuildingId == 0)
+                return false;
+
+            return buildingId == DebugBuildingId;
         }
     }
 }

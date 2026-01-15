@@ -112,7 +112,7 @@ namespace PickyParking.UI.ModOptions
             {
                 if (!int.TryParse(text, out var value))
                 {
-                    Log.Warn("[Settings] Invalid value for " + label + ": " + (text ?? "NULL"));
+                    Log.Warn(DebugLogCategory.RuleUi, "[Settings] Invalid value for " + label + ": " + (text ?? "NULL"));
                     if (field != null)
                         field.text = lastValid.ToString();
                     return;

@@ -3,6 +3,7 @@ using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
 using PickyParking.UI.BuildingOptionsPanel;
+using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
@@ -275,7 +276,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             UpdateParkingSpaceStats();
 
             if (hasStoredRule && Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
         }
 
         private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)

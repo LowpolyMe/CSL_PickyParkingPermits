@@ -5,6 +5,7 @@ using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.Game
 {
@@ -18,7 +19,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info("[Parking] CreateParkedVehicle not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Enforcement, "[Parking] CreateParkedVehicle not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -28,7 +29,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             );
 
             if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info("[Parking] Patched CreateParkedVehicle (diagnostics).");
+                Log.Info(DebugLogCategory.Enforcement, "[Parking] Patched CreateParkedVehicle (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod()
@@ -81,7 +82,7 @@ namespace PickyParking.Patching.Diagnostics.Game
                 string failedPrefabName = info != null ? info.name : "UNKNOWN";
                 string failedSource = ParkingSearchContext.Source ?? "NULL";
 
-                Log.Info(
+                Log.Info(DebugLogCategory.Enforcement,
                     "[Parking] CreateParkedVehicle failed " +
                     $"prefab={failedPrefabName} ownerCitizen={ownerCitizen} pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
                     $"source={failedSource} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"
@@ -101,7 +102,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             string prefabName = info != null ? info.name : "UNKNOWN";
             string source = ParkingSearchContext.Source ?? "NULL";
 
-            Log.Info(
+            Log.Info(DebugLogCategory.Enforcement,
                 "[Parking] CreateParkedVehicle created " +
                 $"buildingId={buildingId} parkedId={parked} prefab={prefabName} ownerCitizen={ownerCitizen} " +
                 $"pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +

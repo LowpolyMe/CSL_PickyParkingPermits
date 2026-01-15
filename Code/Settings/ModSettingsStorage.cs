@@ -30,7 +30,7 @@ namespace PickyParking.Settings
             }
             catch (Exception ex)
             {
-                Log.WarnOnce("Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
+                Log.WarnOnce(DebugLogCategory.None, "Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
                 return new ModSettings();
             }
         }
@@ -62,7 +62,7 @@ namespace PickyParking.Settings
             {
                 settings.SupportedParkingLotPrefabs = new List<PrefabKey>();
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
             }
 
             bool normalizedHue = NormalizeHueValues(settings);
@@ -87,20 +87,20 @@ namespace PickyParking.Settings
             if (cleaned.Count != settings.SupportedParkingLotPrefabs.Count)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[Settings] Normalized settings: removed invalid or duplicate prefabs.");
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: removed invalid or duplicate prefabs.");
             }
 
             if (normalizedHue)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[Settings] Normalized settings: clamped overlay hue values.");
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped overlay hue values.");
             }
 
             bool normalizedReevaluation = NormalizeReevaluationValues(settings);
             if (normalizedReevaluation)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[Settings] Normalized settings: clamped reevaluation limits.");
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped reevaluation limits.");
             }
 
             settings.SupportedParkingLotPrefabs = cleaned;

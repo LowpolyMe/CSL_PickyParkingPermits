@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Threading;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.Debug
 {
@@ -338,7 +339,7 @@ namespace PickyParking.Features.Debug
             sb.Append(" reevalReleased=");
             sb.Append(snapshot.ReevalReleased);
 
-            Log.Info(sb.ToString());
+            Log.Info(DebugLogCategory.DecisionPipeline, sb.ToString());
         }
 
         private static Snapshot SnapshotAndReset()

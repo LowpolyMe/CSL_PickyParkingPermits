@@ -3,6 +3,7 @@ using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.UI.ModResources;
 using PickyParking.UI.BuildingOptionsPanel;
+using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
@@ -29,7 +30,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             Texture2D texture = ModResourceLoader.LoadTexture(ParkingRulesIconAtlasUiValues.TextureFileName);
             if (texture == null)
             {
-                Log.Warn("[ParkingRulesPanel] IconsAtlas texture not found in mod Resources.");
+                Log.Warn(DebugLogCategory.RuleUi, "[ParkingRulesPanel] IconsAtlas texture not found in mod Resources.");
                 return null;
             }
 
@@ -84,7 +85,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (_atlas == null && !_attempted)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[ParkingRulesPanel] Icon atlas cleanup skipped (never created).");
+                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Icon atlas cleanup skipped (never created).");
                 return;
             }
 
@@ -95,7 +96,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (atlas == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[ParkingRulesPanel] Icon atlas cache reset (load attempt only).");
+                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Icon atlas cache reset (load attempt only).");
                 return;
             }
 
@@ -109,7 +110,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             Object.Destroy(atlas);
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[ParkingRulesPanel] Icon atlas cache cleared.");
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Icon atlas cache cleared.");
         }
 
         private static void AddSprite(UITextureAtlas atlas, Texture2D texture, SpriteSpec spec)

@@ -2,6 +2,7 @@ using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingRules
 {
@@ -52,7 +53,7 @@ namespace PickyParking.Features.ParkingRules
                 return;
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[ParkingRules] RemoveRule (" + reason + ") building=" + buildingId);
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] RemoveRule (" + reason + ") building=" + buildingId);
 
             SimThread.Dispatch(() => _parkingRulesRepository.Remove(buildingId));
         }
@@ -63,7 +64,7 @@ namespace PickyParking.Features.ParkingRules
                 return;
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[ParkingRules] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
 
             SimThread.Dispatch(() => _parkingRulesRepository.Set(buildingId, rule));
         }
@@ -93,7 +94,7 @@ namespace PickyParking.Features.ParkingRules
             _pendingReevaluationBuildingId = buildingId;
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[ParkingRules] ApplyNow (" + reason + ") building=" + buildingId + " rule=" + FormatRule(rule) + " reevaluate=deferred");
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] ApplyNow (" + reason + ") building=" + buildingId + " rule=" + FormatRule(rule) + " reevaluate=deferred");
 
             SimThread.Dispatch(() => _parkingRulesRepository.Set(buildingId, rule));
         }
@@ -103,28 +104,28 @@ namespace PickyParking.Features.ParkingRules
             if (!_hasPendingReevaluation)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[ParkingRules] Reevaluation skipped (none pending) for building " + buildingId);
+                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation skipped (none pending) for building " + buildingId);
                 return;
             }
 
             if (_pendingReevaluationBuildingId != buildingId)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[ParkingRules] Reevaluation skipped (pending for " + _pendingReevaluationBuildingId + ") for building " + buildingId);
+                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation skipped (pending for " + _pendingReevaluationBuildingId + ") for building " + buildingId);
                 return;
             }
 
             if (_reevaluation == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info("[ParkingRules] Reevaluation skipped (service missing) for building " + buildingId);
+                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation skipped (service missing) for building " + buildingId);
                 return;
             }
 
             _hasPendingReevaluation = false;
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[ParkingRules] Reevaluation requested for building " + buildingId);
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation requested for building " + buildingId);
 
             SimThread.Dispatch(() => { _reevaluation.RequestForBuilding(buildingId); });
         }

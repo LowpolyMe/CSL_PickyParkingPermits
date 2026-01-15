@@ -3,6 +3,7 @@ using ColossalFramework.UI;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Logging;
 using PickyParking.UI;
+using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel
 {
@@ -170,11 +171,11 @@ namespace PickyParking.UI.BuildingOptionsPanel
             }
             else
             {
-                Log.Warn("[SupportedPrefabs] Settings controller missing; prefab add not persisted.");
+                Log.Warn(DebugLogCategory.RuleUi, "[SupportedPrefabs] Settings controller missing; prefab add not persisted.");
             }
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info("[SupportedPrefabs] Added supported prefab " + _prefabKey);
+                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Added supported prefab " + _prefabKey);
         }
     }
 }

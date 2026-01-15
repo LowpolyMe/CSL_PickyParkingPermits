@@ -3,6 +3,7 @@ using System.Reflection;
 using HarmonyLib;
 using PickyParking.Logging;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.TMPE
 {
@@ -16,14 +17,14 @@ namespace PickyParking.Patching.TMPE
             var type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Error("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen patch.");
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen patch.");
                 return;
             }
 
             MethodInfo method = FindTargetMethod(type);
             if (method == null)
             {
-                Log.Error("[TMPE] FindParkingSpaceForCitizen overload not found; skipping patch.");
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpaceForCitizen overload not found; skipping patch.");
                 return;
             }
 
@@ -33,7 +34,7 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_FindParkingSpaceForCitizenPatch), nameof(Finalizer))
             );
 
-            Log.Info("[TMPE] Patched FindParkingSpaceForCitizen (context injection).");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpaceForCitizen (context injection).");
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)

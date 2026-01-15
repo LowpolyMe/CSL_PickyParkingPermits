@@ -4,6 +4,7 @@ using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
 using PickyParking.UI.BuildingOptionsPanel;
+using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
@@ -380,7 +381,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             };
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled && thumb.spriteInfo == null)
-                Log.Info("[ParkingRulesPanel] Slider thumb sprite missing: " + thumb.spriteName);
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Slider thumb sprite missing: " + thumb.spriteName);
 
             UpdateSliderFill(row);
             return row;

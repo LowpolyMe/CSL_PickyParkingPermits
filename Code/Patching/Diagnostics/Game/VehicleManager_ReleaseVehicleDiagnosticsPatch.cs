@@ -4,6 +4,7 @@ using ColossalFramework;
 using HarmonyLib;
 using PickyParking.Features.Debug;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.Game
 {
@@ -17,7 +18,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info("[Parking] ReleaseVehicle not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Enforcement, "[Parking] ReleaseVehicle not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -27,7 +28,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             );
 
             if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info("[Parking] Patched ReleaseVehicle (diagnostics).");
+                Log.Info(DebugLogCategory.Enforcement, "[Parking] Patched ReleaseVehicle (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod()
@@ -80,14 +81,14 @@ namespace PickyParking.Patching.Diagnostics.Game
 
                 string aiName = GetVehicleAiName(ref vehicle);
 
-                Log.Warn(
+                Log.Warn(DebugLogCategory.Enforcement,
                     "[Parking] ReleaseVehicle called. " +
                     $"vehicleId={vehicleId} reason={reason} ai={aiName} citizenUnits={citizenUnits} sourceBuilding={sourceBuilding} targetBuilding={targetBuilding} flags={vehicle.m_flags}"
                 );
             }
             catch (Exception ex)
             {
-                Log.Error("[Parking] ReleaseVehicle prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Enforcement, "[Parking] ReleaseVehicle prefix exception\n" + ex);
             }
         }
 

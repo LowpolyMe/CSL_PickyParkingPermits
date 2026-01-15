@@ -1,6 +1,7 @@
 using System;
 using PickyParking.Logging;
 using PickyParking.Features.ParkingPolicing;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.TMPE
 {
@@ -22,7 +23,7 @@ namespace PickyParking.Patching.TMPE
                 uint citizenId = driverInstance.m_citizen;
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled && citizenId == 0u && vehicleId != 0)
                 {
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] BeginFindParkingForCitizen: driver citizenId=0 " +
                         $"vehicleId={vehicleId} sourceBuilding={driverInstance.m_sourceBuilding} targetBuilding={driverInstance.m_targetBuilding}"
                     );
@@ -36,12 +37,12 @@ namespace PickyParking.Patching.TMPE
                 else
                 {
                     if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                        Log.Info("[TMPE] CitizenId and VehicleId are 0, not pushing context");
+                        Log.Info(DebugLogCategory.Tmpe, "[TMPE] CitizenId and VehicleId are 0, not pushing context");
                 }
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Prefix exception\n" + ex);
             }
         }
 
@@ -54,7 +55,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Finalizer exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Finalizer exception\n" + ex);
             }
 
             return exception;
@@ -83,7 +84,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Prefix exception\n" + ex);
             }
         }
 
@@ -96,7 +97,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Finalizer exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Finalizer exception\n" + ex);
             }
 
             return exception;
@@ -126,7 +127,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Prefix exception\n" + ex);
             }
         }
 
@@ -139,7 +140,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Finalizer exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Finalizer exception\n" + ex);
             }
 
             return exception;
@@ -156,7 +157,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Prefix exception\n" + ex);
             }
         }
 
@@ -169,7 +170,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] Finalizer exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] Finalizer exception\n" + ex);
             }
 
             return exception;

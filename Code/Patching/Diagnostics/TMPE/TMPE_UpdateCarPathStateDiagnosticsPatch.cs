@@ -4,6 +4,7 @@ using HarmonyLib;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Patching.TMPE;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.TMPE
 {
@@ -20,7 +21,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (type == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] AdvancedParkingManager not found; skipping UpdateCarPathState diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping UpdateCarPathState diagnostics patch.");
                 return;
             }
 
@@ -28,7 +29,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (methods == null || methods.Length == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] UpdateCarPathState overload not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState overload not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -42,7 +43,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
 
             if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info($"[TMPE] Patched UpdateCarPathState (diagnostics). count={methods.Length}");
+                Log.Info(DebugLogCategory.Tmpe, $"[TMPE] Patched UpdateCarPathState (diagnostics). count={methods.Length}");
         }
 
         private static MethodInfo[] FindTargetMethods(Type advancedParkingManagerType)
@@ -91,7 +92,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 {
                     if (ParkingPathModeTracker.TryDescribeUpdateArgs(vehicleId, extDriverInstance, pathStateObj, out string desc))
                     {
-                        Log.Info("[TMPE] UpdateCarPathState prefix hit. " + desc);
+                        Log.Info(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState prefix hit. " + desc);
                     }
                     _prefixLogCount++;
                 }
@@ -101,7 +102,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] UpdateCarPathState diagnostics prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState diagnostics prefix exception\n" + ex);
             }
         }
 
@@ -119,7 +120,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error("[TMPE] UpdateCarPathState diagnostics postfix exception\n" + ex);
+                Log.Error(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState diagnostics postfix exception\n" + ex);
             }
         }
     }

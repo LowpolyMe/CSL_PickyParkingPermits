@@ -8,6 +8,7 @@ using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.TMPE
 {
@@ -36,7 +37,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (type == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen diagnostics patch.");
                 return;
             }
 
@@ -44,7 +45,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] FindParkingSpaceForCitizen overload not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpaceForCitizen overload not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -55,7 +56,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             );
 
             if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info("[TMPE] Patched FindParkingSpaceForCitizen (diagnostics).");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpaceForCitizen (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)
@@ -124,7 +125,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             {
                 if (TryGetExtParkingLocation(extDriverInstanceObj, out string location, out ushort locationId))
                 {
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] FindParkingSpaceForCitizen succeeded. " +
                         $"vehicleId={vehicleId} citizenId={driverInstance.m_citizen} " +
                         $"targetBuildingId={driverInstance.m_targetBuilding} " +
@@ -159,7 +160,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (shouldLogDetail)
                 {
                     string allDeniedNote = isAllDenied ? " allCandidatesDenied=true" : string.Empty;
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] FindParkingSpaceForCitizen failed (no parking found). " +
                         $"vehicleId={snapshot.VehicleId} citizenId={snapshot.CitizenId} isVisitor={snapshot.IsVisitor} " +
                         $"source={snapshot.Source ?? "NULL"} candidates={snapshot.CandidateChecks} " +
@@ -172,7 +173,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 }
                 else if (isAllowedButFailed)
                 {
-                    Log.Info(
+                    Log.Info(DebugLogCategory.Tmpe,
                         "[TMPE] FindParkingSpaceForCitizen failed after allowed candidates. " +
                         $"vehicleId={snapshot.VehicleId} citizenId={snapshot.CitizenId} isVisitor={snapshot.IsVisitor} " +
                         $"source={snapshot.Source ?? "NULL"} candidates={snapshot.CandidateChecks} " +
@@ -256,7 +257,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             if (_failCount > 0 && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
             {
-                Log.Info(
+                Log.Info(DebugLogCategory.Tmpe,
                     "[TMPE] Parking search failures (summary) " +
                     $"total={_failCount} cand0={_failCandidatesZero} allDenied={_failAllDenied} allowed>0={_failAllowedButFailed} " +
                     $"nonTouristCand0={_failNonTouristCandidatesZero} nonTouristAllDenied={_failNonTouristAllDenied}");
@@ -290,7 +291,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             uint citizenId = driverInstance.m_citizen;
             string pathModeText = pathMode != null ? pathMode.ToString() : "NULL";
-            Log.Info(
+            Log.Info(DebugLogCategory.Tmpe,
                 "[TMPE] Parking attempts changed " +
                 $"instanceId={instanceId} citizenId={citizenId} vehicleId={vehicleId} " +
                 $"failedAttempts={failedAttempts} pathMode={pathModeText}"
@@ -395,7 +396,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 }
             }
 
-            Log.Info($"[TMPE] ExtCitizenInstance fields missing or unreadable. type={type.FullName} fields=[{sb}]");
+            Log.Info(DebugLogCategory.Tmpe, $"[TMPE] ExtCitizenInstance fields missing or unreadable. type={type.FullName} fields=[{sb}]");
         }
     }
 }

@@ -5,6 +5,7 @@ using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.TMPE
 {
@@ -18,14 +19,14 @@ namespace PickyParking.Patching.TMPE
             var type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info("[TMPE] AdvancedParkingManager not found; skipping VanillaFindParkingSpaceWithoutRestrictions patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping VanillaFindParkingSpaceWithoutRestrictions patch.");
                 return;
             }
 
             MethodInfo method = FindTargetMethod(type);
             if (method == null)
             {
-                Log.Info("[TMPE] VanillaFindParkingSpaceWithoutRestrictions not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] VanillaFindParkingSpaceWithoutRestrictions not found; skipping patch.");
                 return;
             }
 
@@ -34,7 +35,7 @@ namespace PickyParking.Patching.TMPE
                 postfix: new HarmonyMethod(typeof(TMPE_VanillaFindParkingSpaceWithoutRestrictionsPatch), nameof(Postfix))
             );
 
-            Log.Info("[TMPE] Patched VanillaFindParkingSpaceWithoutRestrictions (enforcement).");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched VanillaFindParkingSpaceWithoutRestrictions (enforcement).");
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)

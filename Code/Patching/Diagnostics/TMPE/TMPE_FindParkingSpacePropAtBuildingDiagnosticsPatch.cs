@@ -7,6 +7,7 @@ using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Logging;
 using PickyParking.Patching.TMPE;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Diagnostics.TMPE
 {
@@ -21,7 +22,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (type == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding diagnostics patch.");
                 return;
             }
 
@@ -29,7 +30,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info("[TMPE] FindParkingSpacePropAtBuilding not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpacePropAtBuilding not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -39,7 +40,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             );
 
             if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info("[TMPE] Patched FindParkingSpacePropAtBuilding (diagnostics).");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpacePropAtBuilding (diagnostics).");
         }
 
         private static void Postfix(bool __result, [HarmonyArgument(3)] ushort buildingId)
@@ -84,7 +85,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             string stats = hasStats ? $"spaces={totalSpaces} occupied={occupiedSpaces}" : "spaces=n/a";
             string propStats = TryFormatPropStats(context, buildingId);
 
-            Log.Info(
+            Log.Info(DebugLogCategory.Tmpe,
                 "[TMPE] FindParkingSpacePropAtBuilding failed " +
                 $"buildingId={buildingId} name={buildingName} prefab={prefabName} {stats} {propStats} " +
                 $"isVisitor={ParkingSearchContext.IsVisitor} vehicleId={ParkingSearchContext.VehicleId} " +

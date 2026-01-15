@@ -9,6 +9,7 @@ using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing.Runtime;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -33,7 +34,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info($"[Parking] Candidate decision skipped: runtime inactive buildingId={buildingId}");
+                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Parking] Candidate decision skipped: runtime inactive buildingId={buildingId}");
                 return false;
             }
 
@@ -51,7 +52,7 @@ namespace PickyParking.Features.ParkingPolicing
                 context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule) &&
                 rule.WorkSchoolWithinRadiusOnly)
             {
-                Log.Info(
+                Log.Info(DebugLogCategory.DecisionPipeline,
                     "[Parking] WorkerOnlyCandidateDecision " +
                     $"buildingId={buildingId} denied={denied} reason={reason} " +
                     $"isVisitor={ParkingSearchContext.IsVisitor} " +
@@ -97,7 +98,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (!ParkingSearchContext.HasContext)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info("[Parking] CreateParkedVehicle check skipped: no parking search context");
+                    Log.Info(DebugLogCategory.DecisionPipeline, "[Parking] CreateParkedVehicle check skipped: no parking search context");
                 ParkingStatsCounter.IncrementCreateCheckNoContext();
                 return false;
             }
@@ -105,7 +106,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (ownerCitizenId == 0u)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info("[Parking] CreateParkedVehicle check skipped: ownerCitizenId=0");
+                    Log.Info(DebugLogCategory.DecisionPipeline, "[Parking] CreateParkedVehicle check skipped: ownerCitizenId=0");
                 ParkingStatsCounter.IncrementCreateCheckNoOwner();
                 return false;
             }
@@ -113,7 +114,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRulesConfigDefinition rule))
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info($"[Parking] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
+                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Parking] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
                 ParkingStatsCounter.IncrementCreateCheckNoRuleBuilding();
                 return false;
             }
@@ -126,7 +127,7 @@ namespace PickyParking.Features.ParkingPolicing
                 Log.IsDecisionDebugEnabled &&
                 rule.WorkSchoolWithinRadiusOnly)
             {
-                Log.Info(
+                Log.Info(DebugLogCategory.DecisionPipeline,
                     "[Parking] WorkerOnlyCreateDenied " +
                     $"buildingId={buildingId} reason={eval.Reason} " +
                     $"isVisitor={ParkingSearchContext.IsVisitor} " +
@@ -199,7 +200,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
             {
-                Log.Warn("[Runtime] ParkingCandidateBlocker accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                Log.Warn(DebugLogCategory.None, "[Runtime] ParkingCandidateBlocker accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
             }
 
             return false;

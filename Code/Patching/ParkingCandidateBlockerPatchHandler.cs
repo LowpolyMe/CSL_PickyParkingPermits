@@ -3,6 +3,7 @@ using PickyParking.Features.Debug;
 using UnityEngine;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching
 {
@@ -27,7 +28,7 @@ namespace PickyParking.Patching
                     if (!_noContextLogged && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     {
                         _noContextLogged = true;
-                        Log.Warn("[Parking] FindParkingSpacePropAtBuilding missing context; passenger car candidates may be skipped.");
+                        Log.Warn(DebugLogCategory.DecisionPipeline, "[Parking] FindParkingSpacePropAtBuilding missing context; passenger car candidates may be skipped.");
                     }
                     ParkingStatsCounter.IncrementPropSearchNoContextDenied();
                     result = false;
@@ -51,7 +52,7 @@ namespace PickyParking.Patching
             }
             catch (Exception ex)
             {
-                Log.Error("[Parking] Exception\n" + ex);
+                Log.Error(DebugLogCategory.DecisionPipeline, "[Parking] Exception\n" + ex);
                 return true;
             }
         }
@@ -103,7 +104,7 @@ namespace PickyParking.Patching
             }
             catch (Exception ex)
             {
-                Log.Error("[Parking] Prefix exception\n" + ex);
+                Log.Error(DebugLogCategory.DecisionPipeline, "[Parking] Prefix exception\n" + ex);
                 return true;
             }
         }

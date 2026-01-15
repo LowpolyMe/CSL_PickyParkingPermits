@@ -3,6 +3,7 @@ using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Game
 {
@@ -18,7 +19,7 @@ namespace PickyParking.Patching.Game
             MethodInfo method = FindTargetMethod();
             if (method == null)
             {
-                Log.Info("[Parking] CreateParkedVehicle not found; skipping patch.");
+                Log.Info(DebugLogCategory.Enforcement, "[Parking] CreateParkedVehicle not found; skipping patch.");
                 return;
             }
 
@@ -27,7 +28,7 @@ namespace PickyParking.Patching.Game
                 prefix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Prefix))
             );
 
-            Log.Info("[Parking] Patched CreateParkedVehicle (parking enforcement).");
+            Log.Info(DebugLogCategory.Enforcement, "[Parking] Patched CreateParkedVehicle (parking enforcement).");
         }
 
         private static MethodInfo FindTargetMethod()

@@ -34,7 +34,7 @@ namespace PickyParking.Settings
             _storage.Save(Current);
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
             {
-                Log.Info(reason == null
+                Log.Info(DebugLogCategory.RuleUi, reason == null
                     ? "[Settings] Saved settings."
                     : "[Settings] Saved settings: " + reason);
             }
@@ -46,7 +46,7 @@ namespace PickyParking.Settings
             Current.CopyFrom(reloaded); 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
             {
-                Log.Info(reason == null
+                Log.Info(DebugLogCategory.RuleUi, reason == null
                     ? "[Settings] Reloaded settings."
                     : "[Settings] Reloaded settings: " + reason);
             }
