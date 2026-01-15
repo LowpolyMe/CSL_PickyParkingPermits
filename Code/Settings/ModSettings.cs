@@ -46,9 +46,31 @@ namespace PickyParking.Settings
 
         public void CopyFrom(ModSettings reloaded)
         {
-            throw new NotImplementedException();
-            //TODO:  implement CopyFrom to assign every field to mutate the existing Current instead of replacing it.
+            if (reloaded == null)
+                throw new ArgumentNullException(nameof(reloaded));
+            
+            if (SupportedParkingLotPrefabs == null)
+                SupportedParkingLotPrefabs = new List<PrefabKey>();
+            else
+                SupportedParkingLotPrefabs.Clear();
+
+            if (reloaded.SupportedParkingLotPrefabs != null && reloaded.SupportedParkingLotPrefabs.Count > 0)
+                SupportedParkingLotPrefabs.AddRange(reloaded.SupportedParkingLotPrefabs);
+            
+            EnableVerboseLogging = reloaded.EnableVerboseLogging;
+            EnabledDebugLogCategories = reloaded.EnabledDebugLogCategories;
+            DisableTMPECandidateBlocking = reloaded.DisableTMPECandidateBlocking;
+            DisableClearKnownParkingOnDenied = reloaded.DisableClearKnownParkingOnDenied;
+            DisableParkingEnforcement = reloaded.DisableParkingEnforcement;
+            DebugBuildingId = reloaded.DebugBuildingId;
+            ResidentsRadiusHue = reloaded.ResidentsRadiusHue;
+            WorkSchoolRadiusHue = reloaded.WorkSchoolRadiusHue;
+            EnableParkingRuleSweeps = reloaded.EnableParkingRuleSweeps;
+            EnableStuckParkedVehicleFix = reloaded.EnableStuckParkedVehicleFix;
+            ReevaluationMaxEvaluationsPerTick = reloaded.ReevaluationMaxEvaluationsPerTick;
+            ReevaluationMaxRelocationsPerTick = reloaded.ReevaluationMaxRelocationsPerTick;
         }
+
 
         public bool IsDebugLogCategoryEnabled(DebugLogCategory category)
         {
