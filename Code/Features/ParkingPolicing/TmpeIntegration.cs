@@ -147,7 +147,7 @@ namespace PickyParking.Features.ParkingPolicing
             }
             
             if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                Log.Info(DebugLogCategory.DecisionPipeline, $"[Parking] No context candidateBuildingId={candidateBuildingId}");
+                Log.Info(DebugLogCategory.DecisionPipeline, $"[Decision] No context candidateBuildingId={candidateBuildingId}");
 
             return false;
         }
@@ -241,7 +241,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             info = _defaultPassengerCarInfo;
             if (info == null && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
+                Log.Info(DebugLogCategory.Tmpe, "[Integration:TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
 
             return info != null;
         }
@@ -288,7 +288,7 @@ namespace PickyParking.Features.ParkingPolicing
         private void LogOffThread(string caller)
         {
             if (Interlocked.Exchange(ref _offThreadLogged, 1) == 0)
-                Log.Warn(DebugLogCategory.Tmpe, "[TMPE] Off-simulation-thread access blocked: " + (caller ?? "UNKNOWN"));
+                Log.Warn(DebugLogCategory.Tmpe, "[Threading] Off-simulation-thread access blocked: " + (caller ?? "UNKNOWN"));
         }
 
     }

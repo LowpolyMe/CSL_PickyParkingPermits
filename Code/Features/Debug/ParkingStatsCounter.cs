@@ -273,10 +273,9 @@ namespace PickyParking.Features.Debug
             var snapshot = SnapshotAndReset();
             var sb = new StringBuilder(256);
 
-            sb.Append("[Parking] Stats window=");
-            sb.Append(windowSeconds.ToString("F1"));
-            sb.Append("s ");
-            sb.Append("ctxPush=");
+            sb.Append("[Daily Statistics]");
+            //TODO add in-game date DD/MM/YY
+            sb.Append(" ctxPush=");
             sb.Append(snapshot.ContextPushTotal);
             sb.Append(" ctxPop=");
             sb.Append(snapshot.ContextPopTotal);
@@ -339,7 +338,7 @@ namespace PickyParking.Features.Debug
             sb.Append(" reevalReleased=");
             sb.Append(snapshot.ReevalReleased);
 
-            Log.Info(DebugLogCategory.DecisionPipeline, sb.ToString());
+            Log.Info(DebugLogCategory.None, sb.ToString());
         }
 
         private static Snapshot SnapshotAndReset()

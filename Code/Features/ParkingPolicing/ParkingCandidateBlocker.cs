@@ -34,26 +34,24 @@ namespace PickyParking.Features.ParkingPolicing
             if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Parking] Candidate decision skipped: runtime inactive buildingId={buildingId}");
+                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Runtime] Candidate decision skipped: runtime inactive buildingId={buildingId}");
                 return false;
             }
 
             if (!IsInScope(context, buildingId))
                 return false;
 
-            string prefabName = GetBuildingPrefabName(buildingId);
-            string buildingName = GetBuildingCustomName(buildingId);
+
 
             DecisionReason reason;
             denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
 
             if (Log.IsVerboseEnabled &&
                 Log.IsDecisionDebugEnabled &&
-                context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule) &&
-                rule.WorkSchoolWithinRadiusOnly)
+                context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule))
             {
                 Log.Info(DebugLogCategory.DecisionPipeline,
-                    "[Parking] WorkerOnlyCandidateDecision " +
+                    "event=CandidateDecision " + 
                     $"buildingId={buildingId} denied={denied} reason={reason} " +
                     $"isVisitor={ParkingSearchContext.IsVisitor} " +
                     $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
@@ -63,7 +61,9 @@ namespace PickyParking.Features.ParkingPolicing
                     $"VisitorsAllowed={rule.VisitorsAllowed}"
                 );
             }
-
+            
+            string prefabName = GetBuildingPrefabName(buildingId);
+            string buildingName = GetBuildingCustomName(buildingId);
             ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName, buildingName);
             ParkingStatsCounter.IncrementCandidateDecision(denied);
             return true;
@@ -98,7 +98,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (!ParkingSearchContext.HasContext)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, "[Parking] CreateParkedVehicle check skipped: no parking search context");
+                    Log.Info(DebugLogCategory.DecisionPipeline, "[Decision] CreateParkedVehicle check skipped: no parking search context");
                 ParkingStatsCounter.IncrementCreateCheckNoContext();
                 return false;
             }
@@ -106,7 +106,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (ownerCitizenId == 0u)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, "[Parking] CreateParkedVehicle check skipped: ownerCitizenId=0");
+                    Log.Info(DebugLogCategory.DecisionPipeline, "[Decision] CreateParkedVehicle check skipped: ownerCitizenId=0");
                 ParkingStatsCounter.IncrementCreateCheckNoOwner();
                 return false;
             }
@@ -114,7 +114,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRulesConfigDefinition rule))
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Parking] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
+                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Decision] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
                 ParkingStatsCounter.IncrementCreateCheckNoRuleBuilding();
                 return false;
             }
@@ -124,11 +124,10 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             if (Log.IsVerboseEnabled &&
-                Log.IsDecisionDebugEnabled &&
-                rule.WorkSchoolWithinRadiusOnly)
+                Log.IsDecisionDebugEnabled)
             {
                 Log.Info(DebugLogCategory.DecisionPipeline,
-                    "[Parking] WorkerOnlyCreateDenied " +
+                    "event=CreateParkedVehicleBlock " +
                     $"buildingId={buildingId} reason={eval.Reason} " +
                     $"isVisitor={ParkingSearchContext.IsVisitor} " +
                     $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
@@ -200,7 +199,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
             {
-                Log.Warn(DebugLogCategory.None, "[Runtime] ParkingCandidateBlocker accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                Log.Warn(DebugLogCategory.None, "[Threading] ParkingCandidateBlocker accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
             }
 
             return false;

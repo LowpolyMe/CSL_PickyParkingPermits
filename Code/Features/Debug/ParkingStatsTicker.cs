@@ -26,7 +26,7 @@ namespace PickyParking.Features.Debug
             if (!enabled)
                 ParkingStatsCounter.ResetAll();
             else if (_instance == null && Interlocked.Exchange(ref _missingInstanceLogged, 1) == 0)
-                Log.Warn(DebugLogCategory.DecisionPipeline, "[Parking] Stats ticker enabled but no instance exists yet.");
+                Log.Warn(DebugLogCategory.None, "[Parking] Stats ticker enabled but no instance exists yet.");
         }
 
         public static void NotifyDayChanged()

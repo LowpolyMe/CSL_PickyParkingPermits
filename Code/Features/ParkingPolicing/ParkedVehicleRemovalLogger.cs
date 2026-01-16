@@ -132,7 +132,7 @@ namespace PickyParking.Features.ParkingPolicing
                 }
 
                 Log.Warn(DebugLogCategory.Enforcement,
-                    "[Parking] Parked vehicle removed " +
+                    "[Forensics] Parked vehicle removed " +
                     $"source={source} buildingId={buildingId} parkedId={parkedVehicleId} " +
                     $"flags={pv.m_flags} prefab={prefabName} ownerCitizen={ownerCitizenId} " +
                     $"ownerInstance={ownerInstance} homeId={homeId} workId={workId} " +
@@ -143,7 +143,7 @@ namespace PickyParking.Features.ParkingPolicing
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.Enforcement, "[Parking] Parked vehicle removal logging failed\n" + ex);
+                Log.Error(DebugLogCategory.Enforcement, "[Forensics] Parked vehicle removal logging failed\n" + ex);
             }
         }
     }

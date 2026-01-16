@@ -70,7 +70,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
             {
                 Log.Info(DebugLogCategory.DecisionPipeline,
-                    $"[Parking] ParkingSearchEpisode " +
+                    $"[SearchEpisode] ParkingSearchEpisode " +
                     $"src={Source ?? "NULL"} depth={StartDepth} " +
                     $"vehicleId={VehicleId} citizenId={CitizenId} isVisitor={IsVisitor} " +
                     $"candidates={CandidateChecks} denied={DeniedCount} allowed={AllowedCount} " +

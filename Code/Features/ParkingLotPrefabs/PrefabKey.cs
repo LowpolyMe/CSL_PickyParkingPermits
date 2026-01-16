@@ -2,7 +2,6 @@ using System;
 
 namespace PickyParking.Features.ParkingLotPrefabs
 {
-    //TODO Make it immutable: >> readonly struct PrefabKey : IEquatable<PrefabKey> >> public string PackageName { get; }, public string PrefabName { get; } >> Remove public setters/fields.
     [Serializable]
     public struct PrefabKey : IEquatable<PrefabKey>
     {

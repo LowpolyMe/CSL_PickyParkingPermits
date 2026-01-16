@@ -194,7 +194,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
             {
-                Log.Warn(DebugLogCategory.None, "[Runtime] ParkingSearchContext accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                Log.Warn(DebugLogCategory.None, "[Threading] ParkingSearchContext accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
             }
 
             return false;

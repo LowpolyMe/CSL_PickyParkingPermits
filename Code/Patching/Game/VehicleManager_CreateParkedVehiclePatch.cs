@@ -7,10 +7,6 @@ using PickyParking.Settings;
 
 namespace PickyParking.Patching.Game
 {
-    
-    
-    
-    
     internal static class VehicleManager_CreateParkedVehiclePatch
     {
         private const string TargetMethodName = "CreateParkedVehicle";
