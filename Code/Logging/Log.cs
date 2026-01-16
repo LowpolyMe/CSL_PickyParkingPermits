@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using ColossalFramework.Plugins;
 using PickyParking.Settings;
 using Debug = UnityEngine.Debug;
 
@@ -43,16 +42,19 @@ namespace PickyParking.Logging
         {
             if (!Policy.ShouldLog(category))
                 return;
-
-            Write(PluginManager.MessageType.Message, $"[{category}] {message}", stackTraceEnabled: false);
+          
+            string line = $"{Prefix}{message}";
+            Debug.Log(line);
         }
 
         public static void Warn(DebugLogCategory category, string message, bool stackTraceEnabled = false)
         {
             if (!Policy.ShouldLog(category))
                 return;
-
-            Write(PluginManager.MessageType.Warning, $"[{category}] {message}", stackTraceEnabled);
+            
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogWarning(line);
         }
 
         public static void Error(DebugLogCategory category, string message, bool stackTraceEnabled = false)
@@ -60,17 +62,28 @@ namespace PickyParking.Logging
             if (!Policy.ShouldLog(category))
                 return;
 
-            Write(PluginManager.MessageType.Error, $"[{category}] {message}", stackTraceEnabled);
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogError(line);
         }
 
         public static void WarnOnce(DebugLogCategory category, string key, string message) =>
             WarnOnce(category, key, message, DefaultRateLimit);
 
-        public static void AlwaysWarn(string message, bool stackTraceEnabled = false) =>
-            Write(PluginManager.MessageType.Warning, message, stackTraceEnabled);
+        //ignores verbose flag
+        public static void AlwaysWarn(string message, bool stackTraceEnabled = false)
+        {
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogWarning(line);
+        }
 
-        public static void AlwaysError(string message, bool stackTraceEnabled = false) =>
-            Write(PluginManager.MessageType.Error, message, stackTraceEnabled);
+        public static void AlwaysError(string message, bool stackTraceEnabled = false)
+        {
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogError(line);
+        }
 
         public static void AlwaysWarnOnce(string key, string message) =>
             AlwaysWarnOnce(key, message, DefaultRateLimit);
@@ -97,40 +110,5 @@ namespace PickyParking.Logging
             AlwaysWarn(message);
         }
 
-        private static void Write(PluginManager.MessageType type, string message, bool stackTraceEnabled)
-        {
-            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
-            string callerTag = CallerTag(type);
-
-            string line = $"{Prefix}{callerTag}{message}{stack}";
-
-            // Unity log
-            switch (type)
-            {
-                case PluginManager.MessageType.Warning:
-                    Debug.LogWarning(line);
-                    break;
-                case PluginManager.MessageType.Error:
-                    Debug.LogError(line);
-                    break;
-                default:
-                    Debug.Log(line);
-                    break;
-            }
-            
-            DebugPanel.EnqueueOrWrite(type, line);
-        }
-
-        private static string CallerTag(PluginManager.MessageType type)
-        {
-            if (type != PluginManager.MessageType.Message)
-                return string.Empty;
-
-            var frame = new StackFrame(2, false);
-            var method = frame.GetMethod();
-            var declaringType = method != null ? method.DeclaringType : null;
-
-            return declaringType != null ? $"[{declaringType.Name}] " : string.Empty;
-        }
     }
 }
