@@ -68,6 +68,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         public ParkingRulesToggleRow VisitorsRow { get; private set; }
         public UIPanel FooterRow { get; private set; }
         public UILabel ParkingSpacesLabel { get; private set; }
+        public UIButton ApplyButton { get; private set; }
 
         public static ParkingRulesConfigPanelUi Create(
             ParkingRulesConfigPanel panel,
@@ -252,6 +253,15 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             ParkingSpacesLabel.text = "Spaces: n/a";
         }
 
+        public void UpdateApplyButtonState(bool hasUnappliedChanges)
+        {
+            if (ApplyButton == null)
+                return;
+
+            ApplyButton.isEnabled = hasUnappliedChanges;
+            ApplyButton.text = hasUnappliedChanges ? "Apply" : "Applied";
+        }
+
         private PanelLayout BuildLayout()
         {
             float rowHeight = _theme.RowHeight;
@@ -295,7 +305,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         private void CreateRestrictionsToggleRow(PanelLayout layout)
         {
             UIPanel row = CreateRowContainer("RestrictionsToggleRow", layout.RowPanelHeight);
-            UIButton toggle = row.AddUIComponent<UIButton>();
+            UIButton toggle = CreateButton(row, true, string.Empty);
             toggle.textScale = _theme.RestrictionsToggleTextScale;
             float height = Mathf.Max(_theme.MinButtonHeight, layout.RowHeight - layout.VerticalPadding * 2f);
             toggle.size = new Vector2(row.width - layout.HorizontalPadding * 2f, height);
@@ -482,8 +492,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         private ToggleButtonWithIconResult CreateToggleButtonWithIcon(ToggleButtonWithIconArgs args)
         {
-            UIButton button = args.RowPanel.AddUIComponent<UIButton>();
-            button.text = args.FallbackText;
+            UIButton button = CreateButton(args.RowPanel, false, args.FallbackText);
             button.textScale = _theme.ToggleTextScale;
             button.size = new Vector2(args.Layout.IconSize, args.Layout.IconSize);
             button.pivot = UIPivotPoint.TopLeft;
@@ -563,8 +572,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (_onApplyChanges == null)
                 return;
 
-            UIButton applyButton = footerRow.AddUIComponent<UIButton>();
-            applyButton.text = "Apply";
+            UIButton applyButton = CreateButton(footerRow,true,"Apply");
             applyButton.textScale = _theme.ApplyButtonTextScale;
             float height = Mathf.Max(_theme.MinButtonHeight, footerRow.height - layout.VerticalPadding * 2f);
             applyButton.size = new Vector2(footerRow.width - layout.HorizontalPadding * 2f, height);
@@ -572,12 +580,29 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             applyButton.relativePosition = new Vector3(
                 layout.HorizontalPadding,
                 (footerRow.height - applyButton.height) * 0.5f);
-            applyButton.atlas = UIView.GetAView().defaultAtlas;
-            applyButton.normalBgSprite = "LevelBarBackground";
-            applyButton.hoveredBgSprite = "LevelBarForeground";
-            applyButton.pressedBgSprite = "LevelBarForeground";
+
+            ApplyButton = applyButton;
 
             applyButton.eventClicked += (_, __) => _onApplyChanges();
+        }
+
+        private static UIButton CreateButton(UIPanel parent,bool useDefaultSprites, string text ="")
+        {
+            UIButton newButton = parent.AddUIComponent<UIButton>();
+            if (!string.IsNullOrEmpty(text))
+                newButton.text = text;
+            newButton.atlas = UIView.GetAView().defaultAtlas;
+            if (useDefaultSprites)
+            {
+                newButton.normalBgSprite = "LevelBarBackground";
+                newButton.hoveredBgSprite = "LevelBarForeground";
+                newButton.pressedBgSprite = "LevelBarForeground";
+                newButton.disabledBgSprite = "LevelBarDisabled";
+            }
+
+            newButton.playAudioEvents = true;
+            newButton.pressedColor = new Color32(210, 210, 210, 255);
+            return newButton;
         }
 
         private float GetRowDisplayValue(ParkingRulesSliderRow row)
