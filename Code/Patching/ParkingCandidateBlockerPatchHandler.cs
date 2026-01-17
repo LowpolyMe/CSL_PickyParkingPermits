@@ -52,7 +52,7 @@ namespace PickyParking.Patching
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.DecisionPipeline, "[Parking] Exception\n" + ex);
+                Log.AlwaysError("[Parking] Exception\n" + ex);
                 return true;
             }
         }
@@ -104,7 +104,7 @@ namespace PickyParking.Patching
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.DecisionPipeline, "[Parking] Prefix exception\n" + ex);
+                Log.AlwaysError("[Parking] Prefix exception\n" + ex);
                 return true;
             }
         }

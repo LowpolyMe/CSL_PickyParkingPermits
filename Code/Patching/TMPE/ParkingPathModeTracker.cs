@@ -380,6 +380,14 @@ namespace PickyParking.Patching.TMPE
             PreUpdateStatusByVehicle.Remove(vehicleId);
         }
 
+        public static void ClearAll()
+        {
+            KnownPathVehicles.Clear();
+            AltPathVehicles.Clear();
+            LastStatusByVehicle.Clear();
+            PreUpdateStatusByVehicle.Clear();
+        }
+
         private static string ReadPathMode(object extDriver)
         {
             try

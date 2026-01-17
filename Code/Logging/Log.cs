@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using PickyParking.Settings;
 using Debug = UnityEngine.Debug;
-
+//Intentionally dropped DebugOutputPanel messages and suppressed most warnings/errors unless verbose logging is enabled. 
 namespace PickyParking.Logging
 {
     public static class Log

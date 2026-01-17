@@ -75,7 +75,7 @@ namespace PickyParking.ModEntry
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn(DebugLogCategory.None, "[Persistence] Failed to apply savegame building rules: " + ex);
+                    Log.AlwaysWarn("[Persistence] Failed to apply savegame building rules: " + ex);
                 }
                 finally
                 {

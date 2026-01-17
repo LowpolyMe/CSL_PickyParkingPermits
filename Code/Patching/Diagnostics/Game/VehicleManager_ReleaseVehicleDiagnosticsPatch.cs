@@ -88,7 +88,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.Enforcement, "[Parking] ReleaseVehicle prefix exception\n" + ex);
+                Log.AlwaysError("[Parking] ReleaseVehicle prefix exception\n" + ex);
             }
         }
 

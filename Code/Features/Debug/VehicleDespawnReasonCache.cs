@@ -73,6 +73,14 @@ namespace PickyParking.Features.Debug
             }
         }
 
+        public static void ClearAll()
+        {
+            lock (_lock)
+            {
+                _reasons.Clear();
+            }
+        }
+
         private static bool IsStale(ReasonEntry entry, uint currentFrame)
         {
             if (currentFrame < entry.Frame)

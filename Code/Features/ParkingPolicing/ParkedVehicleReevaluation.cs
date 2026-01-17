@@ -246,11 +246,25 @@ namespace PickyParking.Features.ParkingPolicing
             while (relocationsThisTick < maxRelocations && _deniedQueue.Count > 0)
             {
                 DeniedParkedVehicle denied = _deniedQueue.Dequeue();
+                if (!_game.TryGetParkedVehicleReevaluationInfo(
+                        denied.ParkedVehicleId,
+                        out uint ownerCitizenId,
+                        out ushort homeId,
+                        out Vector3 parkedPos,
+                        out ushort flags,
+                        out bool ownerRoundTrip,
+                        out bool isStuckCandidate))
+                {
+                    continue;
+                }
+
+                if (ownerCitizenId != denied.OwnerCitizenId)
+                    continue;
                 bool moved = _tmpe.TryMoveParkedVehicleWithConfigDistance(
                     parkedVehicleId: denied.ParkedVehicleId,
                     ownerCitizenId: denied.OwnerCitizenId,
-                    homeId: denied.HomeId,
-                    refPos: denied.ParkedPos
+                    homeId: homeId,
+                    refPos: parkedPos
                 );
 
                 if (!moved)

@@ -155,7 +155,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.Tmpe, "[TMPE] StartPassengerCarPathFind prefix exception\n" + ex);
+                Log.AlwaysError("[TMPE] StartPassengerCarPathFind prefix exception\n" + ex);
             }
         }
 

@@ -288,7 +288,7 @@ namespace PickyParking.Features.ParkingPolicing
         private void LogOffThread(string caller)
         {
             if (Interlocked.Exchange(ref _offThreadLogged, 1) == 0)
-                Log.Warn(DebugLogCategory.Tmpe, "[Threading] Off-simulation-thread access blocked: " + (caller ?? "UNKNOWN"));
+                Log.AlwaysWarn("[Threading] Off-simulation-thread access blocked: " + (caller ?? "UNKNOWN"));
         }
 
     }

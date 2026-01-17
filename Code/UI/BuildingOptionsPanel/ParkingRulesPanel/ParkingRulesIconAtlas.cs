@@ -30,7 +30,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             Texture2D texture = ModResourceLoader.LoadTexture(ParkingRulesIconAtlasUiValues.TextureFileName);
             if (texture == null)
             {
-                Log.Warn(DebugLogCategory.RuleUi, "[ParkingRulesPanel] IconsAtlas texture not found in mod Resources.");
+                Log.AlwaysWarn("[ParkingRulesPanel] IconsAtlas texture not found in mod Resources.");
                 return null;
             }
 

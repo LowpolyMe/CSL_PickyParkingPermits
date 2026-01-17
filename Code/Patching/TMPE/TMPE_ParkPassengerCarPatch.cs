@@ -98,23 +98,23 @@ namespace PickyParking.Patching.TMPE
             }
             catch (ArgumentException ex)
             {
-                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
             }
             catch (FieldAccessException ex)
             {
-                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
             }
             catch (InvalidOperationException ex)
             {
-                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
             }
             catch (TargetException ex)
             {
-                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
             }
             catch (TargetInvocationException ex)
             {
-                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
             }
         }
     }

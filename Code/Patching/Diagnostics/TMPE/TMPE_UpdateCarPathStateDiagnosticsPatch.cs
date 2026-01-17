@@ -102,7 +102,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState diagnostics prefix exception\n" + ex);
+                Log.AlwaysError("[TMPE] UpdateCarPathState diagnostics prefix exception\n" + ex);
             }
         }
 
@@ -120,7 +120,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState diagnostics postfix exception\n" + ex);
+                Log.AlwaysError("[TMPE] UpdateCarPathState diagnostics postfix exception\n" + ex);
             }
         }
     }

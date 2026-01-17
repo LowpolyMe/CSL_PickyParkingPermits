@@ -17,14 +17,14 @@ namespace PickyParking.Patching.TMPE
             var type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Error(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen patch.");
+                Log.AlwaysError("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen patch.");
                 return;
             }
 
             MethodInfo method = FindTargetMethod(type);
             if (method == null)
             {
-                Log.Error(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpaceForCitizen overload not found; skipping patch.");
+                Log.AlwaysError("[TMPE] FindParkingSpaceForCitizen overload not found; skipping patch.");
                 return;
             }
 

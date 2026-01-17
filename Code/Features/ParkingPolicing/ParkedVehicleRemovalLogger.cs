@@ -143,7 +143,7 @@ namespace PickyParking.Features.ParkingPolicing
             }
             catch (Exception ex)
             {
-                Log.Error(DebugLogCategory.Enforcement, "[Forensics] Parked vehicle removal logging failed\n" + ex);
+                Log.AlwaysError("[Forensics] Parked vehicle removal logging failed\n" + ex);
             }
         }
     }

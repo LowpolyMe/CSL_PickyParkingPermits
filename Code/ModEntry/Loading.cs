@@ -12,6 +12,7 @@ using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
 using PickyParking.UI.BuildingOptionsPanel.OverlayRendering;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
+using PickyParking.Patching.Diagnostics.TMPE;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
 
@@ -112,6 +113,9 @@ namespace PickyParking.ModEntry
             ParkingRulesIconAtlas.ClearCache();
             ParkingSearchContext.ClearAll();
             ParkingStatsCounter.ResetAll();
+            VehicleDespawnReasonCache.ClearAll();
+            ParkingPathModeTracker.ClearAll();
+            TMPE_FindParkingSpaceForCitizenDiagnosticsPatch.ClearAll();
             int unloadId = ++_unloadSequence;
             Log.Info(DebugLogCategory.None, "[Runtime] Unload started id=" + unloadId);
             ParkingSearchContextPatchHandler.ClearCaches();

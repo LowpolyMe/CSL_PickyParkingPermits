@@ -31,6 +31,23 @@ namespace PickyParking.Patching.Diagnostics.TMPE
         private static Type _extInstanceType;
         private static readonly HashSet<Type> _extInstanceFieldWarned = new HashSet<Type>();
 
+        public static void ClearAll()
+        {
+            _failCount = 0;
+            _failCandidatesZero = 0;
+            _failAllDenied = 0;
+            _failAllowedButFailed = 0;
+            _failNonTouristCandidatesZero = 0;
+            _failNonTouristAllDenied = 0;
+            _nextSummaryTime = 0f;
+            _lastFailedAttemptsByInstance.Clear();
+            _extInstanceIdField = null;
+            _extFailedAttemptsField = null;
+            _extPathModeField = null;
+            _extInstanceType = null;
+            _extInstanceFieldWarned.Clear();
+        }
+
         public static void Apply(Harmony harmony)
         {
             var type = Type.GetType(TargetTypeName, throwOnError: false);

@@ -4,7 +4,6 @@ using System.Reflection;
 using ColossalFramework.Plugins;
 using UnityEngine;
 using PickyParking.Logging;
-using PickyParking.Settings;
 
 namespace PickyParking.UI.ModResources
 {
@@ -21,7 +20,7 @@ namespace PickyParking.UI.ModResources
             string path = TryGetResourcePath(fileName);
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
-                Log.Warn(DebugLogCategory.RuleUi, "[Resources] Missing texture file: " + fileName);
+                Log.AlwaysWarn("[Resources] Missing texture file: " + fileName);
                 return null;
             }
 
@@ -35,7 +34,7 @@ namespace PickyParking.UI.ModResources
             }
             catch (Exception ex)
             {
-                Log.Warn(DebugLogCategory.RuleUi, "[Resources] Failed to load texture '" + fileName + "': " + ex.Message);
+                Log.AlwaysWarn("[Resources] Failed to load texture '" + fileName + "': " + ex.Message);
                 return null;
             }
         }

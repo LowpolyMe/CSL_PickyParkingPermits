@@ -30,7 +30,7 @@ namespace PickyParking.Settings
             }
             catch (Exception ex)
             {
-                Log.WarnOnce(DebugLogCategory.None, "Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
+                Log.AlwaysWarnOnce("Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
                 return new ModSettings();
             }
         }
