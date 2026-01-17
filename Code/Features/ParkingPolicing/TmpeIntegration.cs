@@ -4,16 +4,12 @@ using System.Threading;
 using ColossalFramework;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
-using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingRules;
 using UnityEngine;
 using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
     public sealed class TmpeIntegration
     {
         private readonly FeatureGate _isFeatureActive;

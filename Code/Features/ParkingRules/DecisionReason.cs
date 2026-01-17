@@ -1,10 +1,6 @@
-using System;
 
 namespace PickyParking.Features.ParkingRules
 {
-    
-    
-    
     public enum DecisionReason
     {
         Allowed_Unrestricted = 0,
