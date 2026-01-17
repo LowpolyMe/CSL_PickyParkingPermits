@@ -154,14 +154,20 @@ namespace PickyParking.Settings
         {
             bool changed = false;
 
-            int evals = ClampInt(settings.ReevaluationMaxEvaluationsPerTick, 1, 4096);
+            int evals = settings.ReevaluationMaxEvaluationsPerTick <= 0
+                ? 256
+                : settings.ReevaluationMaxEvaluationsPerTick;
+            evals = ClampInt(evals, 1, 4096);
             if (evals != settings.ReevaluationMaxEvaluationsPerTick)
             {
                 settings.ReevaluationMaxEvaluationsPerTick = evals;
                 changed = true;
             }
 
-            int relocations = ClampInt(settings.ReevaluationMaxRelocationsPerTick, 1, 512);
+            int relocations = settings.ReevaluationMaxRelocationsPerTick <= 0
+                ? 16
+                : settings.ReevaluationMaxRelocationsPerTick;
+            relocations = ClampInt(relocations, 1, 512);
             if (relocations != settings.ReevaluationMaxRelocationsPerTick)
             {
                 settings.ReevaluationMaxRelocationsPerTick = relocations;

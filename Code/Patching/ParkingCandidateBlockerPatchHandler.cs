@@ -21,6 +21,7 @@ namespace PickyParking.Patching
         {
             try
             {
+                // Design choice: without a parking search context, we intentionally block passenger-car candidates.
                 if (!ParkingSearchContext.HasContext &&
                     !ParkingDebugSettings.DisableParkingEnforcement &&
                     IsPassengerCarInfo(vehicleInfo))
