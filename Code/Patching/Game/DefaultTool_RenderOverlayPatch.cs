@@ -1,8 +1,8 @@
 using System.Reflection;
-using ColossalFramework;
 using HarmonyLib;
 using PickyParking.Logging;
 using PickyParking.UI.BuildingOptionsPanel.OverlayRendering;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.Game
 {
@@ -15,7 +15,7 @@ namespace PickyParking.Patching.Game
             MethodInfo method = AccessTools.Method(typeof(DefaultTool), TargetMethodName, new[] { typeof(RenderManager.CameraInfo) });
             if (method == null)
             {
-                Log.Info("[Overlay] DefaultTool.RenderOverlay not found; skipping patch.");
+                Log.Info(DebugLogCategory.RuleUi, "[Overlay] DefaultTool.RenderOverlay not found; skipping patch.");
                 return;
             }
 
@@ -23,7 +23,7 @@ namespace PickyParking.Patching.Game
                 method,
                 postfix: new HarmonyMethod(typeof(DefaultTool_RenderOverlayPatch), nameof(Postfix)));
 
-            Log.Info("[Overlay] Patched DefaultTool.RenderOverlay.");
+            Log.Info(DebugLogCategory.RuleUi, "[Overlay] Patched DefaultTool.RenderOverlay.");
         }
 
         private static void Postfix(RenderManager.CameraInfo cameraInfo)

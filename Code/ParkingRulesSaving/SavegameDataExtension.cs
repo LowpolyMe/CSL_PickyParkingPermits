@@ -2,6 +2,7 @@ using ICities;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.ModEntry;
+using PickyParking.Settings;
 
 namespace PickyParking.ParkingRulesSaving
 {
@@ -18,7 +19,8 @@ namespace PickyParking.ParkingRulesSaving
             var data = serializableDataManager.LoadData(SavegameRulesStorage.DataId);
             LevelBootstrap.Context.RulesBytes = data;
 
-            Log.Info($"[Persistence] Loaded rules bytes={(data?.Length ?? 0)}");
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                Log.Info(DebugLogCategory.RuleUi, $"[Persistence] Loaded rules bytes={(data?.Length ?? 0)}");
         }
 
         public override void OnSaveData()
@@ -26,7 +28,8 @@ namespace PickyParking.ParkingRulesSaving
             var runtime = ModRuntime.Current;
             if (runtime == null)
             {
-                Log.Info("[Persistence] ModRuntime.Current is null");
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info(DebugLogCategory.RuleUi, "[Persistence] ModRuntime.Current is null");
                 return;
             }
 

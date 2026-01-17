@@ -2,17 +2,10 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 namespace PickyParking.Patching.TMPE
 {
-    
-    
-    
-    
-    
-    
-    
-    
     internal static class TMPE_TryMoveParkedVehiclePatch
     {
         private const string TargetTypeName = "TrafficManager.Manager.Impl.AdvancedParkingManager, TrafficManager";
@@ -23,14 +16,14 @@ namespace PickyParking.Patching.TMPE
             Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info("[TMPE] AdvancedParkingManager not found; skipping TryMoveParkedVehicle patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping TryMoveParkedVehicle patch.");
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                Log.Info("[TMPE] TryMoveParkedVehicle not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] TryMoveParkedVehicle not found; skipping patch.");
                 return;
             }
 
@@ -40,12 +33,12 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_TryMoveParkedVehiclePatch), nameof(Finalizer))
             );
 
-            Log.Info("[TMPE] Patched TryMoveParkedVehicle (context injection).");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched TryMoveParkedVehicle (context injection).");
         }
 
-        private static void Prefix(MethodBase __originalMethod, object[] __args, ref bool __state)
+        private static void Prefix([HarmonyArgument(1)] ref VehicleParked parkedVehicle, ref bool __state)
         {
-            ParkingSearchContextPatchHandler.BeginTryMoveParkedVehicle(__originalMethod, __args, ref __state);
+            ParkingSearchContextPatchHandler.BeginTryMoveParkedVehicle(ref parkedVehicle, ref __state);
         }
 
         private static Exception Finalizer(Exception __exception, bool __state)

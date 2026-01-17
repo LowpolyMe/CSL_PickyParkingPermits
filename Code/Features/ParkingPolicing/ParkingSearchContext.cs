@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 
 namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
-    
     public static class ParkingSearchContext
     {
         private static int _wrongThreadLogged;
@@ -125,18 +122,24 @@ namespace PickyParking.Features.ParkingPolicing
         {
             var stack = GetStackOrNull(createIfMissing: true, requireSimulationThread: true, caller: "Push");
             if (stack == null) return;
-            int startDepth = stack.Count + 1;
 
+
+            ParkingSearchEpisodeDebugHelper episode = null;
             
-            var episode = new ParkingSearchEpisodeDebugHelper(
-                vehicleId,
-                citizenId,
-                isVisitor: false,
-                source: source,
-                startDepth: startDepth
-            );
+            if (EnableEpisodeLogs && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+            {
+                int startDepth = stack.Count + 1;
+                episode = new ParkingSearchEpisodeDebugHelper(
+                    vehicleId,
+                    citizenId,
+                    isVisitor: false,
+                    source: source,
+                    startDepth: startDepth
+                );
+            }
 
             stack.Push(new Frame(vehicleId, citizenId, source, episode));
+            ParkingStatsCounter.IncrementContextPush(vehicleId, citizenId, source);
         }
 
         public static void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName, string buildingName)
@@ -158,6 +161,7 @@ namespace PickyParking.Features.ParkingPolicing
                 minCandidates: LogMinCandidates,
                 minDurationMs: LogMinDurationMs
             );
+            ParkingStatsCounter.IncrementContextPop();
         }
 
         
@@ -189,7 +193,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
             {
-                Log.Warn("[Runtime] ParkingSearchContext accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                Log.AlwaysWarn("[Threading] ParkingSearchContext accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
             }
 
             return false;

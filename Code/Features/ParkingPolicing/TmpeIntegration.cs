@@ -1,11 +1,13 @@
 using System;
 using System.Reflection;
+using System.Threading;
 using ColossalFramework;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingRules;
 using UnityEngine;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -29,6 +31,7 @@ namespace PickyParking.Features.ParkingPolicing
         private Delegate _findParkingSpacePropDelegate;
         private VehicleInfo _defaultPassengerCarInfo;
         private bool _defaultPassengerCarInfoSearched;
+        private int _offThreadLogged;
 
         public TmpeIntegration(FeatureGate featureGate, ParkingPermissionEvaluator evaluator)
         {
@@ -143,12 +146,8 @@ namespace PickyParking.Features.ParkingPolicing
                 return !result.Allowed;
             }
             
-            if (Log.IsVerboseEnabled)
-            {
-                Log.Info(
-                    $"[Parking] No context candidateBuildingId={candidateBuildingId}"
-                );
-            }
+            if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+                Log.Info(DebugLogCategory.DecisionPipeline, $"[Decision] No context candidateBuildingId={candidateBuildingId}");
 
             return false;
         }
@@ -205,6 +204,11 @@ namespace PickyParking.Features.ParkingPolicing
         {
             findDelegate = null;
             if (!_isFeatureActive.IsActive) return false;
+            if (!SimThread.IsSimulationThread())
+            {
+                LogOffThread("TryGetFindParkingSpacePropDelegate");
+                return false;
+            }
 
             if (!EnsureFindParkingSpacePropDelegate())
                 return false;
@@ -236,8 +240,8 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             info = _defaultPassengerCarInfo;
-            if (info == null && Log.IsVerboseEnabled)
-                Log.Info("[TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
+            if (info == null && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+                Log.Info(DebugLogCategory.Tmpe, "[Integration:TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
 
             return info != null;
         }
@@ -245,6 +249,11 @@ namespace PickyParking.Features.ParkingPolicing
         public bool TryMoveParkedVehicleWithConfigDistance(ushort parkedVehicleId, uint ownerCitizenId, ushort homeId, Vector3 refPos)
         {
             if (!_isFeatureActive.IsActive) return false;
+            if (!SimThread.IsSimulationThread())
+            {
+                LogOffThread("TryMoveParkedVehicleWithConfigDistance");
+                return false;
+            }
             if (parkedVehicleId == 0 || ownerCitizenId == 0) return false;
             if (!EnsureRelocationReflection()) return false;
 
@@ -276,6 +285,11 @@ namespace PickyParking.Features.ParkingPolicing
             }
         }
 
+        private void LogOffThread(string caller)
+        {
+            if (Interlocked.Exchange(ref _offThreadLogged, 1) == 0)
+                Log.AlwaysWarn("[Threading] Off-simulation-thread access blocked: " + (caller ?? "UNKNOWN"));
+        }
 
     }
 }

@@ -3,6 +3,7 @@ using ColossalFramework;
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.Features.Debug;
+using PickyParking.Settings;
 
 namespace PickyParking.GameAdapters
 {
@@ -87,8 +88,8 @@ namespace PickyParking.GameAdapters
 
             if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
-                    Log.Info($"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
+                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
                 return false;
             }
 
@@ -96,8 +97,8 @@ namespace PickyParking.GameAdapters
             VehicleAI ai = info?.m_vehicleAI;
             if (ai == null)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
-                    Log.Info($"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
+                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
                 return false;
             }
 
@@ -105,8 +106,8 @@ namespace PickyParking.GameAdapters
             uint citizenId = owner.Citizen;
             if (citizenId == 0)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
-                    Log.Info(
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
+                    Log.Info(DebugLogCategory.LotInspection,
                         "[Parking] TryGetDriverInfo failed: owner citizenId=0 " +
                         $"vehicleId={vehicleId} citizenUnits={vehicle.m_citizenUnits}"
                     );
@@ -133,8 +134,8 @@ namespace PickyParking.GameAdapters
             context = default;
             if (citizenId == 0)
             {
-                if (Log.IsVerboseEnabled && ParkingDebugSettings.EnableGameAccessLogs)
-                    Log.Info("[Parking] TryGetCitizenInfo failed: citizenId=0");
+                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
+                    Log.Info(DebugLogCategory.LotInspection, "[Parking] TryGetCitizenInfo failed: citizenId=0");
                 return false;
             }
 
@@ -164,6 +165,30 @@ namespace PickyParking.GameAdapters
                 out ownerCitizenId,
                 out homeId,
                 out position);
+        }
+
+        public bool TryGetParkedVehicleReevaluationInfo(
+            ushort parkedVehicleId,
+            out uint ownerCitizenId,
+            out ushort homeId,
+            out Vector3 position,
+            out ushort flags,
+            out bool ownerRoundTrip,
+            out bool isStuckCandidate)
+        {
+            return _parkedVehicleQueries.TryGetParkedVehicleReevaluationInfo(
+                parkedVehicleId,
+                out ownerCitizenId,
+                out homeId,
+                out position,
+                out flags,
+                out ownerRoundTrip,
+                out isStuckCandidate);
+        }
+
+        public bool TryFinalizeStuckOwnedParkedVehicle(ushort parkedVehicleId)
+        {
+            return _parkedVehicleQueries.TryFinalizeStuckOwnedParkedVehicle(parkedVehicleId);
         }
 
         public bool TryGetApproxParkingArea(ushort buildingId, out Vector3 center, out float radius)
@@ -224,3 +249,4 @@ namespace PickyParking.GameAdapters
         }
     }
 }
+

@@ -38,6 +38,21 @@ namespace PickyParking.UI.ModOptions
             public const float Max = 1f;
             public const float Step = 0.01f;
         }
+
+        internal static class ReevaluationSliders
+        {
+            public const float MaxEvaluationsMin = 1f;
+            public const float MaxEvaluationsMax = 2048f;
+            public const float MaxEvaluationsStep = 1f;
+
+            public const float MaxRelocationsMin = 1f;
+            public const float MaxRelocationsMax = 256f;
+            public const float MaxRelocationsStep = 1f;
+
+            public const float BuildingsPerDayMin = 0f;
+            public const float BuildingsPerDayMax = 512f;
+            public const float BuildingsPerDayStep = 1f;
+        }
     }
 }
 

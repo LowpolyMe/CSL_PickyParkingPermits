@@ -12,16 +12,13 @@ using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
 using PickyParking.UI.BuildingOptionsPanel.OverlayRendering;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
+using PickyParking.Patching.Diagnostics.TMPE;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
 
 namespace PickyParking.ModEntry
 {
-    
-    
-    
-    
-    
+//TODO On unload, clear static caches (VehicleDespawnReasonCache, stats counters, etc.) on the correct thread.
     public sealed class Loading : LoadingExtensionBase
     {
         private PatchSetup _patches;
@@ -33,6 +30,7 @@ namespace PickyParking.ModEntry
         public override void OnCreated(ILoading loading)
         {
             base.OnCreated(loading);
+            Log.InitializeMainThread();
             LogAssemblyVersionLoadedOnce();
         }
 
@@ -60,7 +58,8 @@ namespace PickyParking.ModEntry
             OverlayRenderer.SetServices(_uiServices);
             CreateRuntimeObjects(mode);
 
-            Log.Info("[Parking] Loaded.");
+            Log.MarkDebugPanelReady();
+            Log.Info(DebugLogCategory.None, "[Parking] Loaded.");
         }
 
         public override void OnLevelUnloading()
@@ -68,13 +67,15 @@ namespace PickyParking.ModEntry
             base.OnLevelUnloading();
 
             Unload(clearLevelContext: true);
-            Log.Info("[Parking] Unloaded.");
+            Log.Info(DebugLogCategory.None, "[Parking] Unloaded.");
+            Log.MarkDebugPanelNotReady();
         }
 
         public override void OnReleased()
         {
             base.OnReleased();
             Unload(clearLevelContext: true);
+            Log.MarkDebugPanelNotReady();
         }
 
         private void CreateRuntimeObjects(LoadMode mode)
@@ -88,7 +89,9 @@ namespace PickyParking.ModEntry
             _runtimeObject = new GameObject("PickyParking.Runtime");
             UnityEngine.Object.DontDestroyOnLoad(_runtimeObject);
 
+            _runtimeObject.AddComponent<Logging.LogFlushPump>();
             _runtimeObject.AddComponent<DebugHotkeyListener>();
+            _runtimeObject.AddComponent<ParkingStatsTicker>();
             var attachPanel = _runtimeObject.AddComponent<AttachPanelToBuildingInfo>();
             attachPanel.Initialize(_uiServices);
         }
@@ -109,8 +112,12 @@ namespace PickyParking.ModEntry
             _uiServices = null;
             ParkingRulesIconAtlas.ClearCache();
             ParkingSearchContext.ClearAll();
+            ParkingStatsCounter.ResetAll();
+            VehicleDespawnReasonCache.ClearAll();
+            ParkingPathModeTracker.ClearAll();
+            TMPE_FindParkingSpaceForCitizenDiagnosticsPatch.ClearAll();
             int unloadId = ++_unloadSequence;
-            Log.Info("[Runtime] Unload started id=" + unloadId);
+            Log.Info(DebugLogCategory.None, "[Runtime] Unload started id=" + unloadId);
             ParkingSearchContextPatchHandler.ClearCaches();
             if (clearLevelContext)
             {
@@ -125,35 +132,34 @@ namespace PickyParking.ModEntry
 
             ModRuntime.ClearCurrent();
             Log.SetVerboseEnabled(false);
-            Log.SetUiDebugEnabled(false);
-            Log.SetTmpeDebugEnabled(false);
-            Log.SetPermissionDebugEnabled(false);
+            Log.SetEnabledDebugCategories(DebugLogCategory.None);
+            
+            //TODO reset all ParkingDebugSettings.* fields
             ParkingSearchContext.EnableEpisodeLogs = false;
             ParkingSearchContext.LogMinCandidates = ParkingSearchContext.DefaultLogMinCandidates;
             ParkingSearchContext.LogMinDurationMs = ParkingSearchContext.DefaultLogMinDurationMs;
-            ParkingCandidateBlocker.EnableCandidateBlockerLogs = false;
-            ParkingDebugSettings.EnableCreateParkedVehicleLogs = false;
-            ParkingDebugSettings.EnableGameAccessLogs = false;
-            ParkingDebugSettings.EnableBuildingDebugLogs = false;
+            ParkingDebugSettings.EnableLotInspectionLogs = false;
+            ParkingDebugSettings.DisableTMPECandidateBlocking = false;
+            ParkingDebugSettings.DisableClearKnownParkingOnDenied = false;
             ParkingDebugSettings.BuildingDebugId = 0;
 
             SimThread.Dispatch(() =>
             {
                 if (_unloadSequence != unloadId)
                 {
-                    Log.Info("[Runtime] Sim-thread cleanup skipped (newer unload id=" + _unloadSequence + ")");
+                    Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup skipped (newer unload id=" + _unloadSequence + ")");
                     return;
                 }
 
                 if (ModRuntime.Current != null)
                 {
-                    Log.Info("[Runtime] Sim-thread cleanup skipped (new runtime active)");
+                    Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup skipped (new runtime active)");
                     return;
                 }
 
                 ParkingSearchContext.ClearAll();
                 ParkingCandidateBlocker.ClearThreadStatic();
-                Log.Info("[Runtime] Sim-thread cleanup complete id=" + unloadId);
+                Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup complete id=" + unloadId);
             });
         }
 
@@ -205,7 +211,7 @@ namespace PickyParking.ModEntry
             if (previousVersions.Length == 0)
                 previousVersions = "<none>";
 
-            Log.Info(
+            Log.Info(DebugLogCategory.None,
                 "Assembly loaded. Current=" + currentVersion +
                 " Previous=" + previousText +
                 " AllPrevious=[" + previousVersions + "]"

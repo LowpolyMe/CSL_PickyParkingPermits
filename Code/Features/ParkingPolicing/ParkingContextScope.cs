@@ -5,20 +5,22 @@ namespace PickyParking.Features.ParkingPolicing
     
     
     
-    public struct ParkingContextScope : IDisposable
+    public sealed class ParkingContextScope : IDisposable
     {
-        private readonly bool _active;
+        private bool _disposed;
 
         public ParkingContextScope(ushort vehicleId, uint citizenId, string source)
         {
-            _active = true;
             ParkingSearchContext.Push(vehicleId, citizenId, source);
         }
 
         public void Dispose()
         {
-            if (_active)
-                ParkingSearchContext.Pop();
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            ParkingSearchContext.Pop();
         }
     }
 }

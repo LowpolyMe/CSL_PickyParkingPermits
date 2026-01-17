@@ -16,7 +16,9 @@ namespace PickyParking.UI.ModOptions
 
             CustomizationOptions.Build(helper, settings, saveSettings, services);
             CreateSupportedPrefabList(helper, settings, saveSettings, services);
+            AdvancedOptions.Build(helper, settings, saveSettings, services);
             LoggingOptions.Build(helper, settings, saveSettings, services);
+            BuildResetOptions(helper, services);
         }
 
         private static void CreateSupportedPrefabList(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
@@ -33,6 +35,22 @@ namespace PickyParking.UI.ModOptions
             var listPanel = groupPanel.AddUIComponent<SupportedPrefabListPanel>();
             listPanel.Initialize(services);
             listPanel.Bind(settings, saveSettings);
+        }
+
+        private static void BuildResetOptions(UIHelperBase helper, UiServices services)
+        {
+            UIHelperBase resetGroup = helper.AddGroup("Settings reset");
+            resetGroup.AddButton("Reset settings (delete file)", () =>
+            {
+                var storage = new ModSettingsStorage();
+                storage.ResetToDefaults();
+                if (services != null)
+                {
+                    services.ReloadSettings("OptionsUI: Reset settings");
+                    if (services.Settings != null)
+                        services.ApplyLoggingSettings(services.Settings);
+                }
+            });
         }
     }
 }

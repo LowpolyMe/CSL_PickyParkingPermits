@@ -20,7 +20,7 @@ namespace PickyParking.UI.ModResources
             string path = TryGetResourcePath(fileName);
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
-                Log.Warn("[Resources] Missing texture file: " + fileName);
+                Log.AlwaysWarn("[Resources] Missing texture file: " + fileName);
                 return null;
             }
 
@@ -34,7 +34,7 @@ namespace PickyParking.UI.ModResources
             }
             catch (Exception ex)
             {
-                Log.Warn("[Resources] Failed to load texture '" + fileName + "': " + ex.Message);
+                Log.AlwaysWarn("[Resources] Failed to load texture '" + fileName + "': " + ex.Message);
                 return null;
             }
         }

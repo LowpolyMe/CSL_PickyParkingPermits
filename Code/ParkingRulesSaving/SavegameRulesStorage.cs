@@ -5,11 +5,10 @@ using ColossalFramework;
 using ICities;
 using PickyParking.Logging;
 using PickyParking.Features.ParkingRules;
+using PickyParking.Settings;
 
 namespace PickyParking.ParkingRulesSaving
 {
-    
-    
     
     
     public sealed class SavegameRulesStorage
@@ -32,9 +31,8 @@ namespace PickyParking.ParkingRulesSaving
                         var entries = new List<KeyValuePair<ushort, ParkingRulesConfigDefinition>>(repository.Enumerate());
                         writer.Write(entries.Count);
 
-                        for (int i = 0; i < entries.Count; i++)
+                        foreach (KeyValuePair<ushort, ParkingRulesConfigDefinition> kv in entries)
                         {
-                            KeyValuePair<ushort, ParkingRulesConfigDefinition> kv = entries[i];
                             writer.Write(kv.Key);
                             kv.Value.Write(writer);
                         }
@@ -45,7 +43,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to save rules: " + ex);
+                Log.AlwaysWarn("[Persistence] Failed to save rules: " + ex);
             }
         }
 
@@ -58,7 +56,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to load rules: " + ex);
+                Log.AlwaysWarn("[Persistence] Failed to load rules: " + ex);
             }
         }
 
@@ -101,12 +99,11 @@ namespace PickyParking.ParkingRulesSaving
                                 break;
 
                             default:
-                                Log.Warn("[Persistence] Unknown rules version: " + version + " (skipping load)");
+                                Log.AlwaysWarn("[Persistence] Unknown rules version: " + version + " (skipping load)");
                                 return;
                         }
 
-                        bool normalized;
-                        rule = ParkingRulesLimits.ClampRule(rule, out normalized);
+                        rule = ParkingRulesLimits.ClampRule(rule, out bool normalized);
                         if (normalized)
                             normalizedCount++;
                         repository.Set(buildingId, rule);
@@ -115,12 +112,12 @@ namespace PickyParking.ParkingRulesSaving
 
                 PruneInvalidEntries(repository);
 
-                if (Log.IsVerboseEnabled)
-                    Log.Info("[Persistence] Normalized rules: " + normalizedCount);
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info(DebugLogCategory.RuleUi, "[Persistence] Normalized rules: " + normalizedCount);
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to load rules from bytes: " + ex);
+                Log.AlwaysWarn("[Persistence] Failed to load rules from bytes: " + ex);
             }
         }
 
@@ -132,7 +129,7 @@ namespace PickyParking.ParkingRulesSaving
 
             try
             {
-                var bm = Singleton<BuildingManager>.instance;
+                BuildingManager bm = Singleton<BuildingManager>.instance;
                 int maxSize = (int)bm.m_buildings.m_size;
 
                 foreach (var kvp in repository.Enumerate())
@@ -151,19 +148,20 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.Warn("[Persistence] Failed to prune invalid rule entries: " + ex);
+                Log.AlwaysWarn("[Persistence] Failed to prune invalid rule entries: " + ex);
                 return;
             }
 
             for (int i = 0; i < toRemove.Count; i++)
                 repository.Remove(toRemove[i]);
 
-            if (Log.IsVerboseEnabled)
-                Log.Info("[Persistence] Pruned invalid rules: " + toRemove.Count);
+            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                Log.Info(DebugLogCategory.RuleUi, "[Persistence] Pruned invalid rules: " + toRemove.Count);
         }
 
     }
 }
+
 
 
 

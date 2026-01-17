@@ -3,6 +3,7 @@ using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using PickyParking.Logging;
+using PickyParking.Settings;
 
 
 namespace PickyParking.Patching.TMPE
@@ -16,14 +17,14 @@ namespace PickyParking.Patching.TMPE
             var type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info("[TMPE] AdvancedParkingManager not found; skipping TrySpawnParkedPassengerCar patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping TrySpawnParkedPassengerCar patch.");
                 return;
             }
 
             var method = FindTrySpawnParkedPassengerCar(type);
             if (method == null)
             {
-                Log.Info("[TMPE] TrySpawnParkedPassengerCar overload not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] TrySpawnParkedPassengerCar overload not found; skipping patch.");
                 return;
             }
 
@@ -33,7 +34,7 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_TrySpawnParkedPassengerCarPatch), nameof(Finalizer))
             );
 
-            Log.Info("[TMPE] Patched TrySpawnParkedPassengerCar (context push/pop).");
+            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched TrySpawnParkedPassengerCar (context push/pop).");
         }
 
         private static MethodInfo FindTrySpawnParkedPassengerCar(Type advancedParkingManagerType)

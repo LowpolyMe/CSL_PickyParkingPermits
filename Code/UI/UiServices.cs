@@ -25,6 +25,8 @@ namespace PickyParking.UI
         }
 
         private ModRuntime Runtime => _runtimeAccessor != null ? _runtimeAccessor() : null;
+        private ModSettingsController RuntimeSettingsController => Runtime != null ? Runtime.SettingsController : null;
+        public bool HasRuntime => Runtime != null;
 
         public bool IsFeatureActive => Runtime != null && Runtime.FeatureGate.IsActive;
         public UiGameQueries Game { get; }
@@ -32,14 +34,15 @@ namespace PickyParking.UI
         public ParkingRulesConfigRegistry ParkingRulesConfigRegistry => Runtime != null ? Runtime.ParkingRulesConfigRegistry : null;
         public ParkingRulePreviewState ParkingRulePreviewState => Runtime != null ? Runtime.ParkingRulePreviewState : null;
         public SupportedParkingLotRegistry SupportedParkingLotRegistry => Runtime != null ? Runtime.SupportedParkingLotRegistry : null;
-        public ModSettingsController SettingsController => _settingsController;
-        public ModSettings Settings => _settingsController != null ? _settingsController.Current : null;
+        public ModSettingsController SettingsController => RuntimeSettingsController ?? _settingsController;
+        public ModSettings Settings => SettingsController != null ? SettingsController.Current : null;
 
         public void ReloadSettings(string reason)
         {
-            if (_settingsController == null || _settingsController.Current == null)
+            var controller = SettingsController;
+            if (controller == null || controller.Current == null)
                 return;
-            _settingsController.Reload(reason);
+            controller.Reload(reason);
         }
 
         public void ApplyLoggingSettings(ModSettings settings)

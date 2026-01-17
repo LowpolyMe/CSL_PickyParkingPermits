@@ -5,6 +5,7 @@ using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing.Runtime;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -15,7 +16,7 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfMatchesLot(ushort parkedVehicleId, ushort buildingId, string source)
         {
-            if (!ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (!Log.IsEnforcementDebugEnabled || !ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
                 return;
 
             float lotDistSqr = 0f;
@@ -28,7 +29,9 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfNearDebugLot(ushort parkedVehicleId, string source)
         {
-            if (!ParkingDebugSettings.EnableBuildingDebugLogs || ParkingDebugSettings.BuildingDebugId == 0)
+            if (!Log.IsEnforcementDebugEnabled ||
+                !ParkingDebugSettings.EnableLotInspectionLogs ||
+                ParkingDebugSettings.BuildingDebugId == 0)
                 return;
 
             if (!TryGetParkedPosition(parkedVehicleId, out var pos))
@@ -65,7 +68,9 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             List<Vector3> spaces = GetSpacePositions();
-            if (!ParkingDebugSettings.EnableBuildingDebugLogs || ParkingDebugSettings.BuildingDebugId == 0)
+            if (!Log.IsEnforcementDebugEnabled ||
+                !ParkingDebugSettings.EnableLotInspectionLogs ||
+                ParkingDebugSettings.BuildingDebugId == 0)
                 return false;
             if (!context.GameAccess.TryCollectParkingSpacePositions(ParkingDebugSettings.BuildingDebugId, spaces))
                 return false;
@@ -126,8 +131,8 @@ namespace PickyParking.Features.ParkingPolicing
                     citizenFlags = citizen.m_flags.ToString();
                 }
 
-                Log.Warn(
-                    "[Parking] Parked vehicle removed " +
+                Log.Warn(DebugLogCategory.Enforcement,
+                    "[Forensics] Parked vehicle removed " +
                     $"source={source} buildingId={buildingId} parkedId={parkedVehicleId} " +
                     $"flags={pv.m_flags} prefab={prefabName} ownerCitizen={ownerCitizenId} " +
                     $"ownerInstance={ownerInstance} homeId={homeId} workId={workId} " +
@@ -138,8 +143,10 @@ namespace PickyParking.Features.ParkingPolicing
             }
             catch (Exception ex)
             {
-                Log.Error("[Parking] Parked vehicle removal logging failed\n" + ex);
+                Log.AlwaysError("[Forensics] Parked vehicle removal logging failed\n" + ex);
             }
         }
     }
 }
+
+

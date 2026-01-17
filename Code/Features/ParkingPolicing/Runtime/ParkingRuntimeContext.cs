@@ -59,7 +59,7 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
             if (_missingLogged) return null;
 
             _missingLogged = true;
-            Log.Warn("[Runtime] Runtime context missing; caller=" + (caller ?? "UNKNOWN"));
+            Log.AlwaysWarn("[Runtime] Runtime context missing; caller=" + (caller ?? "UNKNOWN"));
             return null;
         }
     }

@@ -3,6 +3,7 @@ using ColossalFramework.UI;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
 using PickyParking.UI.BuildingOptionsPanel;
+using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
@@ -82,6 +83,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 return;
 
             _state.ClearDirty();
+            UpdateApplyButtonState();
 
             if (!CanOperateOnBuilding())
                 return;
@@ -230,11 +232,13 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             ClearPreview();
             ApplyRuleToUi(_state.BaselineRule);
             _state.ClearDirty();
+            UpdateApplyButtonState();
         }
 
         private void MarkDirty()
         {
             _state.MarkDirty();
+            UpdateApplyButtonState();
         }
 
         private bool CanOperateOnBuilding()
@@ -273,9 +277,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             UpdateRestrictionsVisibility();
             UpdatePreviewRule();
             UpdateParkingSpaceStats();
+            UpdateApplyButtonState();
 
-            if (hasStoredRule && Log.IsVerboseEnabled && Log.IsUiDebugEnabled)
-                Log.Info("[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
+            if (hasStoredRule && Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
         }
 
         private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)
@@ -319,6 +324,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             _state.BeginApplying();
             _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), reason);
             _state.ClearDirty();
+            UpdateApplyButtonState();
         }
 
         private void ApplyChangesFromButton()
@@ -334,6 +340,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             _editor.ApplyRuleNow(_state.BuildingId, input, "ApplyButton");
             _editor.RequestPendingReevaluationIfAny(_state.BuildingId);
             _state.CommitApplied(input);
+            UpdateApplyButtonState();
         }
 
         private void RequestPendingReevaluationIfAny(ushort buildingId)
@@ -365,6 +372,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             {
                 ClearPreview();
                 _editor.RemoveRule(_state.BuildingId, "RestrictionsToggleOff");
+                UpdateApplyButtonState();
                 return;
             }
 
@@ -385,6 +393,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 ApplyRuleToUi(_state.BaselineRule);
             }
             UpdatePreviewRule();
+            UpdateApplyButtonState();
         }
 
         private void UpdateRestrictionsVisibility()
@@ -394,6 +403,14 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             _ui.SetRestrictionsContentVisible(_state.RestrictionsEnabled);
             _ui.UpdateRestrictionsToggleVisuals(_state.RestrictionsEnabled);
+        }
+
+        private void UpdateApplyButtonState()
+        {
+            if (_ui == null)
+                return;
+
+            _ui.UpdateApplyButtonState(_state.HasUnappliedChanges);
         }
 
         private bool IsPanelVisibleForStats()
@@ -614,6 +631,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         }
     }
 }
+
 
 
 

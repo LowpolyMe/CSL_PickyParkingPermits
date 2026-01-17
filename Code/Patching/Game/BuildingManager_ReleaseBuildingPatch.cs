@@ -1,11 +1,9 @@
 using HarmonyLib;
 using PickyParking.Features.ParkingPolicing;
+
 namespace PickyParking.Patching.Game
 {
-    
-    
-    
-    
+
     internal static class BuildingManager_ReleaseBuildingPatch
     {
         public static void Apply(Harmony harmony)

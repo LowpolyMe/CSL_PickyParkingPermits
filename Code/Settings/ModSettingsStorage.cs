@@ -8,16 +8,14 @@ using PickyParking.Logging;
 
 namespace PickyParking.Settings
 {
-    
-    
-    
+
     public sealed class ModSettingsStorage
     {
         public ModSettings LoadOrCreate()
         {
+            string path = GetSettingsPath();
             try
             {
-                string path = GetSettingsPath();
                 if (!File.Exists(path))
                 {
                     return new ModSettings();
@@ -30,9 +28,9 @@ namespace PickyParking.Settings
                     return NormalizeSettings(settings);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                
+                Log.AlwaysWarnOnce("Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
                 return new ModSettings();
             }
         }
@@ -63,7 +61,8 @@ namespace PickyParking.Settings
             if (settings.SupportedParkingLotPrefabs == null)
             {
                 settings.SupportedParkingLotPrefabs = new List<PrefabKey>();
-                Log.Info("[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
             }
 
             bool normalizedHue = NormalizeHueValues(settings);
@@ -86,13 +85,34 @@ namespace PickyParking.Settings
             }
 
             if (cleaned.Count != settings.SupportedParkingLotPrefabs.Count)
-                Log.Info("[Settings] Normalized settings: removed invalid or duplicate prefabs.");
+            {
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: removed invalid or duplicate prefabs.");
+            }
 
             if (normalizedHue)
-                Log.Info("[Settings] Normalized settings: clamped overlay hue values.");
+            {
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped overlay hue values.");
+            }
+
+            bool normalizedReevaluation = NormalizeReevaluationValues(settings);
+            if (normalizedReevaluation)
+            {
+                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped reevaluation limits.");
+            }
 
             settings.SupportedParkingLotPrefabs = cleaned;
             return settings;
+        }
+
+        public void ResetToDefaults()
+        {
+            string path = GetSettingsPath();
+            if (File.Exists(path))
+                File.Delete(path);
+            Save(new ModSettings());
         }
 
         private static bool NormalizeHueValues(ModSettings settings)
@@ -129,5 +149,39 @@ namespace PickyParking.Settings
 
         private static bool AreEqual(float a, float b)
             => Math.Abs(a - b) < 0.0001f;
+
+        private static bool NormalizeReevaluationValues(ModSettings settings)
+        {
+            bool changed = false;
+
+            int evals = settings.ReevaluationMaxEvaluationsPerTick <= 0
+                ? 256
+                : settings.ReevaluationMaxEvaluationsPerTick;
+            evals = ClampInt(evals, 1, 4096);
+            if (evals != settings.ReevaluationMaxEvaluationsPerTick)
+            {
+                settings.ReevaluationMaxEvaluationsPerTick = evals;
+                changed = true;
+            }
+
+            int relocations = settings.ReevaluationMaxRelocationsPerTick <= 0
+                ? 16
+                : settings.ReevaluationMaxRelocationsPerTick;
+            relocations = ClampInt(relocations, 1, 512);
+            if (relocations != settings.ReevaluationMaxRelocationsPerTick)
+            {
+                settings.ReevaluationMaxRelocationsPerTick = relocations;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private static int ClampInt(int value, int min, int max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
     }
 }

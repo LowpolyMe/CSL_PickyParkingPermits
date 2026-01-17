@@ -2,10 +2,6 @@ using System;
 
 namespace PickyParking.Features.ParkingLotPrefabs
 {
-    
-    
-    
-    
     [Serializable]
     public struct PrefabKey : IEquatable<PrefabKey>
     {

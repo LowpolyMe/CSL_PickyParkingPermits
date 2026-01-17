@@ -1,80 +1,114 @@
+using System;
 using System.Diagnostics;
-using ColossalFramework.Plugins;
+using PickyParking.Settings;
 using Debug = UnityEngine.Debug;
-
+//Intentionally dropped DebugOutputPanel messages and suppressed most warnings/errors unless verbose logging is enabled. 
 namespace PickyParking.Logging
 {
     public static class Log
     {
         private const string Prefix = "[PickyParking] ";
 
-        public static bool IsVerboseEnabled { get; private set; }
-        public static bool IsUiDebugEnabled { get; private set; }
-        public static bool IsTmpeDebugEnabled { get; private set; }
-        public static bool IsPermissionDebugEnabled { get; private set; }
+        private static readonly LogPolicy Policy = new LogPolicy();
+        private static readonly LogRateLimiter RateLimiter = new LogRateLimiter(
+            maxKeys: 1000,
+            ttl: TimeSpan.FromMinutes(10));
 
-        public static void Info(string message) => Write(PluginManager.MessageType.Message, message, false);
-        public static void Warn(string message) => Write(PluginManager.MessageType.Warning, message, true);
-        public static void Error(string message) => Write(PluginManager.MessageType.Error, message, true);
+        private static readonly DebugPanelWriter DebugPanel = new DebugPanelWriter(
+            maxQueuedMessages: 50,
+            failureRateLimit: TimeSpan.FromMinutes(5));
 
-        public static void SetVerboseEnabled(bool isEnabled)
+        private static readonly TimeSpan DefaultRateLimit = TimeSpan.FromMinutes(5);
+        
+
+        public static bool IsVerboseEnabled => Policy.IsVerboseEnabled;
+        public static DebugLogCategory EnabledDebugCategories => Policy.EnabledDebugCategories;
+
+        public static bool IsRuleUiDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.RuleUi);
+        public static bool IsLotDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.LotInspection);
+        public static bool IsDecisionDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.DecisionPipeline);
+        public static bool IsEnforcementDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.Enforcement);
+        public static bool IsTmpeDebugEnabled => Policy.IsCategoryEnabled(DebugLogCategory.Tmpe);
+
+        public static void SetVerboseEnabled(bool isEnabled) => Policy.SetVerboseEnabled(isEnabled);
+        public static void SetEnabledDebugCategories(DebugLogCategory enabledCategories) => Policy.SetEnabledCategories(enabledCategories);
+
+        public static void MarkDebugPanelReady() => DebugPanel.MarkReady();
+        public static void MarkDebugPanelNotReady() => DebugPanel.MarkNotReady();
+        public static void InitializeMainThread() => DebugPanel.InitializeMainThreadIfNeeded();
+        public static void FlushQueuedMessagesFromMainThread() => DebugPanel.FlushFromMainThread();
+
+        public static void Info(DebugLogCategory category, string message)
         {
-            IsVerboseEnabled = isEnabled;
+            if (!Policy.ShouldLog(category))
+                return;
+          
+            string line = $"{Prefix}{message}";
+            Debug.Log(line);
         }
 
-        public static void SetUiDebugEnabled(bool isEnabled)
+        public static void Warn(DebugLogCategory category, string message, bool stackTraceEnabled = false)
         {
-            IsUiDebugEnabled = isEnabled;
-        }
-
-        public static void SetTmpeDebugEnabled(bool isEnabled)
-        {
-            IsTmpeDebugEnabled = isEnabled;
-        }
-
-        public static void SetPermissionDebugEnabled(bool isEnabled)
-        {
-            IsPermissionDebugEnabled = isEnabled;
-        }
-
-        private static void Write(PluginManager.MessageType type, string message, bool stacktrace)
-        {
-            var st = stacktrace ? $"\n{new StackTrace(2, true)}" : string.Empty;
-            var callerTag = string.Empty;
-
-            if (type == PluginManager.MessageType.Message)
-            {
-                var frame = new StackFrame(2, false);
-                var method = frame.GetMethod();
-                var declaringType = method != null ? method.DeclaringType : null;
-                if (declaringType != null)
-                    callerTag = $"[{declaringType.Name}] ";
-            }
-
-            var line = $"{Prefix}{callerTag}{message}{st}";
-
-            switch (type)
-            {
-                case PluginManager.MessageType.Warning:
-                    Debug.LogWarning(line);
-                    break;
-                case PluginManager.MessageType.Error:
-                    Debug.LogError(line);
-                    break;
-                default:
-                    Debug.Log(line);
-                    break;
-            }
+            if (!Policy.ShouldLog(category))
+                return;
             
-            try
-            {
-                DebugOutputPanel.AddMessage(type, line);
-            }
-            catch
-            {
-                
-            }
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogWarning(line);
         }
+
+        public static void Error(DebugLogCategory category, string message, bool stackTraceEnabled = false)
+        {
+            if (!Policy.ShouldLog(category))
+                return;
+
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogError(line);
+        }
+
+        public static void WarnOnce(DebugLogCategory category, string key, string message) =>
+            WarnOnce(category, key, message, DefaultRateLimit);
+
+        //ignores verbose flag
+        public static void AlwaysWarn(string message, bool stackTraceEnabled = false)
+        {
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogWarning(line);
+        }
+
+        public static void AlwaysError(string message, bool stackTraceEnabled = false)
+        {
+            string stack = stackTraceEnabled ? "\n" + new StackTrace(2, true) : string.Empty;
+            string line = $"{Prefix}{message}{stack}";
+            Debug.LogError(line);
+        }
+
+        public static void AlwaysWarnOnce(string key, string message) =>
+            AlwaysWarnOnce(key, message, DefaultRateLimit);
+
+
+
+        private static void WarnOnce(DebugLogCategory category, string key, string message, TimeSpan interval)
+        {
+            string namespacedKey = key;
+
+            if (!RateLimiter.ShouldLog(namespacedKey, interval))
+                return;
+
+            Warn(category, message);
+        }
+
+        private static void AlwaysWarnOnce(string key, string message, TimeSpan interval)
+        {
+            string namespacedKey = key;
+
+            if (!RateLimiter.ShouldLog(namespacedKey, interval))
+                return;
+
+            AlwaysWarn(message);
+        }
+
     }
 }
-

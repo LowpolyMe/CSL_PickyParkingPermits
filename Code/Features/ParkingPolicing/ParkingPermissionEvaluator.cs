@@ -2,6 +2,8 @@ using UnityEngine;
 using PickyParking.ModLifecycle;
 using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingRules;
+using PickyParking.Features.Debug;
+using PickyParking.Settings;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -38,6 +40,8 @@ namespace PickyParking.Features.ParkingPolicing
 
         public Result Evaluate(ushort vehicleId, ushort candidateBuildingId)
         {
+            ParkingStatsCounter.IncrementEvaluateVehicle();
+
             if (!_isFeatureActive.IsActive)
                 return new Result(true, DecisionReason.Allowed_FailOpen_NotActive);
 
@@ -49,8 +53,9 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (!_game.TryGetDriverInfo(vehicleId, out var driverContext))
             {
-                if (PickyParking.Logging.Log.IsVerboseEnabled)
-                    PickyParking.Logging.Log.Info($"[Parking] Evaluate denied: no driver context vehicleId={vehicleId} buildingId={candidateBuildingId}");
+                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
+                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] Evaluate denied: no driver context vehicleId={vehicleId} buildingId={candidateBuildingId}");
+                ParkingStatsCounter.IncrementDeniedNoDriverContext();
                 return new Result(false, DecisionReason.Denied_NoDriverContext);
             }
 
@@ -62,6 +67,8 @@ namespace PickyParking.Features.ParkingPolicing
 
         public Result EvaluateCitizen(uint citizenId, ushort candidateBuildingId)
         {
+            ParkingStatsCounter.IncrementEvaluateCitizen();
+
             if (!_isFeatureActive.IsActive)
                 return new Result(true, DecisionReason.Allowed_FailOpen_NotActive);
 
@@ -70,8 +77,9 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (!_game.TryGetCitizenInfo(citizenId, out var citizenContext))
             {
-                if (PickyParking.Logging.Log.IsVerboseEnabled)
-                    PickyParking.Logging.Log.Info($"[Parking] EvaluateCitizen denied: no citizen context citizenId={citizenId} buildingId={candidateBuildingId}");
+                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
+                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] EvaluateCitizen denied: no citizen context citizenId={citizenId} buildingId={candidateBuildingId}");
+                ParkingStatsCounter.IncrementDeniedNoCitizenContext();
                 return new Result(false, DecisionReason.Denied_NoCitizenContext);
             }
 
@@ -93,16 +101,16 @@ namespace PickyParking.Features.ParkingPolicing
             if (!_rules.TryGet(candidateBuildingId, out rule))
             {
                 failOpenReason = DecisionReason.Allowed_FailOpen_NoRuleConfigured;
-                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsPermissionDebugEnabled)
-                    PickyParking.Logging.Log.Info($"[Parking] Fail-open: no rule configured buildingId={candidateBuildingId}");
+                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
+                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] Fail-open: no rule configured buildingId={candidateBuildingId}");
                 return false;
             }
 
             if (!_game.TryGetBuildingPosition(candidateBuildingId, out lotPos))
             {
                 failOpenReason = DecisionReason.Allowed_FailOpen_TryGetBuildingPosition;
-                if (PickyParking.Logging.Log.IsVerboseEnabled)
-                    PickyParking.Logging.Log.Info($"[Parking] Fail-open: TryGetBuildingPosition failed buildingId={candidateBuildingId}");
+                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
+                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] Fail-open: TryGetBuildingPosition failed buildingId={candidateBuildingId}");
                 return false;
             }
 
@@ -151,3 +159,4 @@ namespace PickyParking.Features.ParkingPolicing
         }
     }
 }
+

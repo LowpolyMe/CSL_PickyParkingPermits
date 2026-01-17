@@ -19,8 +19,18 @@ namespace PickyParking.ModEntry
         {
             
             
-            var storage = new ModSettingsStorage();
-            var controller = ModSettingsController.Load(storage);
+            var runtimeController = ModRuntime.Current != null ? ModRuntime.Current.SettingsController : null;
+            ModSettingsController controller;
+            if (runtimeController != null)
+            {
+                controller = runtimeController;
+            }
+            else
+            {
+                var storage = new ModSettingsStorage();
+                controller = ModSettingsController.Load(storage);
+                controller.Reload("OptionsUI.Open");
+            }
             var services = new UiServices(() => ModRuntime.Current, controller);
             OptionsUI.Build(helper, controller.Current, () => controller.Save("OptionsUI"), services);
         }
