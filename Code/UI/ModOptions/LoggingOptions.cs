@@ -14,8 +14,6 @@ namespace PickyParking.UI.ModOptions
             {
                 HandleVerboseLoggingChanged(isChecked, settings, saveSettings, services);
             });
-            if (!settings.EnableVerboseLogging)
-                return;
             
             BuildLoggingGroup(helper, settings, saveSettings, services);
             BuildBehaviourOverridesGroup(helper, settings, saveSettings, services);

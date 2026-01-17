@@ -1,16 +1,25 @@
 using System;
+using System.Collections;
 using ColossalFramework.UI;
 using ICities;
 using PickyParking.Logging;
 using PickyParking.Settings;
+using PickyParking.ModLifecycle.BackendSelection;
+using PickyParking.ModEntry;
 using UnityEngine;
 
 namespace PickyParking.UI.ModOptions
 {
     internal static class AdvancedOptions
     {
+        private static UILabel _backendStateLabel;
+        private static ParkingBackendState _fallbackBackendState;
+        private static bool _refreshQueued;
+
         public static void Build(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
         {
+            BuildBackendStateGroup(helper, services);
+
             UIHelperBase group = helper.AddGroup("Parking rule sweeps");
             AddInfoLabel(group, "Sweeps re-check parked cars on lots with rules once per in-game day and move or release invalid cars. This costs CPU; disable to reduce impact.");
 
@@ -68,6 +77,60 @@ namespace PickyParking.UI.ModOptions
                 saveSettings();
         }
 
+        public static void RegisterBackendStateRefresh(UIHelperBase helper, UiServices services)
+        {
+            UIHelper helperPanel = helper as UIHelper;
+            if (helperPanel == null)
+                return;
+
+            UIPanel panel = helperPanel.self as UIPanel;
+            if (panel == null)
+                return;
+
+            panel.eventVisibilityChanged += (UIComponent component, bool isVisible) =>
+            {
+                RefreshBackendState(services);
+            };
+        }
+
+        private static void BuildBackendStateGroup(UIHelperBase helper, UiServices services)
+        {
+            UIHelperBase group = helper.AddGroup("Backend status");
+            _backendStateLabel = AddInfoLabel(group, GetBackendStateText(services));
+            AttachBackendStateVisibilityRefresh(group, services);
+            RequestRefreshNextFrame(services);
+        }
+
+        private static string GetBackendStateText(UiServices services)
+        {
+            ParkingBackendState state = ResolveBackendState(services);
+            if (state == null)
+                return "Backend: Unknown (load a game to detect TM:PE).";
+
+            if (!state.IsTmpeDetected)
+                return "Backend: Vanilla (TM:PE not detected).";
+
+            if (state.IsTmpeAdvancedParkingActive)
+                return "Backend: TM:PE (advanced parking ON).";
+
+            return "Backend: Vanilla (TM:PE detected, advanced parking OFF or unknown).";
+        }
+
+        private static ParkingBackendState ResolveBackendState(UiServices services)
+        {
+            if (services != null && services.ParkingBackendState != null)
+                return services.ParkingBackendState;
+
+            ModRuntime runtime = ModRuntime.Current;
+            if (runtime != null && runtime.ParkingBackendState != null)
+                return runtime.ParkingBackendState;
+
+            if (_fallbackBackendState == null)
+                _fallbackBackendState = new ParkingBackendState();
+
+            return _fallbackBackendState;
+        }
+
         private static void ReloadSettings(string reason, UiServices services)
         {
             if (services == null)
@@ -75,15 +138,76 @@ namespace PickyParking.UI.ModOptions
             services.ReloadSettings(reason);
         }
 
-        private static void AddInfoLabel(UIHelperBase group, string text)
+        private static void RefreshBackendState(UiServices services)
         {
-            var helperPanel = group as UIHelper;
+            ParkingBackendState state = ResolveBackendState(services);
+            if (state != null)
+            {
+                state.Refresh();
+            }
+
+            if (_backendStateLabel != null)
+                _backendStateLabel.text = GetBackendStateText(services);
+        }
+
+        public static void RefreshBackendStateNow(UiServices services)
+        {
+            RefreshBackendState(services);
+        }
+
+        private static void AttachBackendStateVisibilityRefresh(UIHelperBase group, UiServices services)
+        {
+            UIHelper helperPanel = group as UIHelper;
             if (helperPanel == null)
                 return;
 
-            var panel = helperPanel.self as UIPanel;
+            UIPanel panel = helperPanel.self as UIPanel;
             if (panel == null)
                 return;
+
+            panel.eventVisibilityChanged += (UIComponent component, bool isVisible) =>
+            {
+                if (!isVisible)
+                    return;
+
+                RequestRefreshNextFrame(services);
+            };
+        }
+
+        private static void RequestRefreshNextFrame(UiServices services)
+        {
+            if (_refreshQueued)
+                return;
+
+            _refreshQueued = true;
+            UIView view = UIView.GetAView();
+            if (view != null)
+            {
+                view.StartCoroutine(RefreshNextFrame(services));
+            }
+            else
+            {
+                _refreshQueued = false;
+                RefreshBackendState(services);
+            }
+        }
+
+        private static IEnumerator RefreshNextFrame(UiServices services)
+        {
+            yield return null;
+            _refreshQueued = false;
+            RefreshBackendState(services);
+        }
+
+        private static UILabel AddInfoLabel(UIHelperBase group, string text)
+        {
+            UIHelper helperPanel = group as UIHelper;
+            if (helperPanel == null)
+                return null;
+
+            UIPanel panel = helperPanel.self as UIPanel;
+            if (panel == null)
+                return null;
 
             UILabel label = panel.AddUIComponent<UILabel>();
             label.processMarkup = true;
@@ -96,6 +220,7 @@ namespace PickyParking.UI.ModOptions
             if (width < 100f)
                 width = ModOptionsUiValues.OptionsPanel.DefaultWidth - 20f;
             label.width = width;
+            return label;
         }
 
         private static void AddIntField(

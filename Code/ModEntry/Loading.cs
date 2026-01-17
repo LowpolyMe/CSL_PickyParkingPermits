@@ -12,6 +12,7 @@ using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
 using PickyParking.UI.BuildingOptionsPanel.OverlayRendering;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
+using PickyParking.ModLifecycle.BackendSelection;
 using PickyParking.Patching.Diagnostics.TMPE;
 using PickyParking.Patching.TMPE;
 using UnityEngine;
@@ -49,6 +50,11 @@ namespace PickyParking.ModEntry
             if (ModRuntime.Current != null)
             {
                 ModRuntime.Current.TmpeIntegration.RefreshState();
+                ParkingBackendState backendState = ModRuntime.Current.ParkingBackendState;
+                if (backendState != null)
+                {
+                    backendState.Refresh();
+                }
             }
 
             _patches = new PatchSetup();
@@ -226,5 +232,6 @@ namespace PickyParking.ModEntry
             _assemblyVersionLogged = true;
             LogAssemblyVersionLoaded();
         }
+
     }
 }

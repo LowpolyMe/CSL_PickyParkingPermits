@@ -39,16 +39,11 @@ namespace PickyParking.Features.ParkingPolicing
         {
             try
             {
-                var tmpeType = Type.GetType(AdvancedParkingManagerType, throwOnError: false);
-
-                if (tmpeType != null)
-                    _isFeatureActive.SetActive();
-                else
-                    _isFeatureActive.SetInactive("TM:PE not found");
+                Type.GetType(AdvancedParkingManagerType, throwOnError: false);
             }
             catch (Exception e)
             {
-                _isFeatureActive.SetInactive("An exception occurred: " + e);
+                Log.AlwaysWarn("[TMPE] RefreshState failed: " + e);
             }
         }
 

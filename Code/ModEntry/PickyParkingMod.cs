@@ -32,6 +32,10 @@ namespace PickyParking.ModEntry
                 controller.Reload("OptionsUI.Open");
             }
             var services = new UiServices(() => ModRuntime.Current, controller);
+            if (ModRuntime.Current != null && ModRuntime.Current.ParkingBackendState != null)
+            {
+                ModRuntime.Current.ParkingBackendState.Refresh();
+            }
             OptionsUI.Build(helper, controller.Current, () => controller.Save("OptionsUI"), services);
         }
     }

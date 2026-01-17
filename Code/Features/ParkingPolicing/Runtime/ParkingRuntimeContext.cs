@@ -5,6 +5,7 @@ using PickyParking.ModLifecycle;
 using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingRules;
 using PickyParking.ModEntry;
+using PickyParking.ModLifecycle.BackendSelection;
 
 namespace PickyParking.Features.ParkingPolicing.Runtime
 {
@@ -17,7 +18,9 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
         public ParkingRulesConfigRegistry ParkingRulesConfigRegistry => _runtime.ParkingRulesConfigRegistry;
         public GameAccess GameAccess => _runtime.GameAccess;
         public TmpeIntegration TmpeIntegration => _runtime.TmpeIntegration;
+        public ParkingBackendState ParkingBackendState => _runtime.ParkingBackendState;
         public ParkingPermissionEvaluator ParkingPermissionEvaluator => _runtime.ParkingPermissionEvaluator;
+        public ParkingCandidateDecisionPipeline CandidateDecisionPipeline => _runtime.ParkingCandidateDecisionPipeline;
         public ParkedVehicleReevaluation ParkedVehicleReevaluation => _runtime.ParkedVehicleReevaluation;
 
         public static ParkingRuntimeContext Current

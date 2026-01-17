@@ -4,6 +4,7 @@ using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
 using PickyParking.ModEntry;
 using PickyParking.Settings;
+using PickyParking.ModLifecycle.BackendSelection;
 
 namespace PickyParking.UI
 {
@@ -34,6 +35,7 @@ namespace PickyParking.UI
         public ParkingRulesConfigRegistry ParkingRulesConfigRegistry => Runtime != null ? Runtime.ParkingRulesConfigRegistry : null;
         public ParkingRulePreviewState ParkingRulePreviewState => Runtime != null ? Runtime.ParkingRulePreviewState : null;
         public SupportedParkingLotRegistry SupportedParkingLotRegistry => Runtime != null ? Runtime.SupportedParkingLotRegistry : null;
+        public ParkingBackendState ParkingBackendState => Runtime != null ? Runtime.ParkingBackendState : null;
         public ModSettingsController SettingsController => RuntimeSettingsController ?? _settingsController;
         public ModSettings Settings => SettingsController != null ? SettingsController.Current : null;
 
