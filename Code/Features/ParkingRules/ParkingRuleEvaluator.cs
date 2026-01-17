@@ -1,8 +1,5 @@
 namespace PickyParking.Features.ParkingRules
 {
-    
-    
-    
     public sealed class ParkingRuleEvaluator
     {
         public struct Result

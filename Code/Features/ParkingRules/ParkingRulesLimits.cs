@@ -1,5 +1,3 @@
-using PickyParking.Features.ParkingRules;
-
 namespace PickyParking.Features.ParkingRules
 {
     public static class ParkingRulesLimits

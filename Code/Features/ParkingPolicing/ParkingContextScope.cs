@@ -2,9 +2,6 @@ using System;
 
 namespace PickyParking.Features.ParkingPolicing
 {
-    
-    
-    
     public sealed class ParkingContextScope : IDisposable
     {
         private bool _disposed;
