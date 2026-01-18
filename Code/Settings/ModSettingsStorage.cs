@@ -104,6 +104,13 @@ namespace PickyParking.Settings
                     Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped reevaluation limits.");
             }
 
+            bool normalizedVanillaRadius = NormalizeVanillaSearchRadius(settings);
+            if (normalizedVanillaRadius)
+            {
+                if (Log.IsVerboseEnabled)
+                    Log.Info(DebugLogCategory.None, "[Settings] Clamped vanilla search radius.");
+            }
+
             settings.SupportedParkingLotPrefabs = cleaned;
             return settings;
         }
@@ -183,6 +190,23 @@ namespace PickyParking.Settings
             if (value < min) return min;
             if (value > max) return max;
             return value;
+        }
+
+        private static bool NormalizeVanillaSearchRadius(ModSettings settings)
+        {
+            bool changed = false;
+
+            int radius = settings.VanillaBuildingSearchRadiusMeters <= 0
+                ? 16
+                : settings.VanillaBuildingSearchRadiusMeters;
+            radius = ClampInt(radius, 16, 256);
+            if (radius != settings.VanillaBuildingSearchRadiusMeters)
+            {
+                settings.VanillaBuildingSearchRadiusMeters = radius;
+                changed = true;
+            }
+
+            return changed;
         }
     }
 }

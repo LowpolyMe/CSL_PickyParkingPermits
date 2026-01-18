@@ -70,6 +70,33 @@ namespace PickyParking.UI.ModOptions
                 SaveSettings(saveSettings);
                 ReloadSettings("OptionsUI: Fix stuck owned parked vehicles", services);
             });
+
+            UIHelperBase vanillaGroup = helper.AddGroup("Vanilla parking search");
+            AddInfoLabel(vanillaGroup, "Radius for the initial lot/prop parking search when a driving passenger car parks.");
+            AddInfoLabel(vanillaGroup, "Small values: more failed parked spawns, more roadside fallback, more no-park cases.");
+            AddInfoLabel(vanillaGroup, "Large values: more CPU, more surprising parking choices, possible edge cases.");
+
+            AddIntField(
+                vanillaGroup,
+                "Initial lot/prop search radius (meters)",
+                settings.VanillaBuildingSearchRadiusMeters,
+                16,
+                256,
+                value =>
+                {
+                    settings.VanillaBuildingSearchRadiusMeters = value;
+                    SaveSettings(saveSettings);
+                    ReloadSettings("OptionsUI: Vanilla search radius", services);
+                    if (Log.IsVerboseEnabled)
+                    {
+                        Log.Info(DebugLogCategory.None, "[Settings] Vanilla search radius updated to " + value + "m.");
+                    }
+                });
+
+            if (Log.IsVerboseEnabled)
+            {
+                Log.Info(DebugLogCategory.None, "[UI] Vanilla search radius controls shown with disclaimer.");
+            }
         }
 
         private static void SaveSettings(Action saveSettings)
