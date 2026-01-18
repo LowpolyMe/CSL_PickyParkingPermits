@@ -23,6 +23,7 @@ namespace PickyParking.Patching
             DefaultTool_RenderOverlayPatch.Apply(_bootstrap.Harmony);
             PassengerCarAI_ParkVehicleContextPatch.Apply(_bootstrap.Harmony);
             PassengerCarAI_UpdateParkedVehicleContextPatch.Apply(_bootstrap.Harmony);
+            PassengerCarAI_FindParkingSpaceBuildingPatch.Apply(_bootstrap.Harmony);
             
             
             TMPE_FindParkingSpaceForCitizenPatch.Apply(_bootstrap.Harmony);
