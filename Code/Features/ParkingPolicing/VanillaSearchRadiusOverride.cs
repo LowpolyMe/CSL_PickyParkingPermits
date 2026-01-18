@@ -27,7 +27,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (backendState.ActiveBackend != ParkingBackendKind.Vanilla)
             {
-                LogVanillaBypassIfTmpeAdvanced(backendState);
+                LogVanillaBypassIfTmpeActive(backendState);
                 return false;
             }
 
@@ -105,12 +105,13 @@ namespace PickyParking.Features.ParkingPolicing
             Log.Info(DebugLogCategory.None, "[Vanilla] Skipped radius override (relocation search uses vanilla radius). source=" + (source ?? "NULL") + " ignoreParked=" + ignoreParked);
         }
 
-        private static void LogVanillaBypassIfTmpeAdvanced(ParkingBackendState backendState)
+        private static void LogVanillaBypassIfTmpeActive(ParkingBackendState backendState)
         {
             if (backendState == null)
                 return;
 
-            if (backendState.ActiveBackend != ParkingBackendKind.TmpeAdvanced)
+            if (backendState.ActiveBackend != ParkingBackendKind.TmpeAdvanced
+                && backendState.ActiveBackend != ParkingBackendKind.TmpeBasic)
                 return;
 
             Log.AlwaysWarnOnce(

@@ -124,19 +124,20 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (backendState.ActiveBackend != ParkingBackendKind.Vanilla)
             {
-                LogVanillaBypassIfTmpeAdvanced(backendState);
+                LogVanillaBypassIfTmpeActive(backendState);
                 return false;
             }
 
             return true;
         }
 
-        private static void LogVanillaBypassIfTmpeAdvanced(ParkingBackendState backendState)
+        private static void LogVanillaBypassIfTmpeActive(ParkingBackendState backendState)
         {
             if (backendState == null)
                 return;
 
-            if (backendState.ActiveBackend != ParkingBackendKind.TmpeAdvanced)
+            if (backendState.ActiveBackend != ParkingBackendKind.TmpeAdvanced
+                && backendState.ActiveBackend != ParkingBackendKind.TmpeBasic)
                 return;
 
             Log.AlwaysWarnOnce(
