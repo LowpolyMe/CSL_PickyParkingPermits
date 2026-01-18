@@ -6,6 +6,16 @@ namespace PickyParking.Features.ParkingPolicing
     {
         private bool _disposed;
 
+        public static void Push(ushort vehicleId, uint citizenId, string source)
+        {
+            ParkingSearchContext.Push(vehicleId, citizenId, source);
+        }
+
+        public static void Pop()
+        {
+            ParkingSearchContext.Pop();
+        }
+
         public ParkingContextScope(ushort vehicleId, uint citizenId, string source)
         {
             ParkingSearchContext.Push(vehicleId, citizenId, source);

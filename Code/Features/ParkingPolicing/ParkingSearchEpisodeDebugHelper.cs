@@ -62,7 +62,20 @@ namespace PickyParking.Features.ParkingPolicing
 
             int duration = Math.Max(0, NowMs() - _startMs);
             if (CandidateChecks == 0)
+            {
+                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled && IsVanillaSource(Source))
+                {
+                    Log.Info(DebugLogCategory.DecisionPipeline,
+                        $"[SearchEpisode] ParkingSearchEpisode " +
+                        $"src={Source ?? "NULL"} depth={StartDepth} " +
+                        $"vehicleId={VehicleId} citizenId={CitizenId} isVisitor={IsVisitor} " +
+                        $"candidates=0 denied=0 allowed=0 " +
+                        $"durationMs={duration} " +
+                        $"last=(NULL bld=0 prefab=NULL name=NULL)"
+                    );
+                }
                 return;
+            }
 
             if (CandidateChecks < minCandidates && duration < minDurationMs)
                 return;
@@ -81,6 +94,14 @@ namespace PickyParking.Features.ParkingPolicing
         }
 
         private static int NowMs() => (int)(Time.realtimeSinceStartup * 1000f);
+
+        private static bool IsVanillaSource(string source)
+        {
+            if (string.IsNullOrEmpty(source))
+                return false;
+
+            return source.StartsWith("Vanilla.", StringComparison.Ordinal);
+        }
     }
 }
 

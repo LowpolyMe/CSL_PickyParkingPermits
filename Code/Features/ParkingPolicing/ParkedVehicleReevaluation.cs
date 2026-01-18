@@ -271,7 +271,7 @@ namespace PickyParking.Features.ParkingPolicing
                 relocationsThisTick++;
             }
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
+            if (Log.IsVerboseEnabled && ParkingDebugSettings.BuildingDebugId == logBuildingId)
                 Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation tick eval=" + evaluationsThisTick +
                          " relocate=" + relocationsThisTick +
                          " finalize=" + finalizationsThisTick +
