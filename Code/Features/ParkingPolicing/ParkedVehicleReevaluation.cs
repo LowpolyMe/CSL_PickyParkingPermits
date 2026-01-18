@@ -168,10 +168,36 @@ namespace PickyParking.Features.ParkingPolicing
             int maxFinalizations = GetMaxFinalizationsPerTick();
             bool stuckFixEnabled = IsStuckFixEnabled();
 
+            EvaluateParkedVehicles(
+                maxEvaluations,
+                maxFinalizations,
+                stuckFixEnabled,
+                ref evaluationsThisTick,
+                ref finalizationsThisTick);
+            RelocateDeniedVehicles(maxRelocations, ref relocationsThisTick);
+
+            if (Log.IsVerboseEnabled && ParkingDebugSettings.BuildingDebugId == logBuildingId)
+                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation tick eval=" + evaluationsThisTick +
+                         " relocate=" + relocationsThisTick +
+                         " finalize=" + finalizationsThisTick +
+                         " buildingId=" + logBuildingId);
+            if (_activeIndex >= _parkedBuffer.Count && _deniedQueue.Count == 0)
+                FinishActiveBuilding();
+            if (HasPendingWork || _deniedQueue.Count > 0)
+                Schedule();
+        }
+
+        private void EvaluateParkedVehicles(
+            int maxEvaluations,
+            int maxFinalizations,
+            bool stuckFixEnabled,
+            ref int evaluationsThisTick,
+            ref int finalizationsThisTick)
+        {
             while (evaluationsThisTick < maxEvaluations && _activeIndex < _parkedBuffer.Count)
             {
                 ushort parkedId = _parkedBuffer[_activeIndex++];
-                if (!_game.TryGetParkedVehicleReevaluationInfo(
+                if (!TryGetParkedVehicleReevaluationInfo(
                         parkedId,
                         out uint ownerCitizenId,
                         out ushort homeId,
@@ -231,11 +257,14 @@ namespace PickyParking.Features.ParkingPolicing
                 ParkingStatsCounter.IncrementReevalDeniedQueued();
                 evaluationsThisTick++;
             }
+        }
 
+        private void RelocateDeniedVehicles(int maxRelocations, ref int relocationsThisTick)
+        {
             while (relocationsThisTick < maxRelocations && _deniedQueue.Count > 0)
             {
                 DeniedParkedVehicle denied = _deniedQueue.Dequeue();
-                if (!_game.TryGetParkedVehicleReevaluationInfo(
+                if (!TryGetParkedVehicleReevaluationInfo(
                         denied.ParkedVehicleId,
                         out uint ownerCitizenId,
                         out ushort homeId,
@@ -287,16 +316,25 @@ namespace PickyParking.Features.ParkingPolicing
 
                 relocationsThisTick++;
             }
+        }
 
-            if (Log.IsVerboseEnabled && ParkingDebugSettings.BuildingDebugId == logBuildingId)
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation tick eval=" + evaluationsThisTick +
-                         " relocate=" + relocationsThisTick +
-                         " finalize=" + finalizationsThisTick +
-                         " buildingId=" + logBuildingId);
-            if (_activeIndex >= _parkedBuffer.Count && _deniedQueue.Count == 0)
-                FinishActiveBuilding();
-            if (HasPendingWork || _deniedQueue.Count > 0)
-                Schedule();
+        private bool TryGetParkedVehicleReevaluationInfo(
+            ushort parkedVehicleId,
+            out uint ownerCitizenId,
+            out ushort homeId,
+            out Vector3 parkedPos,
+            out ushort flags,
+            out bool ownerRoundTrip,
+            out bool isStuckCandidate)
+        {
+            return _game.TryGetParkedVehicleReevaluationInfo(
+                parkedVehicleId,
+                out ownerCitizenId,
+                out homeId,
+                out parkedPos,
+                out flags,
+                out ownerRoundTrip,
+                out isStuckCandidate);
         }
 
         private bool TryMoveParkedVehicleVanilla(ushort parkedVehicleId)
