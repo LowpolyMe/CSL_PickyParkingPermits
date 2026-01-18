@@ -78,9 +78,12 @@ namespace PickyParking.ModLifecycle.BackendSelection
 
             IsTmpeDetected = isTmpeDetected;
             IsTmpeAdvancedParkingActive = isAdvancedActive;
-            ActiveBackend = isTmpeDetected && isAdvancedActive
-                ? ParkingBackendKind.TmpeAdvanced
-                : ParkingBackendKind.Vanilla;
+            if (isTmpeDetected && isAdvancedActive)
+                ActiveBackend = ParkingBackendKind.TmpeAdvanced;
+            else if (isTmpeDetected)
+                ActiveBackend = ParkingBackendKind.TmpeBasic;
+            else
+                ActiveBackend = ParkingBackendKind.Vanilla;
             Reason = reason;
 
             if (Log.IsVerboseEnabled)

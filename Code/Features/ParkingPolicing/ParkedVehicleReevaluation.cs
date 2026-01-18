@@ -9,6 +9,7 @@ using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Settings;
+using PickyParking.ModLifecycle.BackendSelection;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -25,6 +26,7 @@ namespace PickyParking.Features.ParkingPolicing
         private readonly SupportedParkingLotRegistry _supportedLots;
         private readonly TmpeIntegration _tmpe;
         private readonly ModSettingsController _settingsController;
+        private readonly ParkingBackendState _backendState;
 
         private readonly Queue<ushort> _pendingBuildings = new Queue<ushort>();
         private readonly HashSet<ushort> _pendingSet = new HashSet<ushort>();
@@ -57,7 +59,8 @@ namespace PickyParking.Features.ParkingPolicing
             GameAccess game,
             SupportedParkingLotRegistry supportedLots,
             TmpeIntegration tmpe,
-            ModSettingsController settingsController)
+            ModSettingsController settingsController,
+            ParkingBackendState backendState)
         {
             _isFeatureActive = featureGate;
             _rules = rules;
@@ -66,6 +69,7 @@ namespace PickyParking.Features.ParkingPolicing
             _supportedLots = supportedLots;
             _tmpe = tmpe;
             _settingsController = settingsController;
+            _backendState = backendState;
         }
 
         public bool HasPendingWork => _activeBuilding != 0 || _pendingBuildings.Count > 0;
@@ -245,12 +249,25 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (ownerCitizenId != denied.OwnerCitizenId)
                     continue;
-                bool moved = _tmpe.TryMoveParkedVehicleWithConfigDistance(
-                    parkedVehicleId: denied.ParkedVehicleId,
-                    ownerCitizenId: denied.OwnerCitizenId,
-                    homeId: homeId,
-                    refPos: parkedPos
-                );
+
+                ParkingBackendKind backend = ParkingBackendKind.TmpeAdvanced;
+                if (_backendState != null)
+                    backend = _backendState.ActiveBackend;
+
+                bool moved;
+                if (backend == ParkingBackendKind.TmpeAdvanced || backend == ParkingBackendKind.TmpeBasic)
+                {
+                    moved = _tmpe.TryMoveParkedVehicleWithConfigDistance(
+                        parkedVehicleId: denied.ParkedVehicleId,
+                        ownerCitizenId: denied.OwnerCitizenId,
+                        homeId: homeId,
+                        refPos: parkedPos
+                    );
+                }
+                else
+                {
+                    moved = TryMoveParkedVehicleVanilla(denied.ParkedVehicleId);
+                }
 
                 if (!moved)
                 {
@@ -280,6 +297,38 @@ namespace PickyParking.Features.ParkingPolicing
                 FinishActiveBuilding();
             if (HasPendingWork || _deniedQueue.Count > 0)
                 Schedule();
+        }
+
+        private bool TryMoveParkedVehicleVanilla(ushort parkedVehicleId)
+        {
+            VehicleManager vehicleManager = Singleton<VehicleManager>.instance;
+            VehicleParked[] parkedBuffer = vehicleManager.m_parkedVehicles.m_buffer;
+            VehicleParked parked = parkedBuffer[parkedVehicleId];
+            if (parked.Info == null)
+                return false;
+
+            VehicleAI vehicleAi = parked.Info.m_vehicleAI;
+            if (vehicleAi == null)
+                return false;
+
+            PassengerCarAI passengerAi = vehicleAi as PassengerCarAI;
+            if (passengerAi == null)
+            {
+                string typeName = vehicleAi.GetType().Name;
+                if (!string.Equals(typeName, "CustomPassengerCarAI", StringComparison.Ordinal))
+                    return false;
+
+                passengerAi = vehicleAi as PassengerCarAI;
+                if (passengerAi == null)
+                    return false;
+            }
+
+            Vector3 beforePos = parked.m_position;
+            VehicleParked temp = parked;
+            passengerAi.UpdateParkedVehicle(parkedVehicleId, ref temp);
+            parkedBuffer[parkedVehicleId] = temp;
+
+            return temp.m_position != beforePos;
         }
 
         private bool TryBeginNextBuilding()

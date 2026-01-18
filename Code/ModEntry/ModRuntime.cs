@@ -102,7 +102,7 @@ namespace PickyParking.ModEntry
             var tmpe = new TmpeIntegration(featureGate, evaluator);
             var backendState = new ParkingBackendState();
             var candidateDecisionPipeline = new ParkingCandidateDecisionPipeline(evaluator);
-            var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe, settingsController);
+            var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe, settingsController, backendState);
             var previewState = new ParkingRulePreviewState();
             var debugHotkeys = new DebugHotkeyController(
                 gameAccess,

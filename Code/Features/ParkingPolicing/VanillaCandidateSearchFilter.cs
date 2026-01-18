@@ -1,5 +1,6 @@
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing.Runtime;
+using PickyParking.Logging;
 using PickyParking.ModLifecycle.BackendSelection;
 using PickyParking.Settings;
 
@@ -18,7 +19,10 @@ namespace PickyParking.Features.ParkingPolicing
                 return true;
 
             if (backendState.ActiveBackend != ParkingBackendKind.Vanilla)
+            {
+                LogVanillaBypassIfTmpeAdvanced(backendState);
                 return true;
+            }
 
             if (ParkingDebugSettings.DisableParkingEnforcement)
                 return true;
@@ -32,6 +36,19 @@ namespace PickyParking.Features.ParkingPolicing
 
             result = false;
             return false;
+        }
+
+        private static void LogVanillaBypassIfTmpeAdvanced(ParkingBackendState backendState)
+        {
+            if (backendState == null)
+                return;
+
+            if (backendState.ActiveBackend != ParkingBackendKind.TmpeAdvanced)
+                return;
+
+            Log.AlwaysWarnOnce(
+                "VanillaBypass.TmpeAdvanced",
+                "[BackendSelection] event=VanillaBackendBypassed reason=TmpeAdvancedActive");
         }
     }
 }

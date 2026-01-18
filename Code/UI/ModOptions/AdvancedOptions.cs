@@ -133,15 +133,15 @@ namespace PickyParking.UI.ModOptions
         {
             ParkingBackendState state = ResolveBackendState(services);
             if (state == null)
-                return "Backend: Unknown (load a game to detect TM:PE).";
+                return "Backend status: (placeholder) Load a game to detect TM:PE.";
 
             if (!state.IsTmpeDetected)
-                return "Backend: Vanilla (TM:PE not detected).";
+                return "Backend status: (placeholder) TM:PE not detected.";
 
             if (state.IsTmpeAdvancedParkingActive)
-                return "Backend: TM:PE (advanced parking ON).";
+                return "Backend status: (placeholder) TM:PE advanced parking ON.";
 
-            return "Backend: Vanilla (TM:PE detected, advanced parking OFF or unknown).";
+            return "Backend status: (placeholder) TM:PE basic parking (advanced OFF or unknown).";
         }
 
         private static ParkingBackendState ResolveBackendState(UiServices services)
