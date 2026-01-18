@@ -65,7 +65,7 @@ namespace PickyParking.ModEntry
             CreateRuntimeObjects(mode);
 
             Log.MarkDebugPanelReady();
-            Log.Info(DebugLogCategory.None, "[Parking] Loaded.");
+            Log.Info(DebugLogCategory.None, "[Runtime] Loaded.");
         }
 
         public override void OnLevelUnloading()
@@ -73,7 +73,7 @@ namespace PickyParking.ModEntry
             base.OnLevelUnloading();
 
             Unload(clearLevelContext: true);
-            Log.Info(DebugLogCategory.None, "[Parking] Unloaded.");
+            Log.Info(DebugLogCategory.None, "[Runtime] Unloaded.");
             Log.MarkDebugPanelNotReady();
         }
 

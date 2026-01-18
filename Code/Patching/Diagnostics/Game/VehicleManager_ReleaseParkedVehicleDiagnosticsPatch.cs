@@ -15,7 +15,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Parking] ReleaseParkedVehicle not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] ReleaseParkedVehicle not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -25,7 +25,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             );
 
             if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Parking] Patched ReleaseParkedVehicle (diagnostics).");
+                Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] Patched ReleaseParkedVehicle (diagnostics).");
         }
 
         private static void Prefix(ushort parked)

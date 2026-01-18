@@ -18,7 +18,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Parking] ReleaseVehicle not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] ReleaseVehicle not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -28,7 +28,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             );
 
             if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Parking] Patched ReleaseVehicle (diagnostics).");
+                Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] Patched ReleaseVehicle (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod()
@@ -80,15 +80,18 @@ namespace PickyParking.Patching.Diagnostics.Game
                     : "Unknown";
 
                 string aiName = GetVehicleAiName(ref vehicle);
-
-                Log.Warn(DebugLogCategory.Enforcement,
-                    "[Parking] ReleaseVehicle called. " +
-                    $"vehicleId={vehicleId} reason={reason} ai={aiName} citizenUnits={citizenUnits} sourceBuilding={sourceBuilding} targetBuilding={targetBuilding} flags={vehicle.m_flags}"
-                );
+                if (targetBuilding != 0) //indicates outside connection, in which case its a normal expected behaviour
+                {
+                    //disabled because in vanilla enforcement, this will be spammed constantly and its a normal behaviour for vehicles to despawn before respawning as parked. keeping this for tmpe diagnostics and possible future use
+                    /*Log.Warn(DebugLogCategory.Enforcement,
+                        "[Diagnostics] ReleaseVehicle called. " +
+                        $"vehicleId={vehicleId} reason={reason} ai={aiName} citizenUnits={citizenUnits} sourceBuilding={sourceBuilding} targetBuilding={targetBuilding} flags={vehicle.m_flags}"
+                    );*/
+                }
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Parking] ReleaseVehicle prefix exception\n" + ex);
+                Log.AlwaysError("[Diagnostics] ReleaseVehicle prefix exception\n" + ex);
             }
         }
 
