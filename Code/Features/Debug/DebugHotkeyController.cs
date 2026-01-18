@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
@@ -10,9 +9,6 @@ using PickyParking.GameAdapters;
 
 namespace PickyParking.Features.Debug
 {
-    
-    
-    
     public sealed class DebugHotkeyController
     {
         private const ushort DefaultRadiusMeters = ParkingRulesLimits.DefaultRadiusMeters;

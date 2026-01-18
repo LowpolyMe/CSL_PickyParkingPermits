@@ -1,5 +1,6 @@
 using UnityEngine;
 using ColossalFramework.UI;
+using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Logging;
 using PickyParking.UI;

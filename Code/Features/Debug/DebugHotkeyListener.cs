@@ -1,20 +1,10 @@
+using PickyParking.Features.Debug;
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.ModEntry;
-using PickyParking.Settings;
 
 namespace PickyParking.Features.Debug
 {
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     public sealed class DebugHotkeyListener : MonoBehaviour
     {
         private const KeyCode TogglePrefabKey = KeyCode.Keypad0;

@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using ColossalFramework.Plugins;
 using ICities;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.Settings;
 
