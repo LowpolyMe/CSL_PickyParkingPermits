@@ -11,6 +11,7 @@ namespace PickyParking.Patching.TMPE
     internal static class TMPE_AdvancedParkingTogglePatch
     {
         private const string TargetTypeName = "TrafficManager.Manager.AbstractFeatureManager, TrafficManager";
+        private const string AdvancedParkingManagerTypeName = "TrafficManager.Manager.Impl.AdvancedParkingManager";
         private const string EnableMethodName = "OnEnableFeature";
         private const string DisableMethodName = "OnDisableFeature";
 
@@ -19,7 +20,7 @@ namespace PickyParking.Patching.TMPE
             Type type = Type.GetType(TargetTypeName, false);
             if (type == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping toggle patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager not found; skipping backend refresh patch.");
                 return;
             }
 
@@ -28,7 +29,7 @@ namespace PickyParking.Patching.TMPE
 
             if (enableMethod == null && disableMethod == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager toggle methods not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager toggle methods not found; skipping backend refresh patch.");
                 return;
             }
 
@@ -41,7 +42,7 @@ namespace PickyParking.Patching.TMPE
             }
             else
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager.OnEnableFeature not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager.OnEnableFeature not found; skipping patch.");
             }
 
             if (disableMethod != null)
@@ -53,7 +54,7 @@ namespace PickyParking.Patching.TMPE
             }
             else
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager.OnDisableFeature not found; skipping patch.");
+                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager.OnDisableFeature not found; skipping patch.");
             }
 
             Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched AbstractFeatureManager toggles (backend refresh).");
@@ -77,18 +78,21 @@ namespace PickyParking.Patching.TMPE
             return null;
         }
 
-        private static void EnablePostfix()
+        private static void EnablePostfix(object __instance)
         {
-            RefreshBackendState();
+            RefreshBackendState(__instance);
         }
 
-        private static void DisablePostfix()
+        private static void DisablePostfix(object __instance)
         {
-            RefreshBackendState();
+            RefreshBackendState(__instance);
         }
 
-        private static void RefreshBackendState()
+        private static void RefreshBackendState(object instance)
         {
+            if (!IsAdvancedParkingManager(instance))
+                return;
+
             ModRuntime runtime = ModRuntime.Current;
             if (runtime == null)
                 return;
@@ -98,6 +102,19 @@ namespace PickyParking.Patching.TMPE
                 return;
 
             state.Refresh();
+        }
+
+        private static bool IsAdvancedParkingManager(object instance)
+        {
+            if (instance == null)
+                return false;
+
+            Type type = instance.GetType();
+            string fullName = type.FullName;
+            if (string.IsNullOrEmpty(fullName))
+                return false;
+
+            return string.Equals(fullName, AdvancedParkingManagerTypeName, StringComparison.Ordinal);
         }
     }
 }

@@ -78,9 +78,9 @@ namespace PickyParking.ModLifecycle.BackendSelection
 
             IsTmpeDetected = isTmpeDetected;
             IsTmpeAdvancedParkingActive = isAdvancedActive;
-            // We track TM:PE basic vs advanced for future changes; the parkingAI toggle affects pocket‑car/pathing gates,                                                                                                                                                         
-            // which can change how often parking searches run (and thus how often we evaluate candidates), but it does not                                                                                                                                                        
-            // currently require different enforcement logic, so both backends share behavior for now.  
+            // We track TM:PE basic vs advanced for future changes; the parkingAI toggle affects pocket-car/pathing gates,
+            // which can change how often parking searches run (and thus how often we evaluate candidates), but it does not
+            // currently require different enforcement logic, so both backends share behavior for now.
             if (isTmpeDetected && isAdvancedActive)
                 ActiveBackend = ParkingBackendKind.TmpeAdvanced;
             else if (isTmpeDetected)
