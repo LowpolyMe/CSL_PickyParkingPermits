@@ -9,7 +9,7 @@ namespace PickyParking.Logging
         private readonly TimeSpan _ttl;
 
         private readonly object _lock = new object();
-        private readonly Dictionary<string, DateTime> _lastLoggedByKey = new Dictionary<string, DateTime>();
+        private readonly Dictionary<string, LogRateLimiterEntry> _entriesByKey = new Dictionary<string, LogRateLimiterEntry>();
 
         public LogRateLimiter(int maxKeys, TimeSpan ttl)
         {
@@ -17,39 +17,53 @@ namespace PickyParking.Logging
             _ttl = ttl;
         }
 
-        public bool ShouldLog(string key, TimeSpan interval)
+        public bool TryConsume(string key, TimeSpan interval, out int dropped)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
 
             lock (_lock)
             {
-                DateTime last;
-                if (_lastLoggedByKey.TryGetValue(key, out last))
+                LogRateLimiterEntry entry;
+                if (_entriesByKey.TryGetValue(key, out entry))
                 {
-                    if (now - last < interval)
+                    if (now - entry.LastLoggedUtc < interval)
+                    {
+                        entry.DroppedCount++;
+                        dropped = 0;
                         return false;
+                    }
+
+                    dropped = entry.DroppedCount;
+                    entry.DroppedCount = 0;
+                    entry.LastLoggedUtc = now;
+                    return true;
                 }
 
                 EvictIfNeeded(now);
 
-                _lastLoggedByKey[key] = now;
+                dropped = 0;
+                _entriesByKey[key] = new LogRateLimiterEntry(now);
                 return true;
             }
         }
 
         private void EvictIfNeeded(DateTime now)
         {
-            if (_lastLoggedByKey.Count < _maxKeys)
+            if (_entriesByKey.Count < _maxKeys)
                 return;
 
             DateTime cutoff = now - _ttl;
 
             List<string> toRemove = null;
-            foreach (var pair in _lastLoggedByKey)
+            foreach (KeyValuePair<string, LogRateLimiterEntry> pair in _entriesByKey)
             {
-                if (pair.Value < cutoff)
+                if (pair.Value.LastLoggedUtc < cutoff)
                 {
-                    if (toRemove == null) toRemove = new List<string>();
+                    if (toRemove == null)
+                    {
+                        toRemove = new List<string>();
+                    }
+
                     toRemove.Add(pair.Key);
                 }
             }
@@ -57,19 +71,35 @@ namespace PickyParking.Logging
             if (toRemove != null)
             {
                 for (int i = 0; i < toRemove.Count; i++)
-                    _lastLoggedByKey.Remove(toRemove[i]);
+                {
+                    _entriesByKey.Remove(toRemove[i]);
+                }
             }
             
-            if (_lastLoggedByKey.Count >= _maxKeys)
-                _lastLoggedByKey.Clear();
+            if (_entriesByKey.Count >= _maxKeys)
+            {
+                _entriesByKey.Clear();
+            }
         }
 
         public void Clear()
         {
             lock (_lock)
             {
-                _lastLoggedByKey.Clear();
+                _entriesByKey.Clear();
             }
+        }
+
+        private sealed class LogRateLimiterEntry
+        {
+            public LogRateLimiterEntry(DateTime lastLoggedUtc)
+            {
+                LastLoggedUtc = lastLoggedUtc;
+                DroppedCount = 0;
+            }
+
+            public DateTime LastLoggedUtc { get; set; }
+            public int DroppedCount { get; set; }
         }
     }
 }

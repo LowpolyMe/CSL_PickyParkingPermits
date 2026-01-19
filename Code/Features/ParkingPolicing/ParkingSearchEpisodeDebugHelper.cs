@@ -60,20 +60,25 @@ namespace PickyParking.Features.ParkingPolicing
         public void EndAndMaybeLog(bool enabled, int minCandidates, int minDurationMs)
         {
             if (!enabled) return;
+            if (!Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline)) return;
 
             int duration = Math.Max(0, NowMs() - _startMs);
             if (CandidateChecks == 0)
             {
-                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled && IsVanillaSource(Source))
+                if (IsVanillaSource(Source))
                 {
-                    Log.Info(DebugLogCategory.DecisionPipeline,
-                        $"[SearchEpisode] ParkingSearchEpisode " +
-                        $"src={Source ?? "NULL"} depth={StartDepth} " +
-                        $"vehicleId={VehicleId} citizenId={CitizenId} isVisitor={IsVisitor} " +
-                        $"candidates=0 denied=0 allowed=0 " +
-                        $"durationMs={duration} " +
-                        $"last=(NULL bld=0 prefab=NULL name=NULL)"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        GetPathForSource(Source),
+                        "SearchEpisode",
+                        "src=" + (Source ?? "NULL") +
+                        " | depth=" + StartDepth +
+                        " | vehicleId=" + VehicleId +
+                        " | citizenId=" + CitizenId +
+                        " | isVisitor=" + IsVisitor +
+                        " | candidates=0 | denied=0 | allowed=0" +
+                        " | durationMs=" + duration +
+                        " | lastReason=NULL | lastBuildingId=0 | lastPrefab=NULL | lastBuildingName=NULL");
                 }
                 return;
             }
@@ -81,17 +86,23 @@ namespace PickyParking.Features.ParkingPolicing
             if (CandidateChecks < minCandidates && duration < minDurationMs)
                 return;
 
-            if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-            {
-                Log.Info(DebugLogCategory.DecisionPipeline,
-                    $"[SearchEpisode] ParkingSearchEpisode " +
-                    $"src={Source ?? "NULL"} depth={StartDepth} " +
-                    $"vehicleId={VehicleId} citizenId={CitizenId} isVisitor={IsVisitor} " +
-                    $"candidates={CandidateChecks} denied={DeniedCount} allowed={AllowedCount} " +
-                    $"durationMs={duration} " +
-                    $"last=({LastReason ?? "NULL"} bld={LastBuildingId} prefab={LastPrefab ?? "NULL"} name={LastBuildingName ?? "NULL"})"
-                );
-            }
+            Log.Dev.Info(
+                DebugLogCategory.DecisionPipeline,
+                GetPathForSource(Source),
+                "SearchEpisode",
+                "src=" + (Source ?? "NULL") +
+                " | depth=" + StartDepth +
+                " | vehicleId=" + VehicleId +
+                " | citizenId=" + CitizenId +
+                " | isVisitor=" + IsVisitor +
+                " | candidates=" + CandidateChecks +
+                " | denied=" + DeniedCount +
+                " | allowed=" + AllowedCount +
+                " | durationMs=" + duration +
+                " | lastReason=" + (LastReason ?? "NULL") +
+                " | lastBuildingId=" + LastBuildingId +
+                " | lastPrefab=" + (LastPrefab ?? "NULL") +
+                " | lastBuildingName=" + (LastBuildingName ?? "NULL"));
         }
 
         private static int NowMs() => (int)(Time.realtimeSinceStartup * 1000f);
@@ -102,6 +113,17 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             return source.StartsWith("Vanilla.", StringComparison.Ordinal);
+        }
+
+        private static LogPath GetPathForSource(string source)
+        {
+            if (IsVanillaSource(source))
+                return LogPath.Vanilla;
+
+            if (!string.IsNullOrEmpty(source) && source.StartsWith("TMPE.", StringComparison.Ordinal))
+                return LogPath.TMPE;
+
+            return LogPath.Any;
         }
     }
 }

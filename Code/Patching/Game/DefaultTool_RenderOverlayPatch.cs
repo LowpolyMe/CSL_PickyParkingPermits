@@ -16,7 +16,10 @@ namespace PickyParking.Patching.Game
             MethodInfo method = AccessTools.Method(typeof(DefaultTool), TargetMethodName, new[] { typeof(RenderManager.CameraInfo) });
             if (method == null)
             {
-                Log.Info(DebugLogCategory.RuleUi, "[Overlay] DefaultTool.RenderOverlay not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "PatchSkippedMissingMethod", "type=DefaultTool | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -24,7 +27,10 @@ namespace PickyParking.Patching.Game
                 method,
                 postfix: new HarmonyMethod(typeof(DefaultTool_RenderOverlayPatch), nameof(Postfix)));
 
-            Log.Info(DebugLogCategory.RuleUi, "[Overlay] Patched DefaultTool.RenderOverlay.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "PatchApplied", "type=DefaultTool | method=" + TargetMethodName);
+            }
         }
 
         private static void Postfix(RenderManager.CameraInfo cameraInfo)

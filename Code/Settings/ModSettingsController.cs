@@ -33,11 +33,10 @@ namespace PickyParking.Settings
         public void Save(string reason = null)
         {
             _storage.Save(Current);
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
             {
-                Log.Info(DebugLogCategory.RuleUi, reason == null
-                    ? "[Settings] Saved settings."
-                    : "[Settings] Saved settings: " + reason);
+                string fields = reason == null ? null : "reason=" + reason;
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsSaved", fields);
             }
         }
 
@@ -45,11 +44,10 @@ namespace PickyParking.Settings
         {
             var reloaded = _storage.LoadOrCreate();
             Current.CopyFrom(reloaded); 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
             {
-                Log.Info(DebugLogCategory.RuleUi, reason == null
-                    ? "[Settings] Reloaded settings."
-                    : "[Settings] Reloaded settings: " + reason);
+                string fields = reason == null ? null : "reason=" + reason;
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsReloaded", fields);
             }
         }
     }

@@ -16,7 +16,7 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfMatchesLot(ushort parkedVehicleId, ushort buildingId, string source)
         {
-            if (!Log.IsEnforcementDebugEnabled || !ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement) || !ParkingDebugSettings.IsSelectedBuilding(buildingId))
                 return;
 
             float lotDistSqr = 0f;
@@ -29,9 +29,9 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void LogIfNearDebugLot(ushort parkedVehicleId, string source)
         {
-            if (!Log.IsEnforcementDebugEnabled ||
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement) ||
                 !ParkingDebugSettings.EnableLotInspectionLogs ||
-                ParkingDebugSettings.BuildingDebugId == 0)
+                ParkingDebugSettings.SelectedBuildingId == 0)
                 return;
 
             if (!TryGetParkedPosition(parkedVehicleId, out var pos))
@@ -43,7 +43,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (!lotMatched)
                 return;
 
-            LogRemoval(parkedVehicleId, ParkingDebugSettings.BuildingDebugId, source, lotMatched, lotDistSqr, lotSpaceCount);
+            LogRemoval(parkedVehicleId, ParkingDebugSettings.SelectedBuildingId, source, lotMatched, lotDistSqr, lotSpaceCount);
         }
 
         private static bool TryGetParkedPosition(ushort parkedVehicleId, out Vector3 position)
@@ -68,11 +68,11 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             List<Vector3> spaces = GetSpacePositions();
-            if (!Log.IsEnforcementDebugEnabled ||
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement) ||
                 !ParkingDebugSettings.EnableLotInspectionLogs ||
-                ParkingDebugSettings.BuildingDebugId == 0)
+                ParkingDebugSettings.SelectedBuildingId == 0)
                 return false;
-            if (!context.GameAccess.TryCollectParkingSpacePositions(ParkingDebugSettings.BuildingDebugId, spaces))
+            if (!context.GameAccess.TryCollectParkingSpacePositions(ParkingDebugSettings.SelectedBuildingId, spaces))
                 return false;
 
             lotSpaceCount = spaces.Count;
@@ -131,19 +131,30 @@ namespace PickyParking.Features.ParkingPolicing
                     citizenFlags = citizen.m_flags.ToString();
                 }
 
-                Log.Warn(DebugLogCategory.Enforcement,
-                    "[Forensics] Parked vehicle removed " +
-                    $"source={source} buildingId={buildingId} parkedId={parkedVehicleId} " +
-                    $"flags={pv.m_flags} prefab={prefabName} ownerCitizen={ownerCitizenId} " +
-                    $"ownerInstance={ownerInstance} homeId={homeId} workId={workId} " +
-                    $"citizenFlags={citizenFlags} " +
-                    $"pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) " +
-                    $"lotMatch={lotMatched} lotDistSqr={lotDistSqr:F2} lotSpaces={lotSpaceCount}"
-                );
+                Log.Dev.Warn(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "ParkedVehicleRemoved",
+                    "source=" + (source ?? "NULL") +
+                    " | buildingId=" + buildingId +
+                    " | parkedId=" + parkedVehicleId +
+                    " | flags=" + pv.m_flags +
+                    " | prefab=" + prefabName +
+                    " | ownerCitizen=" + ownerCitizenId +
+                    " | ownerInstance=" + ownerInstance +
+                    " | homeId=" + homeId +
+                    " | workId=" + workId +
+                    " | citizenFlags=" + citizenFlags +
+                    " | posX=" + pos.x.ToString("F1") +
+                    " | posY=" + pos.y.ToString("F1") +
+                    " | posZ=" + pos.z.ToString("F1") +
+                    " | lotMatch=" + lotMatched +
+                    " | lotDistSqr=" + lotDistSqr.ToString("F2") +
+                    " | lotSpaces=" + lotSpaceCount);
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Forensics] Parked vehicle removal logging failed\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Enforcement, LogPath.Any, "ParkedVehicleRemovalLogFailed", ex);
             }
         }
     }

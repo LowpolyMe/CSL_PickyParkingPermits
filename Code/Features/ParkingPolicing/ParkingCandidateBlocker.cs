@@ -33,8 +33,10 @@ namespace PickyParking.Features.ParkingPolicing
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetCandidateDecision");
             if (context == null || !context.FeatureGate.IsActive || context.CandidateDecisionPipeline == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Runtime] Candidate decision skipped: runtime inactive buildingId={buildingId}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(DebugLogCategory.DecisionPipeline, LogPath.Any, "CandidateDecisionSkippedRuntimeInactive", "buildingId=" + buildingId);
+                }
                 return false;
             }
 
@@ -47,25 +49,33 @@ namespace PickyParking.Features.ParkingPolicing
             if (!context.CandidateDecisionPipeline.TryDenyCandidateBuilding(buildingId, out denied, out reason))
                 return false;
 
-            if (Log.IsVerboseEnabled &&
-                Log.IsDecisionDebugEnabled &&
+            if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline) &&
                 context.ParkingRulesConfigRegistry.TryGet(buildingId, out var rule))
             {
-                Log.Info(DebugLogCategory.DecisionPipeline,
-                    "event=CandidateDecision " + 
-                    $"buildingId={buildingId} denied={denied} reason={reason} " +
-                    $"isVisitor={ParkingSearchContext.IsVisitor} " +
-                    $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
-                    $"source={ParkingSearchContext.Source ?? "NULL"} " +
-                    $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
-                    $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
-                    $"VisitorsAllowed={rule.VisitorsAllowed}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.DecisionPipeline,
+                    GetPathForSource(ParkingSearchContext.Source),
+                    "CandidateDecision",
+                    "buildingId=" + buildingId +
+                    " | denied=" + denied +
+                    " | reason=" + reason +
+                    " | isVisitor=" + ParkingSearchContext.IsVisitor +
+                    " | vehicleId=" + ParkingSearchContext.VehicleId +
+                    " | citizenId=" + ParkingSearchContext.CitizenId +
+                    " | source=" + (ParkingSearchContext.Source ?? "NULL") +
+                    " | residentsOnly=" + rule.ResidentsWithinRadiusOnly +
+                    " | residentsRadiusMeters=" + rule.ResidentsRadiusMeters +
+                    " | workSchoolOnly=" + rule.WorkSchoolWithinRadiusOnly +
+                    " | workSchoolRadiusMeters=" + rule.WorkSchoolRadiusMeters +
+                    " | visitorsAllowed=" + rule.VisitorsAllowed);
             }
             
-            string prefabName = GetBuildingPrefabName(buildingId);
-            string buildingName = GetBuildingCustomName(buildingId);
-            ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName, buildingName);
+            if (ParkingSearchContext.EnableEpisodeLogs && Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+            {
+                string prefabName = GetBuildingPrefabName(buildingId);
+                string buildingName = GetBuildingCustomName(buildingId);
+                ParkingSearchContext.RecordCandidate(denied, reason.ToString(), buildingId, prefabName, buildingName);
+            }
             ParkingStatsCounter.IncrementCandidateDecision(denied);
             return true;
         }
@@ -98,24 +108,36 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (!ParkingSearchContext.HasContext)
             {
-                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, "[Decision] CreateParkedVehicle check skipped: no parking search context");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(DebugLogCategory.DecisionPipeline, LogPath.Any, "CreateParkedVehicleSkippedNoContext");
+                }
                 ParkingStatsCounter.IncrementCreateCheckNoContext();
                 return false;
             }
 
             if (ownerCitizenId == 0u)
             {
-                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, "[Decision] CreateParkedVehicle check skipped: ownerCitizenId=0");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(DebugLogCategory.DecisionPipeline, LogPath.Any, "CreateParkedVehicleSkippedNoOwner");
+                }
                 ParkingStatsCounter.IncrementCreateCheckNoOwner();
                 return false;
             }
 
             if (!TryFindRuleBuildingAtPosition(context, position, out ushort buildingId, out ParkingRulesConfigDefinition rule))
             {
-                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                    Log.Info(DebugLogCategory.DecisionPipeline, $"[Decision] CreateParkedVehicle check skipped: no rule building at position ({position.x:F1},{position.y:F1},{position.z:F1})");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "CreateParkedVehicleSkippedNoRuleBuilding",
+                        "posX=" + position.x.ToString("F1") +
+                        " | posY=" + position.y.ToString("F1") +
+                        " | posZ=" + position.z.ToString("F1"));
+                }
                 ParkingStatsCounter.IncrementCreateCheckNoRuleBuilding();
                 return false;
             }
@@ -124,19 +146,23 @@ namespace PickyParking.Features.ParkingPolicing
             if (eval.Allowed)
                 return false;
 
-            if (Log.IsVerboseEnabled &&
-                Log.IsDecisionDebugEnabled)
+            if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
             {
-                Log.Info(DebugLogCategory.DecisionPipeline,
-                    "event=CreateParkedVehicleBlock " +
-                    $"buildingId={buildingId} reason={eval.Reason} " +
-                    $"isVisitor={ParkingSearchContext.IsVisitor} " +
-                    $"vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId} " +
-                    $"source={ParkingSearchContext.Source ?? "NULL"} " +
-                    $"rule=ResidentsOnly={rule.ResidentsWithinRadiusOnly} ({rule.ResidentsRadiusMeters}m), " +
-                    $"WorkSchoolOnly={rule.WorkSchoolWithinRadiusOnly} ({rule.WorkSchoolRadiusMeters}m), " +
-                    $"VisitorsAllowed={rule.VisitorsAllowed}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.DecisionPipeline,
+                    GetPathForSource(ParkingSearchContext.Source),
+                    "CreateParkedVehicleBlocked",
+                    "buildingId=" + buildingId +
+                    " | reason=" + eval.Reason +
+                    " | isVisitor=" + ParkingSearchContext.IsVisitor +
+                    " | vehicleId=" + ParkingSearchContext.VehicleId +
+                    " | citizenId=" + ParkingSearchContext.CitizenId +
+                    " | source=" + (ParkingSearchContext.Source ?? "NULL") +
+                    " | residentsOnly=" + rule.ResidentsWithinRadiusOnly +
+                    " | residentsRadiusMeters=" + rule.ResidentsRadiusMeters +
+                    " | workSchoolOnly=" + rule.WorkSchoolWithinRadiusOnly +
+                    " | workSchoolRadiusMeters=" + rule.WorkSchoolRadiusMeters +
+                    " | visitorsAllowed=" + rule.VisitorsAllowed);
             }
 
             return true;
@@ -200,10 +226,31 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
             {
-                Log.AlwaysWarn("[Threading] ParkingCandidateBlocker accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Warn(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "OffSimulationThread",
+                        "caller=" + (caller ?? "UNKNOWN"),
+                        "ParkingCandidateBlocker.OffSimThread");
+                }
             }
 
             return false;
+        }
+
+        private static LogPath GetPathForSource(string source)
+        {
+            if (!string.IsNullOrEmpty(source))
+            {
+                if (source.StartsWith("Vanilla.", StringComparison.Ordinal))
+                    return LogPath.Vanilla;
+                if (source.StartsWith("TMPE.", StringComparison.Ordinal))
+                    return LogPath.TMPE;
+            }
+
+            return LogPath.Any;
         }
 
         internal static bool IsInScope(ParkingRuntimeContext services, ushort buildingId)

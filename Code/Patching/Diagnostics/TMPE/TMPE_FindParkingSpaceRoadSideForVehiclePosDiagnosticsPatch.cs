@@ -19,16 +19,20 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceRoadSideForVehiclePos diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo method = FindTargetMethod(type);
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpaceRoadSideForVehiclePos overload not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -37,8 +41,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 postfix: new HarmonyMethod(typeof(TMPE_FindParkingSpaceRoadSideForVehiclePosDiagnosticsPatch), nameof(Postfix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpaceRoadSideForVehiclePos (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsPatchApplied", "method=" + TargetMethodName);
+            }
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)
@@ -83,7 +89,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (__result)
                 return;
 
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (!ParkingSearchContext.HasContext)
@@ -91,12 +97,18 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             string prefabName = vehicleInfo != null ? vehicleInfo.name : "UNKNOWN";
 
-            Log.Info(DebugLogCategory.Tmpe,
-                "[TMPE] FindParkingSpaceRoadSideForVehiclePos failed " +
-                $"segmentId={segmentId} refPos=({refPos.x:F1},{refPos.y:F1},{refPos.z:F1}) " +
-                $"vehiclePrefab={prefabName} vehicleId={ParkingSearchContext.VehicleId} " +
-                $"citizenId={ParkingSearchContext.CitizenId} source={ParkingSearchContext.Source ?? "NULL"}"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.Tmpe,
+                LogPath.TMPE,
+                "FindParkingSpaceRoadSideForVehiclePosFailed",
+                "segmentId=" + segmentId +
+                " | refPosX=" + refPos.x.ToString("F1") +
+                " | refPosY=" + refPos.y.ToString("F1") +
+                " | refPosZ=" + refPos.z.ToString("F1") +
+                " | vehiclePrefab=" + prefabName +
+                " | vehicleId=" + ParkingSearchContext.VehicleId +
+                " | citizenId=" + ParkingSearchContext.CitizenId +
+                " | source=" + (ParkingSearchContext.Source ?? "NULL"));
         }
     }
 }

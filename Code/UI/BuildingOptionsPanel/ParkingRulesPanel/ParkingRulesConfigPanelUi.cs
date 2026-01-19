@@ -391,8 +391,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 UpdateSliderFill(row);
             };
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled && thumb.spriteInfo == null)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Slider thumb sprite missing: " + thumb.spriteName);
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi) && thumb.spriteInfo == null)
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SliderThumbSpriteMissing", "sprite=" + thumb.spriteName);
+            }
 
             UpdateSliderFill(row);
             return row;

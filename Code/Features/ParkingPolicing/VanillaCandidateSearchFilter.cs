@@ -47,9 +47,15 @@ namespace PickyParking.Features.ParkingPolicing
                 && backendState.ActiveBackend != ParkingBackendKind.TmpeBasic)
                 return;
 
-            Log.AlwaysWarnOnce(
-                "VanillaBypass.TmpeAdvanced",
-                "[BackendSelection] event=VanillaBackendBypassed reason=TmpeAdvancedActive");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Warn(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "VanillaBackendBypassed",
+                    "reason=TmpeActive | activeBackend=" + backendState.ActiveBackend,
+                    "VanillaBypass.TmpeActive");
+            }
         }
     }
 }

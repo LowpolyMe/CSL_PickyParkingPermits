@@ -72,7 +72,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordFromUpdateCarPathState(object[] args)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (!TryExtractUpdateArgs(args, out ushort vehicleId, out object extDriver, out object pathStateObj))
@@ -86,23 +86,33 @@ namespace PickyParking.Patching.TMPE
             {
                 if (!string.Equals(last.PathMode, status.PathMode, StringComparison.Ordinal))
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState pathMode changed. " +
-                        $"vehicleId={vehicleId} prev={last.PathMode ?? "NULL"} next={status.PathMode ?? "NULL"} " +
-                        $"pathState={pathState} parkingLocation={status.ParkingLocation} parkingLocationId={status.ParkingLocationId} " +
-                        $"failedAttempts={status.FailedAttempts}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStatePathModeChanged",
+                        "vehicleId=" + vehicleId +
+                        " | prevPathMode=" + (last.PathMode ?? "NULL") +
+                        " | nextPathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState +
+                        " | parkingLocation=" + status.ParkingLocation +
+                        " | parkingLocationId=" + status.ParkingLocationId +
+                        " | failedAttempts=" + status.FailedAttempts);
                 }
 
                 if (!string.Equals(last.ParkingLocation, status.ParkingLocation, StringComparison.Ordinal) ||
                     last.ParkingLocationId != status.ParkingLocationId)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState parking location changed. " +
-                        $"vehicleId={vehicleId} prev={last.ParkingLocation ?? "NULL"}#{last.ParkingLocationId} " +
-                        $"next={status.ParkingLocation ?? "NULL"}#{status.ParkingLocationId} " +
-                        $"pathMode={status.PathMode ?? "NULL"} pathState={pathState}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStateParkingLocationChanged",
+                        "vehicleId=" + vehicleId +
+                        " | prevLocation=" + (last.ParkingLocation ?? "NULL") +
+                        " | prevLocationId=" + last.ParkingLocationId +
+                        " | nextLocation=" + (status.ParkingLocation ?? "NULL") +
+                        " | nextLocationId=" + status.ParkingLocationId +
+                        " | pathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState);
                 }
             }
 
@@ -111,7 +121,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordFromUpdateCarPathState(ushort vehicleId, object extDriver, object pathStateObj)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (vehicleId == 0 || extDriver == null)
@@ -125,23 +135,33 @@ namespace PickyParking.Patching.TMPE
             {
                 if (!string.Equals(last.PathMode, status.PathMode, StringComparison.Ordinal))
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState pathMode changed. " +
-                        $"vehicleId={vehicleId} prev={last.PathMode ?? "NULL"} next={status.PathMode ?? "NULL"} " +
-                        $"pathState={pathState} parkingLocation={status.ParkingLocation} parkingLocationId={status.ParkingLocationId} " +
-                        $"failedAttempts={status.FailedAttempts}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStatePathModeChanged",
+                        "vehicleId=" + vehicleId +
+                        " | prevPathMode=" + (last.PathMode ?? "NULL") +
+                        " | nextPathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState +
+                        " | parkingLocation=" + status.ParkingLocation +
+                        " | parkingLocationId=" + status.ParkingLocationId +
+                        " | failedAttempts=" + status.FailedAttempts);
                 }
 
                 if (!string.Equals(last.ParkingLocation, status.ParkingLocation, StringComparison.Ordinal) ||
                     last.ParkingLocationId != status.ParkingLocationId)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState parking location changed. " +
-                        $"vehicleId={vehicleId} prev={last.ParkingLocation ?? "NULL"}#{last.ParkingLocationId} " +
-                        $"next={status.ParkingLocation ?? "NULL"}#{status.ParkingLocationId} " +
-                        $"pathMode={status.PathMode ?? "NULL"} pathState={pathState}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStateParkingLocationChanged",
+                        "vehicleId=" + vehicleId +
+                        " | prevLocation=" + (last.ParkingLocation ?? "NULL") +
+                        " | prevLocationId=" + last.ParkingLocationId +
+                        " | nextLocation=" + (status.ParkingLocation ?? "NULL") +
+                        " | nextLocationId=" + status.ParkingLocationId +
+                        " | pathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState);
                 }
             }
 
@@ -150,7 +170,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordBeforeUpdateCarPathState(object[] args)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (!TryExtractUpdateArgs(args, out ushort vehicleId, out object extDriver, out object pathStateObj))
@@ -164,7 +184,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordBeforeUpdateCarPathState(ushort vehicleId, object extDriver, object pathStateObj)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (vehicleId == 0 || extDriver == null)
@@ -178,7 +198,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordAfterUpdateCarPathState(object[] args)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (!TryExtractUpdateArgs(args, out ushort vehicleId, out object extDriver, out object pathStateObj))
@@ -193,23 +213,33 @@ namespace PickyParking.Patching.TMPE
             {
                 if (!string.Equals(before.PathMode, status.PathMode, StringComparison.Ordinal))
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState changed pathMode. " +
-                        $"vehicleId={vehicleId} prev={before.PathMode ?? "NULL"} next={status.PathMode ?? "NULL"} " +
-                        $"pathState={pathState} parkingLocation={status.ParkingLocation} parkingLocationId={status.ParkingLocationId} " +
-                        $"failedAttempts={status.FailedAttempts}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStatePathModeChangedAfter",
+                        "vehicleId=" + vehicleId +
+                        " | prevPathMode=" + (before.PathMode ?? "NULL") +
+                        " | nextPathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState +
+                        " | parkingLocation=" + status.ParkingLocation +
+                        " | parkingLocationId=" + status.ParkingLocationId +
+                        " | failedAttempts=" + status.FailedAttempts);
                 }
 
                 if (!string.Equals(before.ParkingLocation, status.ParkingLocation, StringComparison.Ordinal) ||
                     before.ParkingLocationId != status.ParkingLocationId)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState changed parking location. " +
-                        $"vehicleId={vehicleId} prev={before.ParkingLocation ?? "NULL"}#{before.ParkingLocationId} " +
-                        $"next={status.ParkingLocation ?? "NULL"}#{status.ParkingLocationId} " +
-                        $"pathMode={status.PathMode ?? "NULL"} pathState={pathState}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStateParkingLocationChangedAfter",
+                        "vehicleId=" + vehicleId +
+                        " | prevLocation=" + (before.ParkingLocation ?? "NULL") +
+                        " | prevLocationId=" + before.ParkingLocationId +
+                        " | nextLocation=" + (status.ParkingLocation ?? "NULL") +
+                        " | nextLocationId=" + status.ParkingLocationId +
+                        " | pathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState);
                 }
             }
 
@@ -219,7 +249,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordAfterUpdateCarPathState(ushort vehicleId, object extDriver, object pathStateObj)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (vehicleId == 0 || extDriver == null)
@@ -234,23 +264,33 @@ namespace PickyParking.Patching.TMPE
             {
                 if (!string.Equals(before.PathMode, status.PathMode, StringComparison.Ordinal))
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState changed pathMode. " +
-                        $"vehicleId={vehicleId} prev={before.PathMode ?? "NULL"} next={status.PathMode ?? "NULL"} " +
-                        $"pathState={pathState} parkingLocation={status.ParkingLocation} parkingLocationId={status.ParkingLocationId} " +
-                        $"failedAttempts={status.FailedAttempts}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStatePathModeChangedAfter",
+                        "vehicleId=" + vehicleId +
+                        " | prevPathMode=" + (before.PathMode ?? "NULL") +
+                        " | nextPathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState +
+                        " | parkingLocation=" + status.ParkingLocation +
+                        " | parkingLocationId=" + status.ParkingLocationId +
+                        " | failedAttempts=" + status.FailedAttempts);
                 }
 
                 if (!string.Equals(before.ParkingLocation, status.ParkingLocation, StringComparison.Ordinal) ||
                     before.ParkingLocationId != status.ParkingLocationId)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] UpdateCarPathState changed parking location. " +
-                        $"vehicleId={vehicleId} prev={before.ParkingLocation ?? "NULL"}#{before.ParkingLocationId} " +
-                        $"next={status.ParkingLocation ?? "NULL"}#{status.ParkingLocationId} " +
-                        $"pathMode={status.PathMode ?? "NULL"} pathState={pathState}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "UpdateCarPathStateParkingLocationChangedAfter",
+                        "vehicleId=" + vehicleId +
+                        " | prevLocation=" + (before.ParkingLocation ?? "NULL") +
+                        " | prevLocationId=" + before.ParkingLocationId +
+                        " | nextLocation=" + (status.ParkingLocation ?? "NULL") +
+                        " | nextLocationId=" + status.ParkingLocationId +
+                        " | pathMode=" + (status.PathMode ?? "NULL") +
+                        " | pathState=" + pathState);
                 }
             }
 
@@ -330,7 +370,7 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordParkingLocation(string source, ushort vehicleId, object extDriver)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (vehicleId == 0 || extDriver == null)
@@ -344,13 +384,18 @@ namespace PickyParking.Patching.TMPE
                 if (!string.Equals(last.ParkingLocation, status.ParkingLocation, StringComparison.Ordinal) ||
                     last.ParkingLocationId != status.ParkingLocationId)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] Parking location changed. " +
-                        $"source={source} vehicleId={vehicleId} " +
-                        $"prev={last.ParkingLocation ?? "NULL"}#{last.ParkingLocationId} " +
-                        $"next={status.ParkingLocation ?? "NULL"}#{status.ParkingLocationId} " +
-                        $"pathMode={status.PathMode ?? "NULL"} failedAttempts={status.FailedAttempts}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "ParkingLocationChanged",
+                        "source=" + source +
+                        " | vehicleId=" + vehicleId +
+                        " | prevLocation=" + (last.ParkingLocation ?? "NULL") +
+                        " | prevLocationId=" + last.ParkingLocationId +
+                        " | nextLocation=" + (status.ParkingLocation ?? "NULL") +
+                        " | nextLocationId=" + status.ParkingLocationId +
+                        " | pathMode=" + (status.PathMode ?? "NULL") +
+                        " | failedAttempts=" + status.FailedAttempts);
                 }
             }
 

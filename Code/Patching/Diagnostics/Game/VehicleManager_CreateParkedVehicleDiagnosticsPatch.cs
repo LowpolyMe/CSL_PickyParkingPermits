@@ -18,8 +18,10 @@ namespace PickyParking.Patching.Diagnostics.Game
             MethodInfo method = FindTargetMethod();
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] CreateParkedVehicle not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "DiagnosticsSkippedMissingMethod", "type=VehicleManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -28,8 +30,10 @@ namespace PickyParking.Patching.Diagnostics.Game
                 postfix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehicleDiagnosticsPatch), nameof(Postfix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] Patched CreateParkedVehicle (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "DiagnosticsPatchApplied", "type=VehicleManager | method=" + TargetMethodName);
+            }
         }
 
         private static MethodInfo FindTargetMethod()
@@ -71,7 +75,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             Vector3 position,
             uint ownerCitizen)
         {
-            if (!Log.IsEnforcementDebugEnabled || !Log.IsVerboseEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 return;
 
             if (!__result)
@@ -82,11 +86,18 @@ namespace PickyParking.Patching.Diagnostics.Game
                 string failedPrefabName = info != null ? info.name : "UNKNOWN";
                 string failedSource = ParkingSearchContext.Source ?? "NULL";
 
-                Log.Info(DebugLogCategory.Enforcement,
-                    "[Diagnostics] CreateParkedVehicle failed " +
-                    $"prefab={failedPrefabName} ownerCitizen={ownerCitizen} pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
-                    $"source={failedSource} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Vanilla,
+                    "CreateParkedVehicleFailed",
+                    "prefab=" + failedPrefabName +
+                    " | ownerCitizen=" + ownerCitizen +
+                    " | posX=" + position.x.ToString("F1") +
+                    " | posY=" + position.y.ToString("F1") +
+                    " | posZ=" + position.z.ToString("F1") +
+                    " | source=" + failedSource +
+                    " | vehicleId=" + ParkingSearchContext.VehicleId +
+                    " | citizenId=" + ParkingSearchContext.CitizenId);
                 return;
             }
 
@@ -96,18 +107,26 @@ namespace PickyParking.Patching.Diagnostics.Game
             if (!ParkingCandidateBlocker.TryGetRuleBuildingAtPosition(position, out ushort buildingId))
                 return;
 
-            if (!ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (!ParkingDebugSettings.IsSelectedBuilding(buildingId))
                 return;
 
             string prefabName = info != null ? info.name : "UNKNOWN";
             string source = ParkingSearchContext.Source ?? "NULL";
 
-            Log.Info(DebugLogCategory.Enforcement,
-                "[Diagnostics] CreateParkedVehicle created " +
-                $"buildingId={buildingId} parkedId={parked} prefab={prefabName} ownerCitizen={ownerCitizen} " +
-                $"pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
-                $"source={source} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.Enforcement,
+                LogPath.Vanilla,
+                "CreateParkedVehicleCreated",
+                "buildingId=" + buildingId +
+                " | parkedId=" + parked +
+                " | prefab=" + prefabName +
+                " | ownerCitizen=" + ownerCitizen +
+                " | posX=" + position.x.ToString("F1") +
+                " | posY=" + position.y.ToString("F1") +
+                " | posZ=" + position.z.ToString("F1") +
+                " | source=" + source +
+                " | vehicleId=" + ParkingSearchContext.VehicleId +
+                " | citizenId=" + ParkingSearchContext.CitizenId);
         }
     }
 }

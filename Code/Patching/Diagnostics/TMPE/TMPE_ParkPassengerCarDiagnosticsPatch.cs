@@ -19,16 +19,20 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] VehicleBehaviorManager not found; skipping ParkPassengerCar diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingType", "type=VehicleBehaviorManager");
+                }
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] ParkPassengerCar not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingMethod", "type=VehicleBehaviorManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -37,8 +41,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 postfix: new HarmonyMethod(typeof(TMPE_ParkPassengerCarDiagnosticsPatch), nameof(Postfix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched ParkPassengerCar (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsPatchApplied", "method=" + TargetMethodName);
+            }
         }
 
         private static void Postfix(
@@ -53,24 +59,30 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (TryGetExtDriverState(extDriverInstance, out string decisionPathMode, out string decisionLocation, out ushort decisionLocationId))
                 {
                     string branch = DetermineBranch(decisionPathMode, decisionLocation);
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] ParkVehicle decision. " +
-                        $"pathMode={decisionPathMode} storedLocation={decisionLocation} locationId={decisionLocationId} branch={branch}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "ParkVehicleDecision",
+                        "pathMode=" + decisionPathMode +
+                        " | storedLocation=" + decisionLocation +
+                        " | locationId=" + decisionLocationId +
+                        " | branch=" + branch);
 
                     if (string.Equals(branch, "Vanilla", StringComparison.Ordinal))
                     {
-                        Log.Info(DebugLogCategory.Tmpe,
-                            "[TMPE] ParkVehicle vanilla fallback used. " +
-                            $"pathMode={decisionPathMode} storedLocation={decisionLocation}"
-                        );
+                        Log.Dev.Info(
+                            DebugLogCategory.Tmpe,
+                            LogPath.TMPE,
+                            "ParkVehicleVanillaFallback",
+                            "pathMode=" + decisionPathMode +
+                            " | storedLocation=" + decisionLocation);
                     }
                 }
             }
 
             if (__result)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 {
                     ushort successVehicleId = vehicleId;
 
@@ -79,18 +91,22 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                     TryGetKnownParkingLocation(extDriverInstance, ref successLocation, ref successLocationId);
                     if (string.Equals(successLocation, "Building", StringComparison.Ordinal))
                     {
-                        Log.Info(DebugLogCategory.Tmpe,
-                            "[TMPE] ParkPassengerCar succeeded. " +
-                            $"knownLocation={successLocation} locationId={successLocationId}"
-                        );
+                        Log.Dev.Info(
+                            DebugLogCategory.Tmpe,
+                            LogPath.TMPE,
+                            "ParkPassengerCarSucceeded",
+                            "knownLocation=" + successLocation + " | locationId=" + successLocationId);
                     }
 
                     if (TryGetExtDriverState(extDriverInstance, out string successPathMode, out string successParkingLocation, out ushort successParkingLocationId))
                     {
-                        Log.Info(DebugLogCategory.Tmpe,
-                            "[TMPE] ParkPassengerCar state. " +
-                            $"pathMode={successPathMode} parkingLocation={successParkingLocation} parkingLocationId={successParkingLocationId}"
-                        );
+                        Log.Dev.Info(
+                            DebugLogCategory.Tmpe,
+                            LogPath.TMPE,
+                            "ParkPassengerCarState",
+                            "pathMode=" + successPathMode +
+                            " | parkingLocation=" + successParkingLocation +
+                            " | parkingLocationId=" + successParkingLocationId);
                     }
 
                     if (successVehicleId != 0)
@@ -105,10 +121,11 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
                         if (ParkingPathModeTracker.TryGetStatus(successVehicleId, out bool hadKnown, out bool hadAlt))
                         {
-                            Log.Info(DebugLogCategory.Tmpe,
-                                "[TMPE] ParkPassengerCar path history. " +
-                                $"knownCalculated={hadKnown} altCalculated={hadAlt}"
-                            );
+                            Log.Dev.Info(
+                                DebugLogCategory.Tmpe,
+                                LogPath.TMPE,
+                                "ParkPassengerCarPathHistory",
+                                "knownCalculated=" + hadKnown + " | altCalculated=" + hadAlt);
                         }
                         ParkingPathModeTracker.Clear(successVehicleId);
                     }
@@ -119,7 +136,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (__result)
                 return;
 
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             string pathMode = "UNKNOWN";
@@ -141,7 +158,12 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ParkPassengerCarDiagnostics.ReadState", "[TMPE] Failed reading ext driver state: " + ex);
+                Log.Dev.Warn(
+                    DebugLogCategory.Tmpe,
+                    LogPath.TMPE,
+                    "ExtDriverStateReadFailed",
+                    "error=" + ex,
+                    "TMPE.ParkPassengerCarDiagnostics.ReadState");
                 pathMode = "ERR";
             }
 
@@ -150,26 +172,36 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             TryGetKnownParkingLocation(extDriverInstance, ref parkingLocation, ref parkingLocationId);
 
-            Log.Info(DebugLogCategory.Tmpe,
-                "[TMPE] ParkPassengerCar returned false. " +
-                $"vehicleId={vehicleId} driverCitizenId={driverCitizenId} pathMode={pathMode} failedAttempts={failedAttempts} " +
-                $"knownLocation={parkingLocation} locationId={parkingLocationId} targetBuildingId={targetBuildingId}"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.Tmpe,
+                LogPath.TMPE,
+                "ParkPassengerCarFailed",
+                "vehicleId=" + vehicleId +
+                " | driverCitizenId=" + driverCitizenId +
+                " | pathMode=" + pathMode +
+                " | failedAttempts=" + failedAttempts +
+                " | knownLocation=" + parkingLocation +
+                " | locationId=" + parkingLocationId +
+                " | targetBuildingId=" + targetBuildingId);
 
             if (TryGetExtDriverState(extDriverInstance, out string extPathMode, out string extParkingLocation, out ushort extParkingLocationId))
             {
-                Log.Info(DebugLogCategory.Tmpe,
-                    "[TMPE] ParkPassengerCar state. " +
-                    $"pathMode={extPathMode} parkingLocation={extParkingLocation} parkingLocationId={extParkingLocationId}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.Tmpe,
+                    LogPath.TMPE,
+                    "ParkPassengerCarState",
+                    "pathMode=" + extPathMode +
+                    " | parkingLocation=" + extParkingLocation +
+                    " | parkingLocationId=" + extParkingLocationId);
             }
 
             if (ParkingPathModeTracker.TryGetStatus(vehicleId, out bool failedHadKnown, out bool failedHadAlt))
             {
-                Log.Info(DebugLogCategory.Tmpe,
-                    "[TMPE] ParkPassengerCar path history. " +
-                    $"knownCalculated={failedHadKnown} altCalculated={failedHadAlt}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.Tmpe,
+                    LogPath.TMPE,
+                    "ParkPassengerCarPathHistory",
+                    "knownCalculated=" + failedHadKnown + " | altCalculated=" + failedHadAlt);
             }
 
             if (vehicleId != 0 && extDriverInstance != null)
@@ -211,8 +243,15 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ParkPassengerCarDiagnostics.KnownLocation", "[TMPE] Failed reading known parking location: " + ex);
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Warn(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "KnownParkingLocationReadFailed",
+                        "error=" + ex,
+                        "TMPE.ParkPassengerCarDiagnostics.KnownLocation");
+                }
             }
         }
 
@@ -253,15 +292,22 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.WarnOnce(DebugLogCategory.Tmpe, "TMPE.ParkPassengerCarDiagnostics.ExtState", "[TMPE] Failed reading ext driver state: " + ex);
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Warn(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "ExtDriverStateReadFailed",
+                        "error=" + ex,
+                        "TMPE.ParkPassengerCarDiagnostics.ExtState");
+                }
                 return false;
             }
         }
 
         private static bool IsDecisionLoggingEnabled()
         {
-            return Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled;
+            return Log.Dev.IsEnabled(DebugLogCategory.Tmpe);
         }
 
         private static string DetermineBranch(string pathMode, string location)

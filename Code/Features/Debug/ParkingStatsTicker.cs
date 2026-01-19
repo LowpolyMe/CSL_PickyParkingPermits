@@ -1,5 +1,6 @@
 using System.Threading;
 using UnityEngine;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 
 namespace PickyParking.Features.Debug
@@ -25,7 +26,12 @@ namespace PickyParking.Features.Debug
             if (!enabled)
                 ParkingStatsCounter.ResetAll();
             else if (_instance == null && Interlocked.Exchange(ref _missingInstanceLogged, 1) == 0)
-                Log.Warn(DebugLogCategory.None, "[Runtime] Stats ticker enabled but no instance exists yet.");
+            {
+                if (Log.Dev.IsEnabled(DebugLogCategory.ParkingStats))
+                {
+                    Log.Dev.Warn(DebugLogCategory.ParkingStats, LogPath.Any, "StatsTickerInstanceMissing");
+                }
+            }
         }
 
         public static void NotifyDayChanged()

@@ -6,11 +6,11 @@ namespace PickyParking.Features.Debug
         public static bool DisableTMPECandidateBlocking;
         public static bool DisableClearKnownParkingOnDenied = false;
         public static bool DisableParkingEnforcement;
-        public static ushort BuildingDebugId;
+        public static ushort SelectedBuildingId;
 
-        public static bool IsBuildingDebugEnabled(ushort buildingId)
+        public static bool IsSelectedBuilding(ushort buildingId)
         {
-            return EnableLotInspectionLogs && BuildingDebugId != 0 && buildingId == BuildingDebugId;
+            return SelectedBuildingId != 0 && buildingId == SelectedBuildingId;
         }
     }
 }

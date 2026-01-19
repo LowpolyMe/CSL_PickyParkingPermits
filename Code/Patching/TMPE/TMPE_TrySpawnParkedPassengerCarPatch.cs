@@ -15,17 +15,23 @@ namespace PickyParking.Patching.TMPE
 
         public static void Apply(Harmony harmony)
         {
-            var type = Type.GetType(TargetTypeName, throwOnError: false);
+            Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping TrySpawnParkedPassengerCar patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
-            var method = FindTrySpawnParkedPassengerCar(type);
+            MethodInfo method = FindTrySpawnParkedPassengerCar(type);
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] TrySpawnParkedPassengerCar overload not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AdvancedParkingManager | method=TrySpawnParkedPassengerCar");
+                }
                 return;
             }
 
@@ -35,7 +41,10 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_TrySpawnParkedPassengerCarPatch), nameof(Finalizer))
             );
 
-            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched TrySpawnParkedPassengerCar (context push/pop).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchApplied", "type=AdvancedParkingManager | method=TrySpawnParkedPassengerCar | behavior=ContextPushPop");
+            }
         }
 
         private static MethodInfo FindTrySpawnParkedPassengerCar(Type advancedParkingManagerType)

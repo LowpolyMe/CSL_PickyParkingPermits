@@ -43,7 +43,10 @@ namespace PickyParking.Features.Debug
 
             if (_settingsController == null)
             {
-                Log.Warn(DebugLogCategory.None, "[DebugHotkeys] Settings controller missing; prefab toggle not persisted.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Warn(DebugLogCategory.RuleUi, LogPath.Any, "DebugHotkeySettingsControllerMissing");
+                }
                 return true;
             }
 
@@ -51,8 +54,14 @@ namespace PickyParking.Features.Debug
                 new List<PrefabKey>(_supportedParkingLotRegistry.EnumerateKeys());
             _settingsController.Save( "DebugHotkeyController.ToggleSupportedPrefabForSelection");
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.None, enabled ? $"[DebugHotkeys] Enabled for prefab {key}" : $"[DebugHotkeys] Disabled for prefab {key}");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.RuleUi,
+                    LogPath.Any,
+                    "DebugHotkeyPrefabToggled",
+                    "prefab=" + key + " | enabled=" + enabled);
+            }
 
             return true;
         }
@@ -64,12 +73,17 @@ namespace PickyParking.Features.Debug
 
             if (_parkedVehicleReevaluation == null)
             {
-                Log.Warn(DebugLogCategory.None,"[DebugHotkeys] Reevaluation service missing.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Warn(DebugLogCategory.RuleUi, LogPath.Any, "DebugHotkeyReevaluationServiceMissing");
+                }
                 return false;
             }
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.None,"[DebugHotkeys] Reevaluation requested for building " + buildingId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "DebugHotkeyReevaluationRequested", "buildingId=" + buildingId);
+            }
 
             SimThread.Dispatch(() => { _parkedVehicleReevaluation.RequestForBuilding(buildingId); });
             return true;
@@ -85,15 +99,23 @@ namespace PickyParking.Features.Debug
                 if (_parkingRulesRepository.TryGet(buildingId, out _))
                 {
                     _parkingRulesRepository.Remove(buildingId);
-                    if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                        Log.Info(DebugLogCategory.None,$"[DebugHotkeys] Removed rule for building {buildingId}");
+                    if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                    {
+                        Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "DebugHotkeyRuleRemoved", "buildingId=" + buildingId);
+                    }
                     return;
                 }
 
                 ParkingRulesConfigDefinition rule = CreateDefaultRule();
                 _parkingRulesRepository.Set(buildingId, rule);
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,$"[DebugHotkeys] Created default rule for building {buildingId}: {FormatRule(rule)}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.RuleUi,
+                        LogPath.Any,
+                        "DebugHotkeyRuleCreated",
+                        "buildingId=" + buildingId + " | rule=" + FormatRule(rule));
+                }
             });
 
             return true;
@@ -115,8 +137,14 @@ namespace PickyParking.Features.Debug
                     current.VisitorsAllowed);
 
                 SetOrRemove(buildingId, updated);
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,$"[DebugHotkeys] Residents restriction toggled for building {buildingId}: {FormatRule(updated)}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.RuleUi,
+                        LogPath.Any,
+                        "DebugHotkeyResidentsToggled",
+                        "buildingId=" + buildingId + " | rule=" + FormatRule(updated));
+                }
             });
 
             return true;
@@ -138,8 +166,14 @@ namespace PickyParking.Features.Debug
                     current.VisitorsAllowed);
 
                 SetOrRemove(buildingId, updated);
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,$"[DebugHotkeys] Work/School restriction toggled for building {buildingId}: {FormatRule(updated)}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.RuleUi,
+                        LogPath.Any,
+                        "DebugHotkeyWorkSchoolToggled",
+                        "buildingId=" + buildingId + " | rule=" + FormatRule(updated));
+                }
             });
 
             return true;
@@ -161,8 +195,14 @@ namespace PickyParking.Features.Debug
                     !current.VisitorsAllowed);
 
                 SetOrRemove(buildingId, updated);
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,$"[DebugHotkeys] Visitor restriction toggled for building {buildingId}: {FormatRule(updated)}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.RuleUi,
+                        LogPath.Any,
+                        "DebugHotkeyVisitorsToggled",
+                        "buildingId=" + buildingId + " | rule=" + FormatRule(updated));
+                }
             });
 
             return true;
@@ -180,8 +220,17 @@ namespace PickyParking.Features.Debug
                 ? FormatRule(rule)
                 : "<none>";
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.None,$"[DebugHotkeys] Selected building {buildingId} | Prefab={key} | SupportedPrefab={supported} | Rule={ruleText}");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.RuleUi,
+                    LogPath.Any,
+                    "DebugHotkeySelectionDump",
+                    "buildingId=" + buildingId +
+                    " | prefab=" + key +
+                    " | supportedPrefab=" + supported +
+                    " | rule=" + ruleText);
+            }
 
             return true;
         }
@@ -196,15 +245,19 @@ namespace PickyParking.Features.Debug
 
             if (!_gameAccess.TryGetSelectedBuilding(out buildingId, out info))
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,"[DebugHotkeys] No selected building.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "DebugHotkeyNoSelectedBuilding");
+                }
                 return false;
             }
 
             if (info == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,"[DebugHotkeys] Selected building has no info.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "DebugHotkeySelectedBuildingMissingInfo");
+                }
                 return false;
             }
 

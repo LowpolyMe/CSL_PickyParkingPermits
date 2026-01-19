@@ -94,15 +94,15 @@ namespace PickyParking.UI.ModOptions
                     settings.VanillaBuildingSearchRadiusMeters = value;
                     SaveSettings(saveSettings);
                     ReloadSettings("OptionsUI: Vanilla search radius", services);
-                    if (Log.IsVerboseEnabled)
+                    if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
                     {
-                        Log.Info(DebugLogCategory.None, "[Settings] Vanilla search radius updated to " + value + "m.");
+                        Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsVanillaRadiusUpdated", "meters=" + value);
                     }
                 });
 
-            if (Log.IsVerboseEnabled)
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
             {
-                Log.Info(DebugLogCategory.None, "[UI] Vanilla search radius controls shown with disclaimer.");
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "VanillaRadiusControlsShown");
             }
         }
 
@@ -328,7 +328,7 @@ namespace PickyParking.UI.ModOptions
             {
                 if (!int.TryParse(text, out var value))
                 {
-                    Log.Warn(DebugLogCategory.RuleUi, "[Settings] Invalid value for " + label + ": " + (text ?? "NULL"));
+                    Log.Dev.Warn(DebugLogCategory.RuleUi, LogPath.Any, "SettingsInvalidValue", "label=" + label + " | value=" + (text ?? "NULL"));
                     if (field != null)
                         field.text = lastValid.ToString();
                     return;

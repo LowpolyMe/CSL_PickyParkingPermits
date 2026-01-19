@@ -19,19 +19,23 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
         public static void Apply(Harmony harmony)
         {
-            var type = Type.GetType(TargetTypeName, throwOnError: false);
+            Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpacePropAtBuilding not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -40,8 +44,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 postfix: new HarmonyMethod(typeof(TMPE_FindParkingSpacePropAtBuildingDiagnosticsPatch), nameof(Postfix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpacePropAtBuilding (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsPatchApplied", "method=" + TargetMethodName);
+            }
         }
 
         private static void Postfix(bool __result, [HarmonyArgument(3)] ushort buildingId)
@@ -52,7 +58,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (__result)
                 return;
 
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             var context = ParkingRuntimeContext.GetCurrentOrLog("TMPE_FindParkingSpacePropAtBuildingDiagnosticsPatch.Postfix");
@@ -83,15 +89,22 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             int totalSpaces;
             int occupiedSpaces;
             bool hasStats = context.GameAccess.TryGetParkingSpaceStats(buildingId, out totalSpaces, out occupiedSpaces);
-            string stats = hasStats ? $"spaces={totalSpaces} occupied={occupiedSpaces}" : "spaces=n/a";
+            string stats = hasStats ? "spaces=" + totalSpaces + " | occupied=" + occupiedSpaces : "spaces=n/a";
             string propStats = TryFormatPropStats(context, buildingId);
 
-            Log.Info(DebugLogCategory.Tmpe,
-                "[TMPE] FindParkingSpacePropAtBuilding failed " +
-                $"buildingId={buildingId} name={buildingName} prefab={prefabName} {stats} {propStats} " +
-                $"isVisitor={ParkingSearchContext.IsVisitor} vehicleId={ParkingSearchContext.VehicleId} " +
-                $"citizenId={ParkingSearchContext.CitizenId} source={ParkingSearchContext.Source ?? "NULL"}"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.Tmpe,
+                LogPath.TMPE,
+                "FindParkingSpacePropAtBuildingFailed",
+                "buildingId=" + buildingId +
+                " | name=" + buildingName +
+                " | prefab=" + prefabName +
+                " | " + stats +
+                " | " + propStats +
+                " | isVisitor=" + ParkingSearchContext.IsVisitor +
+                " | vehicleId=" + ParkingSearchContext.VehicleId +
+                " | citizenId=" + ParkingSearchContext.CitizenId +
+                " | source=" + (ParkingSearchContext.Source ?? "NULL"));
         }
 
         private static bool IsSupportedParkingLot(ParkingRuntimeContext context, ushort buildingId)
@@ -134,7 +147,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                     totalSpaces += propInfo.m_parkingSpaces.Length;
                 }
 
-                return $"props={propsWithSpaces} propSpaces={totalSpaces}";
+                return "props=" + propsWithSpaces + " | propSpaces=" + totalSpaces;
             }
             catch
             {

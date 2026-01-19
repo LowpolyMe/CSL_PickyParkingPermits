@@ -33,24 +33,30 @@ namespace PickyParking.Features.ParkingPolicing
                 if (!CitizenIdResolver.TryGetCitizenIdFromVehicle(vehicleId, out citizenId, out reason))
                 {
                     string resolvedReason = reason ?? "unknown";
-                    Log.AlwaysWarnOnce(
-                        "VanillaNoCitizen." + vehicleId,
-                        "VanillaContextMissingCitizen src=ParkVehicle vehicleId=" + vehicleId + " reason=" + resolvedReason);
+                    if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                    {
+                        Log.Dev.Warn(
+                            DebugLogCategory.Enforcement,
+                            LogPath.Vanilla,
+                            "VanillaContextMissingCitizen",
+                            "src=ParkVehicle | vehicleId=" + vehicleId + " | reason=" + resolvedReason,
+                            "VanillaNoCitizen." + vehicleId);
+                    }
                     citizenId = 0u;
                 }
 
                 ParkingContextScope.Push(vehicleId, citizenId, ParkVehicleSource);
                 state = true;
 
-                if (Log.IsVerboseEnabled &&
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement) &&
                     Interlocked.Exchange(ref _parkVehicleInjectedLogged, 1) == 0)
                 {
-                    Log.Info(DebugLogCategory.Enforcement, "[Vanilla] Context push src=" + ParkVehicleSource);
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "ContextPush", "source=" + ParkVehicleSource);
                 }
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Vanilla] Prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Enforcement, LogPath.Vanilla, "ContextPushPrefixException", ex);
             }
         }
 
@@ -69,15 +75,15 @@ namespace PickyParking.Features.ParkingPolicing
                 ParkingContextScope.Push(0, citizenId, UpdateParkedVehicleSource);
                 state = true;
 
-                if (Log.IsVerboseEnabled &&
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement) &&
                     Interlocked.Exchange(ref _updateParkedInjectedLogged, 1) == 0)
                 {
-                    Log.Info(DebugLogCategory.Enforcement, "[Vanilla] Context push src=" + UpdateParkedVehicleSource);
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "ContextPush", "source=" + UpdateParkedVehicleSource);
                 }
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Vanilla] Prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Enforcement, LogPath.Vanilla, "ContextPushPrefixException", ex);
             }
         }
 
@@ -98,15 +104,15 @@ namespace PickyParking.Features.ParkingPolicing
                 if (state)
                     ParkingContextScope.Pop();
 
-                if (state && Log.IsVerboseEnabled &&
+                if (state && Log.Dev.IsEnabled(DebugLogCategory.Enforcement) &&
                     Interlocked.Exchange(ref loggedFlag, 1) == 0)
                 {
-                    Log.Info(DebugLogCategory.Enforcement, "[Vanilla] Context pop src=" + source);
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "ContextPop", "source=" + source);
                 }
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Vanilla] Finalizer exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Enforcement, LogPath.Vanilla, "ContextPopFinalizerException", ex);
             }
 
             return exception;
@@ -140,9 +146,15 @@ namespace PickyParking.Features.ParkingPolicing
                 && backendState.ActiveBackend != ParkingBackendKind.TmpeBasic)
                 return;
 
-            Log.AlwaysWarnOnce(
-                "VanillaBypass.TmpeAdvanced",
-                "[BackendSelection] event=VanillaBackendBypassed reason=TmpeAdvancedActive");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Warn(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "VanillaBackendBypassed",
+                    "reason=TmpeActive | activeBackend=" + backendState.ActiveBackend,
+                    "VanillaBypass.TmpeActive");
+            }
         }
     }
 }

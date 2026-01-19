@@ -12,7 +12,8 @@ namespace PickyParking.Features.Debug
         DecisionPipeline = 1 << 2,
         Enforcement = 1 << 3,
         Tmpe = 1 << 4,
+        ParkingStats = 1 << 5,
 
-        All = RuleUi | LotInspection | DecisionPipeline | Enforcement | Tmpe 
+        All = RuleUi | LotInspection | DecisionPipeline | Enforcement | Tmpe | ParkingStats
     }
 }

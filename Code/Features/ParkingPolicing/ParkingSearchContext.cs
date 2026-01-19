@@ -126,7 +126,7 @@ namespace PickyParking.Features.ParkingPolicing
 
             ParkingSearchEpisodeDebugHelper episode = null;
             
-            if (EnableEpisodeLogs && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+            if (EnableEpisodeLogs && Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
             {
                 int startDepth = stack.Count + 1;
                 episode = new ParkingSearchEpisodeDebugHelper(
@@ -193,7 +193,15 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
             {
-                Log.AlwaysWarn("[Threading] ParkingSearchContext accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Warn(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "OffSimulationThread",
+                        "caller=" + (caller ?? "UNKNOWN"),
+                        "ParkingSearchContext.OffSimThread");
+                }
             }
 
             return false;

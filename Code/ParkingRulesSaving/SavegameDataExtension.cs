@@ -20,8 +20,11 @@ namespace PickyParking.ParkingRulesSaving
             var data = serializableDataManager.LoadData(SavegameRulesStorage.DataId);
             LevelBootstrap.Context.RulesBytes = data;
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, $"[Persistence] Loaded rules bytes={(data?.Length ?? 0)}");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                int byteCount = data == null ? 0 : data.Length;
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "RulesBytesLoaded", "byteCount=" + byteCount);
+            }
         }
 
         public override void OnSaveData()
@@ -29,8 +32,10 @@ namespace PickyParking.ParkingRulesSaving
             var runtime = ModRuntime.Current;
             if (runtime == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[Persistence] ModRuntime.Current is null");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "RulesSaveSkippedRuntimeMissing");
+                }
                 return;
             }
 

@@ -17,7 +17,10 @@ namespace PickyParking.Patching.Game
             MethodInfo method = FindTargetMethod();
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Enforcement, "[Vanilla] PassengerCarAI.FindParkingSpaceBuilding not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "PatchSkippedMissingMethod", "type=PassengerCarAI | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -26,7 +29,10 @@ namespace PickyParking.Patching.Game
                 prefix: new HarmonyMethod(typeof(PassengerCarAI_FindParkingSpaceBuildingPatch), nameof(Prefix))
             );
 
-            Log.Info(DebugLogCategory.Enforcement, "[Vanilla] Patched PassengerCarAI.FindParkingSpaceBuilding (vanilla candidate filtering).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "PatchApplied", "type=PassengerCarAI | method=" + TargetMethodName + " | behavior=CandidateFilter");
+            }
         }
 
         private static MethodInfo FindTargetMethod()

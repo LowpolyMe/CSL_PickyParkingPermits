@@ -16,7 +16,10 @@ namespace PickyParking.Patching.Game
             MethodInfo method = FindTargetMethod();
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Enforcement, "[Enforcement] CreateParkedVehicle not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "PatchSkippedMissingMethod", "type=VehicleManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -25,7 +28,10 @@ namespace PickyParking.Patching.Game
                 prefix: new HarmonyMethod(typeof(VehicleManager_CreateParkedVehiclePatch), nameof(Prefix))
             );
 
-            Log.Info(DebugLogCategory.Enforcement, "[Enforcement] Patched CreateParkedVehicle (parking enforcement).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "PatchApplied", "type=VehicleManager | method=" + TargetMethodName + " | behavior=ParkingEnforcement");
+            }
         }
 
         private static MethodInfo FindTargetMethod()

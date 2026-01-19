@@ -44,7 +44,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.AlwaysWarn("[Persistence] Failed to save rules: " + ex);
+                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "RulesSaveFailed", "error=" + ex);
             }
         }
 
@@ -57,7 +57,7 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.AlwaysWarn("[Persistence] Failed to load rules: " + ex);
+                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "RulesLoadFailed", "error=" + ex);
             }
         }
 
@@ -100,7 +100,7 @@ namespace PickyParking.ParkingRulesSaving
                                 break;
 
                             default:
-                                Log.AlwaysWarn("[Persistence] Unknown rules version: " + version + " (skipping load)");
+                                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "RulesUnknownVersion", "version=" + version);
                                 return;
                         }
 
@@ -113,12 +113,14 @@ namespace PickyParking.ParkingRulesSaving
 
                 PruneInvalidEntries(repository);
 
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[Persistence] Normalized rules: " + normalizedCount);
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "RulesNormalized", "normalizedCount=" + normalizedCount);
+                }
             }
             catch (Exception ex)
             {
-                Log.AlwaysWarn("[Persistence] Failed to load rules from bytes: " + ex);
+                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "RulesLoadFromBytesFailed", "error=" + ex);
             }
         }
 
@@ -149,15 +151,17 @@ namespace PickyParking.ParkingRulesSaving
             }
             catch (Exception ex)
             {
-                Log.AlwaysWarn("[Persistence] Failed to prune invalid rule entries: " + ex);
+                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "RulesPruneFailed", "error=" + ex);
                 return;
             }
 
             for (int i = 0; i < toRemove.Count; i++)
                 repository.Remove(toRemove[i]);
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[Persistence] Pruned invalid rules: " + toRemove.Count);
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "RulesPruned", "count=" + toRemove.Count);
+            }
         }
 
     }

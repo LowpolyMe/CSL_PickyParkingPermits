@@ -44,7 +44,10 @@ namespace PickyParking.Features.ParkingPolicing
             }
             catch (Exception e)
             {
-                Log.AlwaysWarn("[TMPE] RefreshState failed: " + e);
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Warn(DebugLogCategory.Tmpe, LogPath.TMPE, "TmpeRefreshStateFailed", "error=" + e);
+                }
             }
         }
 
@@ -67,8 +70,10 @@ namespace PickyParking.Features.ParkingPolicing
                 return !result.Allowed;
             }
             
-            if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                Log.Info(DebugLogCategory.DecisionPipeline, $"[Decision] No context candidateBuildingId={candidateBuildingId}");
+            if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+            {
+                Log.Dev.Info(DebugLogCategory.DecisionPipeline, LogPath.TMPE, "DecisionContextMissing", "buildingId=" + candidateBuildingId);
+            }
 
             return false;
         }
@@ -161,8 +166,10 @@ namespace PickyParking.Features.ParkingPolicing
             }
 
             info = _defaultPassengerCarInfo;
-            if (info == null && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, "[Integration:TMPE] Default passenger car prefab not found; TMPE occupancy checks disabled.");
+            if (info == null && Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Warn(DebugLogCategory.Tmpe, LogPath.TMPE, "TmpeDefaultPassengerCarMissing");
+            }
 
             return info != null;
         }
@@ -209,7 +216,12 @@ namespace PickyParking.Features.ParkingPolicing
         private void LogOffThread(string caller)
         {
             if (Interlocked.Exchange(ref _offThreadLogged, 1) == 0)
-                Log.AlwaysWarn("[Threading] Off-simulation-thread access blocked: " + (caller ?? "UNKNOWN"));
+            {
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Warn(DebugLogCategory.Tmpe, LogPath.TMPE, "OffSimulationThread", "caller=" + (caller ?? "UNKNOWN"), "TmpeIntegration.OffSimThread");
+                }
+            }
         }
 
     }
