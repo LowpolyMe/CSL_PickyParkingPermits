@@ -16,9 +16,16 @@ namespace PickyParking.UI.ModOptions
         private static UILabel _backendStateLabel;
         private static ParkingBackendState _fallbackBackendState;
         private static bool _refreshQueued;
+        private static UIPanel _optionsPanel;
+        private static UIPanel _backendGroupPanel;
+        private static bool _optionsVisibilitySubscribed;
+        private static bool _backendGroupVisibilitySubscribed;
+        private static UiServices _services;
 
         public static void Build(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
         {
+            _services = services;
+            ResetBackendStateUi();
             BuildBackendStateGroup(helper, services);
 
             UIHelperBase group = helper.AddGroup("Parking rule sweeps");
@@ -107,6 +114,7 @@ namespace PickyParking.UI.ModOptions
 
         public static void RegisterBackendStateRefresh(UIHelperBase helper, UiServices services)
         {
+            _services = services;
             UIHelper helperPanel = helper as UIHelper;
             if (helperPanel == null)
                 return;
@@ -115,17 +123,14 @@ namespace PickyParking.UI.ModOptions
             if (panel == null)
                 return;
 
-            panel.eventVisibilityChanged += (UIComponent component, bool isVisible) =>
-            {
-                RefreshBackendState(services);
-            };
+            SubscribeOptionsVisibility(panel, services);
         }
 
         private static void BuildBackendStateGroup(UIHelperBase helper, UiServices services)
         {
             UIHelperBase group = helper.AddGroup("Backend status");
             _backendStateLabel = AddInfoLabel(group, GetBackendStateText(services));
-            AttachBackendStateVisibilityRefresh(group, services);
+            SubscribeBackendGroupVisibility(group, services);
             RequestRefreshNextFrame(services);
         }
 
@@ -183,7 +188,38 @@ namespace PickyParking.UI.ModOptions
             RefreshBackendState(services);
         }
 
-        private static void AttachBackendStateVisibilityRefresh(UIHelperBase group, UiServices services)
+        private static void SubscribeOptionsVisibility(UIPanel panel, UiServices services)
+        {
+            if (_optionsVisibilitySubscribed && _optionsPanel == panel)
+                return;
+
+            UnsubscribeOptionsVisibility();
+            UnsubscribeBackendGroupVisibility();
+            _optionsPanel = panel;
+            _optionsPanel.eventVisibilityChanged += OnOptionsVisibilityChanged;
+            _optionsVisibilitySubscribed = true;
+            RequestRefreshNextFrame(services);
+        }
+
+        private static void UnsubscribeOptionsVisibility()
+        {
+            if (!_optionsVisibilitySubscribed || _optionsPanel == null)
+                return;
+
+            _optionsPanel.eventVisibilityChanged -= OnOptionsVisibilityChanged;
+            _optionsPanel = null;
+            _optionsVisibilitySubscribed = false;
+        }
+
+        private static void OnOptionsVisibilityChanged(UIComponent component, bool isVisible)
+        {
+            if (!isVisible)
+                return;
+
+            RequestRefreshNextFrame(_services);
+        }
+
+        private static void SubscribeBackendGroupVisibility(UIHelperBase group, UiServices services)
         {
             UIHelper helperPanel = group as UIHelper;
             if (helperPanel == null)
@@ -193,13 +229,32 @@ namespace PickyParking.UI.ModOptions
             if (panel == null)
                 return;
 
-            panel.eventVisibilityChanged += (UIComponent component, bool isVisible) =>
-            {
-                if (!isVisible)
-                    return;
+            if (_backendGroupVisibilitySubscribed && _backendGroupPanel == panel)
+                return;
 
-                RequestRefreshNextFrame(services);
-            };
+            UnsubscribeBackendGroupVisibility();
+            _backendGroupPanel = panel;
+            _backendGroupPanel.eventVisibilityChanged += OnBackendGroupVisibilityChanged;
+            _backendGroupVisibilitySubscribed = true;
+            RequestRefreshNextFrame(services);
+        }
+
+        private static void UnsubscribeBackendGroupVisibility()
+        {
+            if (!_backendGroupVisibilitySubscribed || _backendGroupPanel == null)
+                return;
+
+            _backendGroupPanel.eventVisibilityChanged -= OnBackendGroupVisibilityChanged;
+            _backendGroupPanel = null;
+            _backendGroupVisibilitySubscribed = false;
+        }
+
+        private static void OnBackendGroupVisibilityChanged(UIComponent component, bool isVisible)
+        {
+            if (!isVisible)
+                return;
+
+            RequestRefreshNextFrame(_services);
         }
 
         private static void RequestRefreshNextFrame(UiServices services)
@@ -225,6 +280,14 @@ namespace PickyParking.UI.ModOptions
             yield return null;
             _refreshQueued = false;
             RefreshBackendState(services);
+        }
+
+        private static void ResetBackendStateUi()
+        {
+            UnsubscribeOptionsVisibility();
+            UnsubscribeBackendGroupVisibility();
+            _backendStateLabel = null;
+            _refreshQueued = false;
         }
 
         private static UILabel AddInfoLabel(UIHelperBase group, string text)

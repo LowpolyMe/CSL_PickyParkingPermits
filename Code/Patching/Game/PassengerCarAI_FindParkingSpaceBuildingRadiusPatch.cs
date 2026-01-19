@@ -1,11 +1,9 @@
 using System;
 using System.Reflection;
-using System.Threading;
 using HarmonyLib;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Logging;
-using PickyParking.Settings;
 using UnityEngine;
 
 namespace PickyParking.Patching.Game
@@ -13,7 +11,6 @@ namespace PickyParking.Patching.Game
     internal static class PassengerCarAI_FindParkingSpaceBuildingRadiusPatch
     {
         private const string TargetMethodName = "FindParkingSpaceBuilding";
-        private static int _prefixLogged;
 
         public static void Apply(Harmony harmony)
         {
@@ -74,16 +71,7 @@ namespace PickyParking.Patching.Game
 
         private static void Prefix([HarmonyArgument(2)] ushort ignoreParked, [HarmonyArgument(6)] ref float maxDistance)
         {
-            if (Log.IsVerboseEnabled && Interlocked.Exchange(ref _prefixLogged, 1) == 0)
-            {
-                string source = ParkingSearchContext.Source ?? "NULL";
-                Log.Info(DebugLogCategory.None,
-                    "[Vanilla] Radius patch prefix hit source=" + source +
-                    " ignoreParked=" + ignoreParked +
-                    " maxDistance=" + maxDistance);
-            }
-
-            VanillaSearchRadiusOverride.TryOverride(ref maxDistance, ignoreParked);
+            VanillaSearchRadiusOverride.ApplyPrefix(ref maxDistance, ignoreParked);
         }
     }
 }

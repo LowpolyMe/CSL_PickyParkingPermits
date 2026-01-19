@@ -1,3 +1,4 @@
+using System.Threading;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingPolicing.Runtime;
 using PickyParking.Logging;
@@ -12,8 +13,15 @@ namespace PickyParking.Features.ParkingPolicing
         private const string ParkVehicleSource = "Vanilla.PassengerCarAI.ParkVehicle";
         private const string TmpeParkVehicleSource = "TMPE.ParkPassengerCar";
         private static int _lastLoggedRadius = -1;
+        private static int _prefixLogged;
         private static int _skipNonParkVehicleLogged;
         private static int _skipIgnoreParkedLogged;
+
+        public static void ApplyPrefix(ref float maxDistance, ushort ignoreParked)
+        {
+            LogPrefixOnce(ignoreParked, maxDistance);
+            TryOverride(ref maxDistance, ignoreParked);
+        }
 
         public static bool TryOverride(ref float maxDistance, ushort ignoreParked)
         {
@@ -59,6 +67,21 @@ namespace PickyParking.Features.ParkingPolicing
             maxDistance = clamped;
             LogAppliedRadius(clamped, source);
             return true;
+        }
+
+        private static void LogPrefixOnce(ushort ignoreParked, float maxDistance)
+        {
+            if (!Log.IsVerboseEnabled)
+                return;
+
+            if (Interlocked.Exchange(ref _prefixLogged, 1) != 0)
+                return;
+
+            string source = ParkingSearchContext.Source ?? "NULL";
+            Log.Info(DebugLogCategory.None,
+                "[Vanilla] Radius patch prefix hit source=" + source +
+                " ignoreParked=" + ignoreParked +
+                " maxDistance=" + maxDistance);
         }
 
         private static void LogAppliedRadius(int meters, string source)
