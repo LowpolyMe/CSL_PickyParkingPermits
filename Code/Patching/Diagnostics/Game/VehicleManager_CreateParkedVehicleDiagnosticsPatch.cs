@@ -19,7 +19,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             if (method == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Parking] CreateParkedVehicle not found; skipping diagnostics patch.");
+                    Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] CreateParkedVehicle not found; skipping diagnostics patch.");
                 return;
             }
 
@@ -29,7 +29,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             );
 
             if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Parking] Patched CreateParkedVehicle (diagnostics).");
+                Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] Patched CreateParkedVehicle (diagnostics).");
         }
 
         private static MethodInfo FindTargetMethod()
@@ -83,7 +83,7 @@ namespace PickyParking.Patching.Diagnostics.Game
                 string failedSource = ParkingSearchContext.Source ?? "NULL";
 
                 Log.Info(DebugLogCategory.Enforcement,
-                    "[Parking] CreateParkedVehicle failed " +
+                    "[Diagnostics] CreateParkedVehicle failed " +
                     $"prefab={failedPrefabName} ownerCitizen={ownerCitizen} pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
                     $"source={failedSource} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"
                 );
@@ -103,7 +103,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             string source = ParkingSearchContext.Source ?? "NULL";
 
             Log.Info(DebugLogCategory.Enforcement,
-                "[Parking] CreateParkedVehicle created " +
+                "[Diagnostics] CreateParkedVehicle created " +
                 $"buildingId={buildingId} parkedId={parked} prefab={prefabName} ownerCitizen={ownerCitizen} " +
                 $"pos=({position.x:F1},{position.y:F1},{position.z:F1}) " +
                 $"source={source} vehicleId={ParkingSearchContext.VehicleId} citizenId={ParkingSearchContext.CitizenId}"

@@ -1,16 +1,33 @@
 using System;
+using System.Collections;
 using ColossalFramework.UI;
 using ICities;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.Settings;
+using PickyParking.ModLifecycle.BackendSelection;
+using PickyParking.ModEntry;
 using UnityEngine;
 
 namespace PickyParking.UI.ModOptions
 {
     internal static class AdvancedOptions
     {
+        private static UILabel _backendStateLabel;
+        private static ParkingBackendState _fallbackBackendState;
+        private static bool _refreshQueued;
+        private static UIPanel _optionsPanel;
+        private static UIPanel _backendGroupPanel;
+        private static bool _optionsVisibilitySubscribed;
+        private static bool _backendGroupVisibilitySubscribed;
+        private static UiServices _services;
+
         public static void Build(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
         {
+            _services = services;
+            ResetBackendStateUi();
+            BuildBackendStateGroup(helper, services);
+
             UIHelperBase group = helper.AddGroup("Parking rule sweeps");
             AddInfoLabel(group, "Sweeps re-check parked cars on lots with rules once per in-game day and move or release invalid cars. This costs CPU; disable to reduce impact.");
 
@@ -60,12 +77,91 @@ namespace PickyParking.UI.ModOptions
                 SaveSettings(saveSettings);
                 ReloadSettings("OptionsUI: Fix stuck owned parked vehicles", services);
             });
+
+            UIHelperBase vanillaGroup = helper.AddGroup("Vanilla parking search");
+            AddInfoLabel(vanillaGroup, "Radius for the initial lot/prop parking search when a driving passenger car parks.");
+            AddInfoLabel(vanillaGroup, "Small values: more failed parked spawns, more roadside fallback, more no-park cases.");
+            AddInfoLabel(vanillaGroup, "Large values: more CPU, more surprising parking choices, possible edge cases.");
+
+            AddIntField(
+                vanillaGroup,
+                "Initial lot/prop search radius (meters)",
+                settings.VanillaBuildingSearchRadiusMeters,
+                16,
+                256,
+                value =>
+                {
+                    settings.VanillaBuildingSearchRadiusMeters = value;
+                    SaveSettings(saveSettings);
+                    ReloadSettings("OptionsUI: Vanilla search radius", services);
+                    if (Log.IsVerboseEnabled)
+                    {
+                        Log.Info(DebugLogCategory.None, "[Settings] Vanilla search radius updated to " + value + "m.");
+                    }
+                });
+
+            if (Log.IsVerboseEnabled)
+            {
+                Log.Info(DebugLogCategory.None, "[UI] Vanilla search radius controls shown with disclaimer.");
+            }
         }
 
         private static void SaveSettings(Action saveSettings)
         {
             if (saveSettings != null)
                 saveSettings();
+        }
+
+        public static void RegisterBackendStateRefresh(UIHelperBase helper, UiServices services)
+        {
+            _services = services;
+            UIHelper helperPanel = helper as UIHelper;
+            if (helperPanel == null)
+                return;
+
+            UIPanel panel = helperPanel.self as UIPanel;
+            if (panel == null)
+                return;
+
+            SubscribeOptionsVisibility(panel, services);
+        }
+
+        private static void BuildBackendStateGroup(UIHelperBase helper, UiServices services)
+        {
+            UIHelperBase group = helper.AddGroup("Backend status");
+            _backendStateLabel = AddInfoLabel(group, GetBackendStateText(services));
+            SubscribeBackendGroupVisibility(group, services);
+            RequestRefreshNextFrame(services);
+        }
+
+        private static string GetBackendStateText(UiServices services)
+        {
+            ParkingBackendState state = ResolveBackendState(services);
+            if (state == null)
+                return "Backend status: (placeholder) Load a game to detect TM:PE.";
+
+            if (!state.IsTmpeDetected)
+                return "Backend status: (placeholder) TM:PE not detected.";
+
+            if (state.IsTmpeAdvancedParkingActive)
+                return "Backend status: (placeholder) TM:PE advanced parking ON.";
+
+            return "Backend status: (placeholder) TM:PE basic parking (advanced OFF or unknown).";
+        }
+
+        private static ParkingBackendState ResolveBackendState(UiServices services)
+        {
+            if (services != null && services.ParkingBackendState != null)
+                return services.ParkingBackendState;
+
+            ModRuntime runtime = ModRuntime.Current;
+            if (runtime != null && runtime.ParkingBackendState != null)
+                return runtime.ParkingBackendState;
+
+            if (_fallbackBackendState == null)
+                _fallbackBackendState = new ParkingBackendState();
+
+            return _fallbackBackendState;
         }
 
         private static void ReloadSettings(string reason, UiServices services)
@@ -75,15 +171,134 @@ namespace PickyParking.UI.ModOptions
             services.ReloadSettings(reason);
         }
 
-        private static void AddInfoLabel(UIHelperBase group, string text)
+        private static void RefreshBackendState(UiServices services)
         {
-            var helperPanel = group as UIHelper;
+            ParkingBackendState state = ResolveBackendState(services);
+            if (state != null)
+            {
+                state.Refresh();
+            }
+
+            if (_backendStateLabel != null)
+                _backendStateLabel.text = GetBackendStateText(services);
+        }
+
+        public static void RefreshBackendStateNow(UiServices services)
+        {
+            RefreshBackendState(services);
+        }
+
+        private static void SubscribeOptionsVisibility(UIPanel panel, UiServices services)
+        {
+            if (_optionsVisibilitySubscribed && _optionsPanel == panel)
+                return;
+
+            UnsubscribeOptionsVisibility();
+            UnsubscribeBackendGroupVisibility();
+            _optionsPanel = panel;
+            _optionsPanel.eventVisibilityChanged += OnOptionsVisibilityChanged;
+            _optionsVisibilitySubscribed = true;
+            RequestRefreshNextFrame(services);
+        }
+
+        private static void UnsubscribeOptionsVisibility()
+        {
+            if (!_optionsVisibilitySubscribed || _optionsPanel == null)
+                return;
+
+            _optionsPanel.eventVisibilityChanged -= OnOptionsVisibilityChanged;
+            _optionsPanel = null;
+            _optionsVisibilitySubscribed = false;
+        }
+
+        private static void OnOptionsVisibilityChanged(UIComponent component, bool isVisible)
+        {
+            if (!isVisible)
+                return;
+
+            RequestRefreshNextFrame(_services);
+        }
+
+        private static void SubscribeBackendGroupVisibility(UIHelperBase group, UiServices services)
+        {
+            UIHelper helperPanel = group as UIHelper;
             if (helperPanel == null)
                 return;
 
-            var panel = helperPanel.self as UIPanel;
+            UIPanel panel = helperPanel.self as UIPanel;
             if (panel == null)
                 return;
+
+            if (_backendGroupVisibilitySubscribed && _backendGroupPanel == panel)
+                return;
+
+            UnsubscribeBackendGroupVisibility();
+            _backendGroupPanel = panel;
+            _backendGroupPanel.eventVisibilityChanged += OnBackendGroupVisibilityChanged;
+            _backendGroupVisibilitySubscribed = true;
+            RequestRefreshNextFrame(services);
+        }
+
+        private static void UnsubscribeBackendGroupVisibility()
+        {
+            if (!_backendGroupVisibilitySubscribed || _backendGroupPanel == null)
+                return;
+
+            _backendGroupPanel.eventVisibilityChanged -= OnBackendGroupVisibilityChanged;
+            _backendGroupPanel = null;
+            _backendGroupVisibilitySubscribed = false;
+        }
+
+        private static void OnBackendGroupVisibilityChanged(UIComponent component, bool isVisible)
+        {
+            if (!isVisible)
+                return;
+
+            RequestRefreshNextFrame(_services);
+        }
+
+        private static void RequestRefreshNextFrame(UiServices services)
+        {
+            if (_refreshQueued)
+                return;
+
+            _refreshQueued = true;
+            UIView view = UIView.GetAView();
+            if (view != null)
+            {
+                view.StartCoroutine(RefreshNextFrame(services));
+            }
+            else
+            {
+                _refreshQueued = false;
+                RefreshBackendState(services);
+            }
+        }
+
+        private static IEnumerator RefreshNextFrame(UiServices services)
+        {
+            yield return null;
+            _refreshQueued = false;
+            RefreshBackendState(services);
+        }
+
+        private static void ResetBackendStateUi()
+        {
+            UnsubscribeOptionsVisibility();
+            UnsubscribeBackendGroupVisibility();
+            _backendStateLabel = null;
+            _refreshQueued = false;
+        }
+
+        private static UILabel AddInfoLabel(UIHelperBase group, string text)
+        {
+            UIHelper helperPanel = group as UIHelper;
+            if (helperPanel == null)
+                return null;
+
+            UIPanel panel = helperPanel.self as UIPanel;
+            if (panel == null)
+                return null;
 
             UILabel label = panel.AddUIComponent<UILabel>();
             label.processMarkup = true;
@@ -96,6 +311,7 @@ namespace PickyParking.UI.ModOptions
             if (width < 100f)
                 width = ModOptionsUiValues.OptionsPanel.DefaultWidth - 20f;
             label.width = width;
+            return label;
         }
 
         private static void AddIntField(

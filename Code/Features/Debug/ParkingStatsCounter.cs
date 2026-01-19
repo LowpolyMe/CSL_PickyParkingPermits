@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using System.Threading;
 using PickyParking.Logging;
-using PickyParking.Settings;
 
 namespace PickyParking.Features.Debug
 {

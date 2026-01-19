@@ -8,6 +8,7 @@ using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.Debug;
+using PickyParking.ModLifecycle.BackendSelection;
 
 namespace PickyParking.ModEntry
 {
@@ -19,8 +20,10 @@ namespace PickyParking.ModEntry
         public ModSettingsController SettingsController { get; private set; }
         public GameAccess GameAccess { get; private set; }
         public TmpeIntegration TmpeIntegration { get; private set; }
+        public ParkingBackendState ParkingBackendState { get; private set; }
         public ParkingRuleEvaluator ParkingRuleEvaluator { get; private set; }
         public ParkingPermissionEvaluator ParkingPermissionEvaluator { get; private set; }
+        public ParkingCandidateDecisionPipeline ParkingCandidateDecisionPipeline { get; private set; }
         public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; private set; }
         public ParkingRulePreviewState ParkingRulePreviewState { get; private set; }
         public DebugHotkeyController DebugHotkeyController { get; private set; }
@@ -53,6 +56,9 @@ namespace PickyParking.ModEntry
 
             if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
                 Log.Info(DebugLogCategory.RuleUi, "[Settings] Patch settings applied.");
+
+            if (Current != null && Current.ParkingBackendState != null)
+                Current.ParkingBackendState.Refresh();
         }
         
         public static ModRuntime Create(ModSettings settings, ModSettingsController settingsController, LevelContext levelContext = null)
@@ -61,6 +67,7 @@ namespace PickyParking.ModEntry
             if (settingsController == null) throw new ArgumentNullException(nameof(settingsController));
             
             var featureGate = new FeatureGate();
+            featureGate.SetActive();
             var registry = new SupportedParkingLotRegistry(settings.SupportedParkingLotPrefabs);
             var rulesRepo = new ParkingRulesConfigRegistry();
             
@@ -93,7 +100,9 @@ namespace PickyParking.ModEntry
                 policy);
 
             var tmpe = new TmpeIntegration(featureGate, evaluator);
-            var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe, settingsController);
+            var backendState = new ParkingBackendState();
+            var candidateDecisionPipeline = new ParkingCandidateDecisionPipeline(evaluator);
+            var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe, settingsController, backendState);
             var previewState = new ParkingRulePreviewState();
             var debugHotkeys = new DebugHotkeyController(
                 gameAccess,
@@ -113,8 +122,10 @@ namespace PickyParking.ModEntry
                 settingsController,
                 gameAccess,
                 tmpe,
+                backendState,
                 policy,
                 evaluator,
+                candidateDecisionPipeline,
                 reevaluation,
                 previewState,
                 debugHotkeys,
@@ -161,8 +172,10 @@ namespace PickyParking.ModEntry
             SettingsController = dependencies.SettingsController;
             GameAccess = dependencies.GameAccess;
             TmpeIntegration = dependencies.TmpeIntegration;
+            ParkingBackendState = dependencies.ParkingBackendState;
             ParkingRuleEvaluator = dependencies.ParkingRuleEvaluator;
             ParkingPermissionEvaluator = dependencies.ParkingPermissionEvaluator;
+            ParkingCandidateDecisionPipeline = dependencies.ParkingCandidateDecisionPipeline;
             ParkedVehicleReevaluation = dependencies.ParkedVehicleReevaluation;
             ParkingRulePreviewState = dependencies.ParkingRulePreviewState;
             DebugHotkeyController = dependencies.DebugHotkeyController;
@@ -178,8 +191,10 @@ namespace PickyParking.ModEntry
                 ModSettingsController settingsController,
                 GameAccess gameAccess,
                 TmpeIntegration tmpeIntegration,
+                ParkingBackendState parkingBackendState,
                 ParkingRuleEvaluator parkingRuleEvaluator,
                 ParkingPermissionEvaluator parkingPermissionEvaluator,
+                ParkingCandidateDecisionPipeline parkingCandidateDecisionPipeline,
                 ParkedVehicleReevaluation parkedVehicleReevaluation,
                 ParkingRulePreviewState parkingRulePreviewState,
                 DebugHotkeyController debugHotkeyController,
@@ -191,8 +206,10 @@ namespace PickyParking.ModEntry
                 SettingsController = settingsController ?? throw new ArgumentNullException(nameof(settingsController));
                 GameAccess = gameAccess ?? throw new ArgumentNullException(nameof(gameAccess));
                 TmpeIntegration = tmpeIntegration ?? throw new ArgumentNullException(nameof(tmpeIntegration));
+                ParkingBackendState = parkingBackendState ?? throw new ArgumentNullException(nameof(parkingBackendState));
                 ParkingRuleEvaluator = parkingRuleEvaluator ?? throw new ArgumentNullException(nameof(parkingRuleEvaluator));
                 ParkingPermissionEvaluator = parkingPermissionEvaluator ?? throw new ArgumentNullException(nameof(parkingPermissionEvaluator));
+                ParkingCandidateDecisionPipeline = parkingCandidateDecisionPipeline ?? throw new ArgumentNullException(nameof(parkingCandidateDecisionPipeline));
                 ParkedVehicleReevaluation = parkedVehicleReevaluation ?? throw new ArgumentNullException(nameof(parkedVehicleReevaluation));
                 ParkingRulePreviewState = parkingRulePreviewState ?? throw new ArgumentNullException(nameof(parkingRulePreviewState));
                 DebugHotkeyController = debugHotkeyController ?? throw new ArgumentNullException(nameof(debugHotkeyController));
@@ -205,8 +222,10 @@ namespace PickyParking.ModEntry
             public ModSettingsController SettingsController { get; }
             public GameAccess GameAccess { get; }
             public TmpeIntegration TmpeIntegration { get; }
+            public ParkingBackendState ParkingBackendState { get; }
             public ParkingRuleEvaluator ParkingRuleEvaluator { get; }
             public ParkingPermissionEvaluator ParkingPermissionEvaluator { get; }
+            public ParkingCandidateDecisionPipeline ParkingCandidateDecisionPipeline { get; }
             public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; }
             public ParkingRulePreviewState ParkingRulePreviewState { get; }
             public DebugHotkeyController DebugHotkeyController { get; }

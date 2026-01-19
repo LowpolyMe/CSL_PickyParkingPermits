@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.Settings;
 

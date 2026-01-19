@@ -1,6 +1,6 @@
 using System;
 
-namespace PickyParking.Settings
+namespace PickyParking.Features.Debug
 {
     [Flags]
     public enum DebugLogCategory

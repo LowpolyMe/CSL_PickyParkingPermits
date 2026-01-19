@@ -31,7 +31,7 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
 
             var context = ParkingRuntimeContext.GetCurrentOrLog("ParkingCandidateBlocker.TryGetCandidateDecision");
-            if (context == null || context.TmpeIntegration == null || !context.FeatureGate.IsActive)
+            if (context == null || !context.FeatureGate.IsActive || context.CandidateDecisionPipeline == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     Log.Info(DebugLogCategory.DecisionPipeline, $"[Runtime] Candidate decision skipped: runtime inactive buildingId={buildingId}");
@@ -44,7 +44,8 @@ namespace PickyParking.Features.ParkingPolicing
 
 
             DecisionReason reason;
-            denied = context.TmpeIntegration.TryDenyBuildingParkingCandidate(buildingId, out reason);
+            if (!context.CandidateDecisionPipeline.TryDenyCandidateBuilding(buildingId, out denied, out reason))
+                return false;
 
             if (Log.IsVerboseEnabled &&
                 Log.IsDecisionDebugEnabled &&

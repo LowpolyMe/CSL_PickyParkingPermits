@@ -9,6 +9,7 @@ using PickyParking.Features.ParkingRules;
 using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Settings;
+using PickyParking.ModLifecycle.BackendSelection;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -25,6 +26,7 @@ namespace PickyParking.Features.ParkingPolicing
         private readonly SupportedParkingLotRegistry _supportedLots;
         private readonly TmpeIntegration _tmpe;
         private readonly ModSettingsController _settingsController;
+        private readonly ParkingBackendState _backendState;
 
         private readonly Queue<ushort> _pendingBuildings = new Queue<ushort>();
         private readonly HashSet<ushort> _pendingSet = new HashSet<ushort>();
@@ -57,7 +59,8 @@ namespace PickyParking.Features.ParkingPolicing
             GameAccess game,
             SupportedParkingLotRegistry supportedLots,
             TmpeIntegration tmpe,
-            ModSettingsController settingsController)
+            ModSettingsController settingsController,
+            ParkingBackendState backendState)
         {
             _isFeatureActive = featureGate;
             _rules = rules;
@@ -66,6 +69,7 @@ namespace PickyParking.Features.ParkingPolicing
             _supportedLots = supportedLots;
             _tmpe = tmpe;
             _settingsController = settingsController;
+            _backendState = backendState;
         }
 
         public bool HasPendingWork => _activeBuilding != 0 || _pendingBuildings.Count > 0;
@@ -164,10 +168,36 @@ namespace PickyParking.Features.ParkingPolicing
             int maxFinalizations = GetMaxFinalizationsPerTick();
             bool stuckFixEnabled = IsStuckFixEnabled();
 
+            EvaluateParkedVehicles(
+                maxEvaluations,
+                maxFinalizations,
+                stuckFixEnabled,
+                ref evaluationsThisTick,
+                ref finalizationsThisTick);
+            RelocateDeniedVehicles(maxRelocations, ref relocationsThisTick);
+
+            if (Log.IsVerboseEnabled && ParkingDebugSettings.BuildingDebugId == logBuildingId)
+                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation tick eval=" + evaluationsThisTick +
+                         " relocate=" + relocationsThisTick +
+                         " finalize=" + finalizationsThisTick +
+                         " buildingId=" + logBuildingId);
+            if (_activeIndex >= _parkedBuffer.Count && _deniedQueue.Count == 0)
+                FinishActiveBuilding();
+            if (HasPendingWork || _deniedQueue.Count > 0)
+                Schedule();
+        }
+
+        private void EvaluateParkedVehicles(
+            int maxEvaluations,
+            int maxFinalizations,
+            bool stuckFixEnabled,
+            ref int evaluationsThisTick,
+            ref int finalizationsThisTick)
+        {
             while (evaluationsThisTick < maxEvaluations && _activeIndex < _parkedBuffer.Count)
             {
                 ushort parkedId = _parkedBuffer[_activeIndex++];
-                if (!_game.TryGetParkedVehicleReevaluationInfo(
+                if (!TryGetParkedVehicleReevaluationInfo(
                         parkedId,
                         out uint ownerCitizenId,
                         out ushort homeId,
@@ -227,11 +257,14 @@ namespace PickyParking.Features.ParkingPolicing
                 ParkingStatsCounter.IncrementReevalDeniedQueued();
                 evaluationsThisTick++;
             }
+        }
 
+        private void RelocateDeniedVehicles(int maxRelocations, ref int relocationsThisTick)
+        {
             while (relocationsThisTick < maxRelocations && _deniedQueue.Count > 0)
             {
                 DeniedParkedVehicle denied = _deniedQueue.Dequeue();
-                if (!_game.TryGetParkedVehicleReevaluationInfo(
+                if (!TryGetParkedVehicleReevaluationInfo(
                         denied.ParkedVehicleId,
                         out uint ownerCitizenId,
                         out ushort homeId,
@@ -245,12 +278,25 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (ownerCitizenId != denied.OwnerCitizenId)
                     continue;
-                bool moved = _tmpe.TryMoveParkedVehicleWithConfigDistance(
-                    parkedVehicleId: denied.ParkedVehicleId,
-                    ownerCitizenId: denied.OwnerCitizenId,
-                    homeId: homeId,
-                    refPos: parkedPos
-                );
+
+                ParkingBackendKind backend = ParkingBackendKind.TmpeAdvanced;
+                if (_backendState != null)
+                    backend = _backendState.ActiveBackend;
+
+                bool moved;
+                if (backend == ParkingBackendKind.TmpeAdvanced || backend == ParkingBackendKind.TmpeBasic)
+                {
+                    moved = _tmpe.TryMoveParkedVehicleWithConfigDistance(
+                        parkedVehicleId: denied.ParkedVehicleId,
+                        ownerCitizenId: denied.OwnerCitizenId,
+                        homeId: homeId,
+                        refPos: parkedPos
+                    );
+                }
+                else
+                {
+                    moved = TryMoveParkedVehicleVanilla(denied.ParkedVehicleId);
+                }
 
                 if (!moved)
                 {
@@ -270,16 +316,57 @@ namespace PickyParking.Features.ParkingPolicing
 
                 relocationsThisTick++;
             }
+        }
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation tick eval=" + evaluationsThisTick +
-                         " relocate=" + relocationsThisTick +
-                         " finalize=" + finalizationsThisTick +
-                         " buildingId=" + logBuildingId);
-            if (_activeIndex >= _parkedBuffer.Count && _deniedQueue.Count == 0)
-                FinishActiveBuilding();
-            if (HasPendingWork || _deniedQueue.Count > 0)
-                Schedule();
+        private bool TryGetParkedVehicleReevaluationInfo(
+            ushort parkedVehicleId,
+            out uint ownerCitizenId,
+            out ushort homeId,
+            out Vector3 parkedPos,
+            out ushort flags,
+            out bool ownerRoundTrip,
+            out bool isStuckCandidate)
+        {
+            return _game.TryGetParkedVehicleReevaluationInfo(
+                parkedVehicleId,
+                out ownerCitizenId,
+                out homeId,
+                out parkedPos,
+                out flags,
+                out ownerRoundTrip,
+                out isStuckCandidate);
+        }
+
+        private bool TryMoveParkedVehicleVanilla(ushort parkedVehicleId)
+        {
+            VehicleManager vehicleManager = Singleton<VehicleManager>.instance;
+            VehicleParked[] parkedBuffer = vehicleManager.m_parkedVehicles.m_buffer;
+            VehicleParked parked = parkedBuffer[parkedVehicleId];
+            if (parked.Info == null)
+                return false;
+
+            VehicleAI vehicleAi = parked.Info.m_vehicleAI;
+            if (vehicleAi == null)
+                return false;
+
+            PassengerCarAI passengerAi = vehicleAi as PassengerCarAI;
+            if (passengerAi == null)
+            {
+                string typeName = vehicleAi.GetType().Name;
+                if (!string.Equals(typeName, "CustomPassengerCarAI", StringComparison.Ordinal))
+                    return false;
+
+                passengerAi = vehicleAi as PassengerCarAI;
+                if (passengerAi == null)
+                    return false;
+            }
+
+            Vector3 beforePos = parked.m_position;
+            VehicleParked temp = parked;
+            passengerAi.UpdateParkedVehicle(parkedVehicleId, ref temp);
+            parkedBuffer[parkedVehicleId] = temp;
+
+            return temp.m_position != beforePos;
         }
 
         private bool TryBeginNextBuilding()

@@ -21,6 +21,10 @@ namespace PickyParking.Patching
             BuildingManager_ReleaseBuildingPatch.Apply(_bootstrap.Harmony);
             VehicleManager_CreateParkedVehiclePatch.Apply(_bootstrap.Harmony);
             DefaultTool_RenderOverlayPatch.Apply(_bootstrap.Harmony);
+            PassengerCarAI_ParkVehicleContextPatch.Apply(_bootstrap.Harmony);
+            PassengerCarAI_UpdateParkedVehicleContextPatch.Apply(_bootstrap.Harmony);
+            PassengerCarAI_FindParkingSpaceBuildingPatch.Apply(_bootstrap.Harmony);
+            PassengerCarAI_FindParkingSpaceBuildingRadiusPatch.Apply(_bootstrap.Harmony);
             
             
             TMPE_FindParkingSpaceForCitizenPatch.Apply(_bootstrap.Harmony);
@@ -29,6 +33,7 @@ namespace PickyParking.Patching
             TMPE_VanillaFindParkingSpaceWithoutRestrictionsPatch.Apply(_bootstrap.Harmony);
             TMPE_ParkPassengerCarPatch.Apply(_bootstrap.Harmony);
             TMPE_TrySpawnParkedPassengerCarPatch.Apply(_bootstrap.Harmony);
+            TMPE_AdvancedParkingTogglePatch.Apply(_bootstrap.Harmony);
 
             _diagnostics.ApplyAll(_bootstrap.Harmony);
             

@@ -81,13 +81,13 @@ namespace PickyParking.GameAdapters
             {
                 _parkingSpaceCache.Remove(buildingId);
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] Parking spaces missing: building info null buildingId={buildingId}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: building info null buildingId={buildingId}");
                 return false;
             }
             if (buildingInfo.m_props == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] Parking spaces missing: building props null buildingId={buildingId} prefab={buildingInfo.name}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: building props null buildingId={buildingId} prefab={buildingInfo.name}");
                 return false;
             }
 
@@ -96,7 +96,7 @@ namespace PickyParking.GameAdapters
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                     ShouldLogForBuilding(buildingId, buildingInfo))
                 {
-                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] Parking spaces missing: m_hasParkingSpaces=0 buildingId={buildingId} prefab={buildingInfo.name}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: m_hasParkingSpaces=0 buildingId={buildingId} prefab={buildingInfo.name}");
                 }
                 return false;
             }
@@ -154,7 +154,7 @@ namespace PickyParking.GameAdapters
             }
 
             if (outPositions.Count == 0 && Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                Log.Info(DebugLogCategory.LotInspection, $"[Parking] Parking spaces missing: no parking space props buildingId={buildingId} prefab={buildingInfo.name}");
+                Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: no parking space props buildingId={buildingId} prefab={buildingInfo.name}");
 
             if (outPositions.Count > 0)
                 CacheParkingSpaces(buildingId, ref building, buildingInfo, outPositions);
@@ -296,7 +296,7 @@ namespace PickyParking.GameAdapters
                             if (++safety > ParkedGridSafetyLimit)
                             {
                                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] Parked grid safety limit hit buildingId={buildingId} space=({spacePos.x:F1},{spacePos.y:F1},{spacePos.z:F1})");
+                                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parked grid safety limit hit buildingId={buildingId} space=({spacePos.x:F1},{spacePos.y:F1},{spacePos.z:F1})");
                                 break;
                             }
                         }
@@ -317,14 +317,14 @@ namespace PickyParking.GameAdapters
             if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                 totalSpaces > 0 && occupiedSpaces == totalSpaces && ShouldLogForBuilding(buildingId, null))
             {
-                Log.Info(DebugLogCategory.LotInspection, $"[Parking] Parking space stats show no free spaces buildingId={buildingId} total={totalSpaces} maxSnapDistance={maxSnapDistance}");
+                Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking space stats show no free spaces buildingId={buildingId} total={totalSpaces} maxSnapDistance={maxSnapDistance}");
             }
 
             if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
                 ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
             {
                 Log.Info(DebugLogCategory.LotInspection,
-                    "[Parking] Building debug grid occupancy " +
+                    "[LotInspection] Building debug grid occupancy " +
                     $"buildingId={buildingId} spaces={totalSpaces} occupied={occupiedSpaces} " +
                     $"maxSnapDistance={maxSnapDistance:F2}"
                 );
@@ -451,7 +451,7 @@ namespace PickyParking.GameAdapters
                     catch (Exception e)
                     {
                         if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                            Log.Warn(DebugLogCategory.LotInspection, "[Parking] TMPE occupancy check failed: " + e);
+                            Log.Warn(DebugLogCategory.LotInspection, "[LotInspection] TMPE occupancy check failed: " + e);
                         return false;
                     }
 
@@ -573,7 +573,7 @@ namespace PickyParking.GameAdapters
                 ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
             {
                 Log.Info(DebugLogCategory.LotInspection,
-                    "[Parking] Building debug TMPE occupancy " +
+                    "[LotInspection] Building debug TMPE occupancy " +
                     $"buildingId={buildingId} spaces={totalSpaces} occupied={occupiedSpaces} " +
                     $"epsilon={TmpeSpaceMatchEpsilon:F2}"
                 );
@@ -590,7 +590,7 @@ namespace PickyParking.GameAdapters
                     : "n/a";
 
                 Log.Info(DebugLogCategory.LotInspection,
-                    "[Parking] TMPE space detail " +
+                    "[LotInspection] TMPE space detail " +
                     $"buildingId={buildingId} total={totalSpaces} free={freeSpaces} occupied={occupiedSpaces} " +
                     $"epsilon={TmpeSpaceMatchEpsilon:F2} " +
                     $"blockedSample=[{blockedSample}] freeSample=[{freeSample}]"
@@ -613,7 +613,7 @@ namespace PickyParking.GameAdapters
             Vector3 pos = pv.m_position;
 
             Log.Info(DebugLogCategory.LotInspection,
-                "[Parking] TMPE parked vehicle " +
+                "[LotInspection] TMPE parked vehicle " +
                 $"buildingId={buildingId} parkedId={parkedVehicleId} prefab={prefabName} " +
                 $"flags={pv.m_flags} ownerCitizen={pv.m_ownerCitizen} " +
                 $"pos=({pos.x:F1},{pos.y:F1},{pos.z:F1})"
@@ -660,7 +660,7 @@ namespace PickyParking.GameAdapters
             }
 
             Log.Info(DebugLogCategory.LotInspection,
-                "[Parking] Building debug space dump " +
+                "[LotInspection] Building debug space dump " +
                 $"buildingId={buildingId} spaces={totalSpaces} unique={uniqueCount} occupied={occupiedSpaces} " +
                 $"maxSnapDistance={maxSnapDistance} sample=[{sample}]"
             );

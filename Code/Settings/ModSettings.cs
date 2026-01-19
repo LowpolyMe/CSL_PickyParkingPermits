@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingLotPrefabs;
 
 namespace PickyParking.Settings
@@ -24,6 +25,7 @@ namespace PickyParking.Settings
         public bool EnableStuckParkedVehicleFix { get; set; }
         public int ReevaluationMaxEvaluationsPerTick { get; set; }
         public int ReevaluationMaxRelocationsPerTick { get; set; }
+        public int VanillaBuildingSearchRadiusMeters { get; set; }
 
         public ModSettings()
         {
@@ -40,6 +42,7 @@ namespace PickyParking.Settings
             EnableStuckParkedVehicleFix = true;
             ReevaluationMaxEvaluationsPerTick = 256;
             ReevaluationMaxRelocationsPerTick = 16;
+            VanillaBuildingSearchRadiusMeters = 16;
         }
 
         internal const string FileName = "PickyParking.xml";
@@ -69,6 +72,7 @@ namespace PickyParking.Settings
             EnableStuckParkedVehicleFix = reloaded.EnableStuckParkedVehicleFix;
             ReevaluationMaxEvaluationsPerTick = reloaded.ReevaluationMaxEvaluationsPerTick;
             ReevaluationMaxRelocationsPerTick = reloaded.ReevaluationMaxRelocationsPerTick;
+            VanillaBuildingSearchRadiusMeters = reloaded.VanillaBuildingSearchRadiusMeters;
         }
 
 

@@ -19,6 +19,8 @@ namespace PickyParking.UI.ModOptions
             AdvancedOptions.Build(helper, settings, saveSettings, services);
             LoggingOptions.Build(helper, settings, saveSettings, services);
             BuildResetOptions(helper, services);
+            AdvancedOptions.RegisterBackendStateRefresh(helper, services);
+            AdvancedOptions.RefreshBackendStateNow(services);
         }
 
         private static void CreateSupportedPrefabList(UIHelperBase helper, ModSettings settings, Action saveSettings, UiServices services)
@@ -54,4 +56,3 @@ namespace PickyParking.UI.ModOptions
         }
     }
 }
-

@@ -29,7 +29,7 @@ namespace PickyParking.Patching
                     if (!_noContextLogged && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
                     {
                         _noContextLogged = true;
-                        Log.Warn(DebugLogCategory.DecisionPipeline, "[Parking] FindParkingSpacePropAtBuilding missing context; passenger car candidates may be skipped.");
+                        Log.Warn(DebugLogCategory.DecisionPipeline, "[DecisionPipeline] FindParkingSpacePropAtBuilding missing context; passenger car candidates may be skipped.");
                     }
                     ParkingStatsCounter.IncrementPropSearchNoContextDenied();
                     result = false;
@@ -53,7 +53,7 @@ namespace PickyParking.Patching
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Parking] Exception\n" + ex);
+                Log.AlwaysError("[DecisionPipeline] Exception\n" + ex);
                 return true;
             }
         }
@@ -105,7 +105,7 @@ namespace PickyParking.Patching
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Parking] Prefix exception\n" + ex);
+                Log.AlwaysError("[Enforcement] Prefix exception\n" + ex);
                 return true;
             }
         }

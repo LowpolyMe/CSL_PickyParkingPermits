@@ -89,7 +89,7 @@ namespace PickyParking.GameAdapters
             if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
                 return false;
             }
 
@@ -98,7 +98,7 @@ namespace PickyParking.GameAdapters
             if (ai == null)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[Parking] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
+                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
                 return false;
             }
 
@@ -108,7 +108,7 @@ namespace PickyParking.GameAdapters
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
                     Log.Info(DebugLogCategory.LotInspection,
-                        "[Parking] TryGetDriverInfo failed: owner citizenId=0 " +
+                        "[LotInspection] TryGetDriverInfo failed: owner citizenId=0 " +
                         $"vehicleId={vehicleId} citizenUnits={vehicle.m_citizenUnits}"
                     );
                 return false;
@@ -135,7 +135,7 @@ namespace PickyParking.GameAdapters
             if (citizenId == 0)
             {
                 if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, "[Parking] TryGetCitizenInfo failed: citizenId=0");
+                    Log.Info(DebugLogCategory.LotInspection, "[LotInspection] TryGetCitizenInfo failed: citizenId=0");
                 return false;
             }
 

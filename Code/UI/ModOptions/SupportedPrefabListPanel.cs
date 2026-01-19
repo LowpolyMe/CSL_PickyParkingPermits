@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using ColossalFramework.UI;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Settings;
