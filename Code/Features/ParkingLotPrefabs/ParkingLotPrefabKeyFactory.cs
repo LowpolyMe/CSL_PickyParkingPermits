@@ -26,8 +26,16 @@ namespace PickyParking.Features.ParkingLotPrefabs
                 return new PrefabKey(string.Empty, string.Empty);
             }
 
-            PrefabKeyHolder holder = _keyCache.GetValue(prefab, CreateKeyHolder);
-            return holder.Key;
+            lock (CacheLock)
+            {
+                PrefabKey cached;
+                if (_keyCache.TryGetValue(prefab, out cached))
+                    return cached;
+
+                PrefabKey created = CreateKeyUncached(prefab);
+                _keyCache[prefab] = created;
+                return created;
+            }
         }
 
         public static void ClearCache()

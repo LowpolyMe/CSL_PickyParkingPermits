@@ -9,10 +9,23 @@ namespace PickyParking.Features.ParkingPolicing
     internal sealed class RuleLotSpatialIndex
     {
         private const float CellSize = 8f;
-        private readonly Dictionary<CellKey, List<ushort>> _cells = new Dictionary<CellKey, List<ushort>>();
+        private readonly Dictionary<CellKey, HashSet<ushort>> _cells = new Dictionary<CellKey, HashSet<ushort>>();
         private readonly List<Vector3> _spacePositions = new List<Vector3>(64);
         private readonly HashSet<ushort> _candidateBuildingIds = new HashSet<ushort>();
         private int _rulesVersion = -1;
+
+        internal struct RuleLotQuery
+        {
+            public ParkingRuntimeContext Context;
+            public Vector3 Position;
+            public float MaxSnapDistanceSqr;
+        }
+
+        internal struct RuleLotQueryResult
+        {
+            public ushort BuildingId;
+            public ParkingRulesConfigDefinition Rule;
+        }
 
         public void Clear()
         {
@@ -20,16 +33,13 @@ namespace PickyParking.Features.ParkingPolicing
             _rulesVersion = -1;
         }
 
-        public bool TryFindBuilding(
-            ParkingRuntimeContext context,
-            Vector3 position,
-            float maxSnapDistanceSqr,
-            out ushort buildingId,
-            out ParkingRulesConfigDefinition rule)
+        public bool TryFindBuilding(RuleLotQuery query, out RuleLotQueryResult result)
         {
-            buildingId = 0;
-            rule = default;
+            result = default(RuleLotQueryResult);
 
+            ParkingRuntimeContext context = query.Context;
+            Vector3 position = query.Position;
+            float maxSnapDistanceSqr = query.MaxSnapDistanceSqr;
             if (context == null || context.ParkingRulesConfigRegistry == null)
                 return false;
 
@@ -43,17 +53,19 @@ namespace PickyParking.Features.ParkingPolicing
             {
                 for (int dz = -1; dz <= 1; dz++)
                 {
-                    var key = new CellKey(cellX + dx, cellZ + dz);
-                    if (!_cells.TryGetValue(key, out var list))
+                    CellKey key = new CellKey(cellX + dx, cellZ + dz);
+                    HashSet<ushort> list;
+                    if (!_cells.TryGetValue(key, out list))
                         continue;
 
-                    for (int i = 0; i < list.Count; i++)
-                        _candidateBuildingIds.Add(list[i]);
+                    foreach (ushort candidateId in list)
+                        _candidateBuildingIds.Add(candidateId);
                 }
             }
 
-            foreach (var candidateId in _candidateBuildingIds)
+            foreach (ushort candidateId in _candidateBuildingIds)
             {
+                ParkingRulesConfigDefinition rule;
                 if (!context.ParkingRulesConfigRegistry.TryGet(candidateId, out rule))
                     continue;
 
@@ -72,13 +84,13 @@ namespace PickyParking.Features.ParkingPolicing
 
                     if (dx * dx + dz * dz <= maxSnapDistanceSqr)
                     {
-                        buildingId = candidateId;
+                        result.BuildingId = candidateId;
+                        result.Rule = rule;
                         return true;
                     }
                 }
             }
 
-            rule = default;
             return false;
         }
 
@@ -91,7 +103,7 @@ namespace PickyParking.Features.ParkingPolicing
             _cells.Clear();
             _rulesVersion = version;
 
-            foreach (var kvp in context.ParkingRulesConfigRegistry.Enumerate())
+            foreach (KeyValuePair<ushort, ParkingRulesConfigDefinition> kvp in context.ParkingRulesConfigRegistry.Enumerate())
             {
                 _spacePositions.Clear();
                 if (!context.GameAccess.TryCollectParkingSpacePositions(kvp.Key, _spacePositions))
@@ -99,10 +111,11 @@ namespace PickyParking.Features.ParkingPolicing
 
                 for (int i = 0; i < _spacePositions.Count; i++)
                 {
-                    var key = new CellKey(CellFor(_spacePositions[i].x), CellFor(_spacePositions[i].z));
-                    if (!_cells.TryGetValue(key, out var list))
+                    CellKey key = new CellKey(CellFor(_spacePositions[i].x), CellFor(_spacePositions[i].z));
+                    HashSet<ushort> list;
+                    if (!_cells.TryGetValue(key, out list))
                     {
-                        list = new List<ushort>();
+                        list = new HashSet<ushort>();
                         _cells.Add(key, list);
                     }
 
