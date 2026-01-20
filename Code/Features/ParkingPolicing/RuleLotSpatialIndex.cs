@@ -48,10 +48,11 @@ namespace PickyParking.Features.ParkingPolicing
             _candidateBuildingIds.Clear();
             int cellX = CellFor(position.x);
             int cellZ = CellFor(position.z);
+            int cellRadius = Mathf.CeilToInt(Mathf.Sqrt(maxSnapDistanceSqr) / CellSize);
 
-            for (int dx = -1; dx <= 1; dx++)
+            for (int dx = -cellRadius; dx <= cellRadius; dx++)
             {
-                for (int dz = -1; dz <= 1; dz++)
+                for (int dz = -cellRadius; dz <= cellRadius; dz++)
                 {
                     CellKey key = new CellKey(cellX + dx, cellZ + dz);
                     HashSet<ushort> list;
