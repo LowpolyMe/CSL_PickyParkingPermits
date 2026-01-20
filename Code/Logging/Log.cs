@@ -109,28 +109,7 @@ namespace PickyParking.Logging
         {
             EmitLegacy(LogLevel.Error, category, message, "LegacyError", stackTraceEnabled, LogAudience.Dev);
         }
-
-        public static void WarnOnce(DebugLogCategory category, string key, string message)
-        {
-            WarnOnce(category, key, message, DefaultRateLimit);
-        }
-
-        // TODO (Iteration2): Migrate call sites to explicit Log.Player or Log.Dev methods.
-        public static void AlwaysWarn(string message, bool stackTraceEnabled = false)
-        {
-            EmitLegacy(LogLevel.Warn, DebugLogCategory.None, message, "LegacyAlwaysWarn", stackTraceEnabled, LogAudience.Player);
-        }
-
-        // TODO (Iteration2): Migrate call sites to explicit Log.Player or Log.Dev methods.
-        public static void AlwaysError(string message, bool stackTraceEnabled = false)
-        {
-            EmitLegacy(LogLevel.Error, DebugLogCategory.None, message, "LegacyAlwaysError", stackTraceEnabled, LogAudience.Player);
-        }
-
-        public static void AlwaysWarnOnce(string key, string message)
-        {
-            AlwaysWarnOnce(key, message, DefaultRateLimit);
-        }
+        
 
         private static void EmitLegacy(LogLevel level, DebugLogCategory feature, string message, string eventName, bool stackTraceEnabled, LogAudience audience)
         {
@@ -145,17 +124,6 @@ namespace PickyParking.Logging
             }
 
             return "msg=" + message;
-        }
-
-        private static void WarnOnce(DebugLogCategory category, string key, string message, TimeSpan interval)
-        {
-            EmitLazy(LogAudience.Dev, LogLevel.Warn, category, LogPath.Any, "LegacyWarnOnce", () => BuildLegacyFields(message), key, interval, false, null);
-        }
-
-        private static void AlwaysWarnOnce(string key, string message, TimeSpan interval)
-        {
-            // TODO (Iteration2): Migrate call sites to explicit Log.Player or Log.Dev methods.
-            EmitLazy(LogAudience.Player, LogLevel.Warn, DebugLogCategory.None, LogPath.Any, "LegacyAlwaysWarnOnce", () => BuildLegacyFields(message), key, interval, false, null);
         }
 
         private static void Emit(LogAudience audience, LogLevel level, DebugLogCategory feature, LogPath path, string eventName, string fields, string rateKey, TimeSpan? rateInterval, bool stackTraceEnabled, Exception exception)
