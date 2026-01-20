@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ColossalFramework.Packaging;
 using PickyParking.Features.ParkingLotPrefabs;
 
@@ -5,7 +6,41 @@ namespace PickyParking.Features.ParkingLotPrefabs
 {
     public static class ParkingLotPrefabKeyFactory
     {
+        private sealed class PrefabKeyHolder
+        {
+            public readonly PrefabKey Key;
+
+            public PrefabKeyHolder(PrefabKey key)
+            {
+                Key = key;
+            }
+        }
+
+        private static ConditionalWeakTable<global::BuildingInfo, PrefabKeyHolder> _keyCache
+            = new ConditionalWeakTable<global::BuildingInfo, PrefabKeyHolder>();
+
         public static PrefabKey CreateKey(global::BuildingInfo prefab)
+        {
+            if (prefab == null)
+            {
+                return new PrefabKey(string.Empty, string.Empty);
+            }
+
+            PrefabKeyHolder holder = _keyCache.GetValue(prefab, CreateKeyHolder);
+            return holder.Key;
+        }
+
+        public static void ClearCache()
+        {
+            _keyCache = new ConditionalWeakTable<global::BuildingInfo, PrefabKeyHolder>();
+        }
+
+        private static PrefabKeyHolder CreateKeyHolder(global::BuildingInfo prefab)
+        {
+            return new PrefabKeyHolder(CreateKeyUncached(prefab));
+        }
+
+        private static PrefabKey CreateKeyUncached(global::BuildingInfo prefab)
         {
             string prefabName = (prefab != null) ? prefab.name : string.Empty;
 
