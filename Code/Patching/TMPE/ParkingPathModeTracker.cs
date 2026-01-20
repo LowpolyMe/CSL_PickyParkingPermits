@@ -30,6 +30,9 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordIfCalculating(object[] args)
         {
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                return;
+
             if (!TryExtractUpdateArgs(args, out ushort vehicleId, out object extDriver, out _))
                 return;
 
@@ -51,6 +54,9 @@ namespace PickyParking.Patching.TMPE
 
         public static void RecordIfCalculating(ushort vehicleId, object extDriver)
         {
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                return;
+
             if (vehicleId == 0 || extDriver == null)
                 return;
 
