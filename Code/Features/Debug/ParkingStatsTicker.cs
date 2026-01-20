@@ -1,6 +1,5 @@
 using System.Threading;
 using UnityEngine;
-using PickyParking.Features.Debug;
 using PickyParking.Logging;
 
 namespace PickyParking.Features.Debug

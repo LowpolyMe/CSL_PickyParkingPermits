@@ -19,10 +19,11 @@ namespace PickyParking.Features.ParkingLotPrefabs
 
             lock (CacheLock)
             {
-                if (_keyCache.TryGetValue(prefab, out var cached))
+                PrefabKey cached;
+                if (_keyCache.TryGetValue(prefab, out cached))
                     return cached;
 
-                var created = CreateKeyUncached(prefab);
+                PrefabKey created = CreateKeyUncached(prefab);
                 _keyCache[prefab] = created;
                 return created;
             }

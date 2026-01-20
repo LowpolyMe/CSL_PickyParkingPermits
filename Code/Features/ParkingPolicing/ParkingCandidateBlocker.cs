@@ -173,12 +173,24 @@ namespace PickyParking.Features.ParkingPolicing
             out ushort buildingId,
             out ParkingRulesConfigDefinition rule)
         {
-            return _ruleLotSpatialIndex.TryFindBuilding(
-                context,
-                position,
-                MaxSnapDistanceSqr,
-                out buildingId,
-                out rule);
+            RuleLotSpatialIndex.RuleLotQuery query = new RuleLotSpatialIndex.RuleLotQuery
+            {
+                Context = context,
+                Position = position,
+                MaxSnapDistanceSqr = MaxSnapDistanceSqr
+            };
+
+            RuleLotSpatialIndex.RuleLotQueryResult result;
+            if (!_ruleLotSpatialIndex.TryFindBuilding(query, out result))
+            {
+                buildingId = 0;
+                rule = default(ParkingRulesConfigDefinition);
+                return false;
+            }
+
+            buildingId = result.BuildingId;
+            rule = result.Rule;
+            return true;
         }
 
         public static void ClearThreadStatic()
