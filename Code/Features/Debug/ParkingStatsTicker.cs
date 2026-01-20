@@ -9,7 +9,6 @@ namespace PickyParking.Features.Debug
         private const string RuntimeObjectName = "PickyParking.Runtime";
         private static ParkingStatsTicker _instance;
         private static bool _desiredEnabled = true;
-        private static int _missingInstanceLogged;
         private static int _dayChangedRequested;
 
         private float _lastLogTime;
@@ -24,11 +23,16 @@ namespace PickyParking.Features.Debug
                 _instance.enabled = enabled;
             if (!enabled)
                 ParkingStatsCounter.ResetAll();
-            else if (_instance == null && Interlocked.Exchange(ref _missingInstanceLogged, 1) == 0)
+            else if (_instance == null)
             {
                 if (Log.Dev.IsEnabled(DebugLogCategory.ParkingStats))
                 {
-                    Log.Dev.Warn(DebugLogCategory.ParkingStats, LogPath.Any, "StatsTickerInstanceMissing");
+                    Log.Dev.Warn(
+                        DebugLogCategory.ParkingStats,
+                        LogPath.Any,
+                        "StatsTickerInstanceMissing",
+                        null,
+                        "ParkingStatsTicker.InstanceMissing");
                 }
             }
         }
@@ -84,11 +88,11 @@ namespace PickyParking.Features.Debug
 
         private static void TryEnsureInstance()
         {
-            var runtimeObject = GameObject.Find(RuntimeObjectName);
+            GameObject runtimeObject = GameObject.Find(RuntimeObjectName);
             if (runtimeObject == null)
                 return;
 
-            var ticker = runtimeObject.GetComponent<ParkingStatsTicker>();
+            ParkingStatsTicker ticker = runtimeObject.GetComponent<ParkingStatsTicker>();
             if (ticker == null)
                 ticker = runtimeObject.AddComponent<ParkingStatsTicker>();
 

@@ -21,7 +21,8 @@ namespace PickyParking.Features.ParkingPolicing
 
             float lotDistSqr = 0f;
             int lotSpaceCount = 0;
-            bool lotMatched = TryGetParkedPosition(parkedVehicleId, out var pos) &&
+            Vector3 pos;
+            bool lotMatched = TryGetParkedPosition(parkedVehicleId, out pos) &&
                               TryMatchLot(pos, out lotDistSqr, out lotSpaceCount);
 
             LogRemoval(parkedVehicleId, buildingId, source, lotMatched, lotDistSqr, lotSpaceCount);
@@ -34,7 +35,8 @@ namespace PickyParking.Features.ParkingPolicing
                 ParkingDebugSettings.SelectedBuildingId == 0)
                 return;
 
-            if (!TryGetParkedPosition(parkedVehicleId, out var pos))
+            Vector3 pos;
+            if (!TryGetParkedPosition(parkedVehicleId, out pos))
                 return;
 
             float lotDistSqr;
@@ -63,7 +65,7 @@ namespace PickyParking.Features.ParkingPolicing
             distSqr = 0f;
             lotSpaceCount = 0;
 
-            var context = ParkingRuntimeContext.Current;
+            ParkingRuntimeContext context = ParkingRuntimeContext.Current;
             if (context == null || context.GameAccess == null)
                 return false;
 

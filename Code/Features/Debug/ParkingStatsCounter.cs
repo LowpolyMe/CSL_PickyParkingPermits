@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using PickyParking.Logging;
@@ -276,7 +277,7 @@ namespace PickyParking.Features.Debug
             StringBuilder sb = new StringBuilder(256);
 
             sb.Append("windowSeconds=");
-            sb.Append(windowSeconds.ToString("F1"));
+            sb.Append(windowSeconds.ToString("F1", CultureInfo.InvariantCulture));
             sb.Append(" | ctxPush=");
             sb.Append(snapshot.ContextPushTotal);
             sb.Append(" | ctxPop=");
