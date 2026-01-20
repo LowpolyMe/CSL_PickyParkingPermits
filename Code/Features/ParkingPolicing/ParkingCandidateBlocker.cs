@@ -254,8 +254,18 @@ namespace PickyParking.Features.ParkingPolicing
                 if (info == null) return "NULL_INFO";
                 return info.name != null ? info.name : "NULL_PREFAB_NAME";
             }
-            catch
+            catch (Exception ex)
             {
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Warn(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "BuildingPrefabNameLookupFailed",
+                        "error=" + ex,
+                        "ParkingCandidateBlocker.GetBuildingPrefabName",
+                        TimeSpan.FromMinutes(5));
+                }
                 return "NAME_LOOKUP_FAILED";
             }
         }
@@ -268,8 +278,18 @@ namespace PickyParking.Features.ParkingPolicing
                 string name = bm.GetBuildingName(buildingId, default(InstanceID));
                 return !string.IsNullOrEmpty(name) ? name : "NONE";
             }
-            catch
+            catch (Exception ex)
             {
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Warn(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "BuildingCustomNameLookupFailed",
+                        "error=" + ex,
+                        "ParkingCandidateBlocker.GetBuildingCustomName",
+                        TimeSpan.FromMinutes(5));
+                }
                 return "NAME_LOOKUP_FAILED";
             }
         }
