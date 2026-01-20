@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using ColossalFramework;
 using UnityEngine;
@@ -16,7 +15,7 @@ namespace PickyParking.Features.ParkingPolicing
     public static class ParkingCandidateBlocker
     {
         private const float MaxSnapDistanceSqr = 4f;
-        [ThreadStatic] private static List<Vector3> _spacePositions;
+        private static readonly RuleLotSpatialIndex _ruleLotSpatialIndex = new RuleLotSpatialIndex();
         private static int _wrongThreadLogged;
 
         public static bool TryGetCandidateDecision(ushort buildingId, out bool denied)
@@ -174,49 +173,17 @@ namespace PickyParking.Features.ParkingPolicing
             out ushort buildingId,
             out ParkingRulesConfigDefinition rule)
         {
-            buildingId = 0;
-            rule = default;
-
-            var spacePositions = GetSpacePositionsBuffer();
-
-            foreach (var kvp in context.ParkingRulesConfigRegistry.Enumerate())
-            {
-                if (!IsInScope(context, kvp.Key))
-                    continue;
-
-                spacePositions.Clear();
-                if (!context.GameAccess.TryCollectParkingSpacePositions(kvp.Key, spacePositions))
-                    continue;
-
-                for (int i = 0; i < spacePositions.Count; i++)
-                {
-                    Vector3 spacePos = spacePositions[i];
-                    float dx = spacePos.x - position.x;
-                    float dz = spacePos.z - position.z;
-
-                    if (dx * dx + dz * dz <= MaxSnapDistanceSqr)
-                    {
-                        buildingId = kvp.Key;
-                        rule = kvp.Value;
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static List<Vector3> GetSpacePositionsBuffer()
-        {
-            if (_spacePositions == null)
-                _spacePositions = new List<Vector3>(64);
-
-            return _spacePositions;
+            return _ruleLotSpatialIndex.TryFindBuilding(
+                context,
+                position,
+                MaxSnapDistanceSqr,
+                out buildingId,
+                out rule);
         }
 
         public static void ClearThreadStatic()
         {
-            _spacePositions = null;
+            _ruleLotSpatialIndex.Clear();
         }
 
         private static bool EnsureSimulationThread(string caller)

@@ -583,7 +583,7 @@ namespace PickyParking.Features.ParkingPolicing
             if (_rules == null || buildingId == 0)
                 return;
 
-            _rules.RemoveIf(kvp => kvp.Key == buildingId);
+            _rules.Remove(buildingId);
         }
 
         private int GetMaxEvaluationsPerTick()

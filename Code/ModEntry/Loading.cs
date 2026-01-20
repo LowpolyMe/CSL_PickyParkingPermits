@@ -11,6 +11,7 @@ using PickyParking.UI.BuildingOptionsPanel;
 using PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel;
 using PickyParking.UI.BuildingOptionsPanel.OverlayRendering;
 using PickyParking.Features.Debug;
+using PickyParking.Features.ParkingLotPrefabs;
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.ModLifecycle.BackendSelection;
 using PickyParking.Patching.Diagnostics.TMPE;
@@ -127,6 +128,7 @@ namespace PickyParking.ModEntry
             ParkingStatsCounter.ResetAll();
             VehicleDespawnReasonCache.ClearAll();
             ParkingPathModeTracker.ClearAll();
+            ParkingLotPrefabKeyFactory.ClearCache();
             TMPE_FindParkingSpaceForCitizenDiagnosticsPatch.ClearAll();
             int unloadId = ++_unloadSequence;
             if (Log.Dev.IsEnabled(DebugLogCategory.None))
