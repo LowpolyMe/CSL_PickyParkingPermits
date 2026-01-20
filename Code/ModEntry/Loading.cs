@@ -66,7 +66,10 @@ namespace PickyParking.ModEntry
             CreateRuntimeObjects(mode);
 
             Log.MarkDebugPanelReady();
-            Log.Info(DebugLogCategory.None, "[Runtime] Loaded.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.None))
+            {
+                Log.Dev.Info(DebugLogCategory.None, LogPath.Any, "RuntimeLoaded", "mode=" + mode);
+            }
         }
 
         public override void OnLevelUnloading()
@@ -74,7 +77,10 @@ namespace PickyParking.ModEntry
             base.OnLevelUnloading();
 
             Unload(clearLevelContext: true);
-            Log.Info(DebugLogCategory.None, "[Runtime] Unloaded.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.None))
+            {
+                Log.Dev.Info(DebugLogCategory.None, LogPath.Any, "RuntimeUnloaded");
+            }
             Log.MarkDebugPanelNotReady();
         }
 
@@ -125,7 +131,10 @@ namespace PickyParking.ModEntry
             ParkingLotPrefabKeyFactory.ClearCache();
             TMPE_FindParkingSpaceForCitizenDiagnosticsPatch.ClearAll();
             int unloadId = ++_unloadSequence;
-            Log.Info(DebugLogCategory.None, "[Runtime] Unload started id=" + unloadId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.None))
+            {
+                Log.Dev.Info(DebugLogCategory.None, LogPath.Any, "RuntimeUnloadStart", "unloadId=" + unloadId);
+            }
             ParkingSearchContextPatchHandler.ClearCaches();
             if (clearLevelContext)
             {
@@ -149,25 +158,34 @@ namespace PickyParking.ModEntry
             ParkingDebugSettings.EnableLotInspectionLogs = false;
             ParkingDebugSettings.DisableTMPECandidateBlocking = false;
             ParkingDebugSettings.DisableClearKnownParkingOnDenied = false;
-            ParkingDebugSettings.BuildingDebugId = 0;
+            ParkingDebugSettings.SelectedBuildingId = 0;
 
             SimThread.Dispatch(() =>
             {
                 if (_unloadSequence != unloadId)
                 {
-                    Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup skipped (newer unload id=" + _unloadSequence + ")");
+                    if (Log.Dev.IsEnabled(DebugLogCategory.None))
+                    {
+                        Log.Dev.Info(DebugLogCategory.None, LogPath.Any, "RuntimeCleanupSkippedNewerUnload", "unloadId=" + unloadId + " currentUnloadId=" + _unloadSequence);
+                    }
                     return;
                 }
 
                 if (ModRuntime.Current != null)
                 {
-                    Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup skipped (new runtime active)");
+                    if (Log.Dev.IsEnabled(DebugLogCategory.None))
+                    {
+                        Log.Dev.Info(DebugLogCategory.None, LogPath.Any, "RuntimeCleanupSkippedNewRuntime");
+                    }
                     return;
                 }
 
                 ParkingSearchContext.ClearAll();
                 ParkingCandidateBlocker.ClearThreadStatic();
-                Log.Info(DebugLogCategory.None, "[Runtime] Sim-thread cleanup complete id=" + unloadId);
+                if (Log.Dev.IsEnabled(DebugLogCategory.None))
+                {
+                    Log.Dev.Info(DebugLogCategory.None, LogPath.Any, "RuntimeCleanupComplete", "unloadId=" + unloadId);
+                }
             });
         }
 
@@ -219,11 +237,16 @@ namespace PickyParking.ModEntry
             if (previousVersions.Length == 0)
                 previousVersions = "<none>";
 
-            Log.Info(DebugLogCategory.None,
-                "Assembly loaded. Current=" + currentVersion +
-                " Previous=" + previousText +
-                " AllPrevious=[" + previousVersions + "]"
-            );
+            if (Log.Dev.IsEnabled(DebugLogCategory.None))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.None,
+                    LogPath.Any,
+                    "AssemblyLoaded",
+                    "currentVersion=" + currentVersion +
+                    " | previousVersion=" + previousText +
+                    " | previousVersions=[" + previousVersions + "]");
+            }
         }
 
         private static void LogAssemblyVersionLoadedOnce()

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
@@ -9,7 +8,6 @@ namespace PickyParking.Features.ParkingPolicing
 {
     public static class ParkingSearchContext
     {
-        private static int _wrongThreadLogged;
         public const int DefaultLogMinCandidates = 10;
         public const int DefaultLogMinDurationMs = 50;
 
@@ -17,7 +15,7 @@ namespace PickyParking.Features.ParkingPolicing
         {
             get
             {
-                var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "Depth");
+                Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "Depth");
                 return stack != null ? stack.Count : 0;
             }
         }
@@ -49,7 +47,7 @@ namespace PickyParking.Features.ParkingPolicing
         {
             get
             {
-                var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "HasContext");
+                Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "HasContext");
                 return stack != null && stack.Count > 0;
             }
         }
@@ -83,12 +81,12 @@ namespace PickyParking.Features.ParkingPolicing
         public static bool TryGetEpisodeSnapshot(out EpisodeSnapshot snapshot)
         {
             snapshot = default;
-            var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "TryGetEpisodeSnapshot");
+            Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "TryGetEpisodeSnapshot");
             if (stack == null || stack.Count == 0)
                 return false;
 
-            var frame = stack.Peek();
-            var episode = frame.Episode;
+            Frame frame = stack.Peek();
+            ParkingSearchEpisodeDebugHelper episode = frame.Episode;
             if (episode == null)
                 return false;
 
@@ -113,20 +111,20 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void SetEpisodeVisitorFlag(bool isVisitor)
         {
-            var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "SetEpisodeVisitorFlag");
+            Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "SetEpisodeVisitorFlag");
             if (stack == null || stack.Count == 0) return;
             stack.Peek().Episode?.SetIsVisitor(isVisitor);
         }
 
         public static void Push(ushort vehicleId, uint citizenId, string source = null)
         {
-            var stack = GetStackOrNull(createIfMissing: true, requireSimulationThread: true, caller: "Push");
+            Stack<Frame> stack = GetStackOrNull(createIfMissing: true, requireSimulationThread: true, caller: "Push");
             if (stack == null) return;
 
 
             ParkingSearchEpisodeDebugHelper episode = null;
             
-            if (EnableEpisodeLogs && Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
+            if (EnableEpisodeLogs && Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
             {
                 int startDepth = stack.Count + 1;
                 episode = new ParkingSearchEpisodeDebugHelper(
@@ -144,18 +142,18 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static void RecordCandidate(bool denied, string reason, ushort buildingId, string prefabName, string buildingName)
         {
-            var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "RecordCandidate");
+            Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "RecordCandidate");
             if (stack == null || stack.Count == 0) return;
-            var f = stack.Peek();
+            Frame f = stack.Peek();
             f.Episode?.RecordCandidate(denied, reason, buildingId, prefabName, buildingName);
         }
 
         public static void Pop()
         {
-            var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "Pop");
+            Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: true, caller: "Pop");
             if (stack == null || stack.Count == 0) return;
 
-            var frame = stack.Pop();
+            Frame frame = stack.Pop();
             frame.Episode?.EndAndMaybeLog(
                 enabled: EnableEpisodeLogs,
                 minCandidates: LogMinCandidates,
@@ -169,7 +167,7 @@ namespace PickyParking.Features.ParkingPolicing
         
         public static void ClearAll()
         {
-            var stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: false, caller: "ClearAll");
+            Stack<Frame> stack = GetStackOrNull(createIfMissing: false, requireSimulationThread: false, caller: "ClearAll");
             stack?.Clear();
         }
 
@@ -191,9 +189,14 @@ namespace PickyParking.Features.ParkingPolicing
             if (SimThread.IsSimulationThread())
                 return true;
 
-            if (Interlocked.Exchange(ref _wrongThreadLogged, 1) == 0)
+            if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
             {
-                Log.AlwaysWarn("[Threading] ParkingSearchContext accessed off simulation thread; caller=" + (caller ?? "UNKNOWN"));
+                Log.Dev.Warn(
+                    DebugLogCategory.DecisionPipeline,
+                    LogPath.Any,
+                    "OffSimulationThread",
+                    "caller=" + (caller ?? "UNKNOWN"),
+                    "ParkingSearchContext.OffSimThread");
             }
 
             return false;

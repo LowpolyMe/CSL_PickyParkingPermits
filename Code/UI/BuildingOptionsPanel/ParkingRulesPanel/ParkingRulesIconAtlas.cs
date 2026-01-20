@@ -31,7 +31,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             Texture2D texture = ModResourceLoader.LoadTexture(ParkingRulesIconAtlasUiValues.TextureFileName);
             if (texture == null)
             {
-                Log.AlwaysWarn("[ParkingRulesPanel] IconsAtlas texture not found in mod Resources.");
+                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "IconAtlasTextureMissing", "fileName=" + ParkingRulesIconAtlasUiValues.TextureFileName);
                 return null;
             }
 
@@ -85,8 +85,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         {
             if (_atlas == null && !_attempted)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Icon atlas cleanup skipped (never created).");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "IconAtlasCleanupSkippedNeverCreated");
+                }
                 return;
             }
 
@@ -96,8 +98,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             if (atlas == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Icon atlas cache reset (load attempt only).");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "IconAtlasCacheReset");
+                }
                 return;
             }
 
@@ -110,8 +114,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             }
 
             Object.Destroy(atlas);
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Icon atlas cache cleared.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "IconAtlasCacheCleared");
+            }
         }
 
         private static void AddSprite(UITextureAtlas atlas, Texture2D texture, SpriteSpec spec)

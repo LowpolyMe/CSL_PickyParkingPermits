@@ -22,12 +22,15 @@ namespace PickyParking.Patching.TMPE
             try
             {
                 uint citizenId = driverInstance.m_citizen;
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled && citizenId == 0u && vehicleId != 0)
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe) && citizenId == 0u && vehicleId != 0)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] BeginFindParkingForCitizen: driver citizenId=0 " +
-                        $"vehicleId={vehicleId} sourceBuilding={driverInstance.m_sourceBuilding} targetBuilding={driverInstance.m_targetBuilding}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "FindParkingForCitizenMissingCitizen",
+                        "vehicleId=" + vehicleId +
+                        " | sourceBuilding=" + driverInstance.m_sourceBuilding +
+                        " | targetBuilding=" + driverInstance.m_targetBuilding);
                 }
 
                 if (citizenId != 0u || vehicleId != 0)
@@ -37,13 +40,15 @@ namespace PickyParking.Patching.TMPE
                 }
                 else
                 {
-                    if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                        Log.Info(DebugLogCategory.Tmpe, "[TMPE] CitizenId and VehicleId are 0, not pushing context");
+                    if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                    {
+                        Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "ContextPushSkippedNoIds");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "FindParkingForCitizenPrefixException", ex);
             }
         }
 
@@ -56,7 +61,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Finalizer exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "FindParkingForCitizenFinalizerException", ex);
             }
 
             return exception;
@@ -85,7 +90,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "ParkPassengerCarPrefixException", ex);
             }
         }
 
@@ -98,7 +103,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Finalizer exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "ParkPassengerCarFinalizerException", ex);
             }
 
             return exception;
@@ -128,7 +133,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "TryMoveParkedVehiclePrefixException", ex);
             }
         }
 
@@ -141,7 +146,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Finalizer exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "TryMoveParkedVehicleFinalizerException", ex);
             }
 
             return exception;
@@ -158,7 +163,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "TrySpawnParkedCarPrefixException", ex);
             }
         }
 
@@ -171,7 +176,7 @@ namespace PickyParking.Patching.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] Finalizer exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "TrySpawnParkedCarFinalizerException", ex);
             }
 
             return exception;

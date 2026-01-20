@@ -17,17 +17,23 @@ namespace PickyParking.Patching.TMPE
 
         public static void Apply(Harmony harmony)
         {
-            var type = System.Type.GetType(TargetTypeName, throwOnError: false);
+            Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpacePropAtBuilding patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpacePropAtBuilding not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -36,7 +42,10 @@ namespace PickyParking.Patching.TMPE
                 prefix: new HarmonyMethod(typeof(TMPE_FindParkingSpacePropAtBuildingPatch), nameof(Prefix))
             );
 
-            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpacePropAtBuilding (enforcement).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchApplied", "type=AdvancedParkingManager | method=" + TargetMethodName + " | behavior=Enforcement");
+            }
         }
 
         internal static bool ConsumeSuppressDiagnostics()

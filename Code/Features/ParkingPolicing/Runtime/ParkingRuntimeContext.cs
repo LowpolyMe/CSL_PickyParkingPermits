@@ -1,5 +1,6 @@
 using PickyParking.Features.ParkingPolicing;
 using PickyParking.Features.ParkingLotPrefabs;
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 using PickyParking.ModLifecycle;
 using PickyParking.GameAdapters;
@@ -62,7 +63,10 @@ namespace PickyParking.Features.ParkingPolicing.Runtime
             if (_missingLogged) return null;
 
             _missingLogged = true;
-            Log.AlwaysWarn("[Runtime] Runtime context missing; caller=" + (caller ?? "UNKNOWN"));
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Warn(DebugLogCategory.Enforcement, LogPath.Any, "RuntimeContextMissing", "caller=" + (caller ?? "UNKNOWN"));
+            }
             return null;
         }
     }

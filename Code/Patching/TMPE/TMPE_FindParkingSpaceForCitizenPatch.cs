@@ -15,17 +15,23 @@ namespace PickyParking.Patching.TMPE
 
         public static void Apply(Harmony harmony)
         {
-            var type = Type.GetType(TargetTypeName, throwOnError: false);
+            Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.AlwaysError("[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Warn(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo method = FindTargetMethod(type);
             if (method == null)
             {
-                Log.AlwaysError("[TMPE] FindParkingSpaceForCitizen overload not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Warn(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -35,7 +41,10 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_FindParkingSpaceForCitizenPatch), nameof(Finalizer))
             );
 
-            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpaceForCitizen (context injection).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchApplied", "type=AdvancedParkingManager | method=" + TargetMethodName + " | behavior=ContextInjection");
+            }
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)

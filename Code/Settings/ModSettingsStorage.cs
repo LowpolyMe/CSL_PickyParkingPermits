@@ -31,7 +31,12 @@ namespace PickyParking.Settings
             }
             catch (Exception ex)
             {
-                Log.AlwaysWarnOnce("Settings.LoadOrCreate", $"[Settings] Failed to load settings from {path}; using defaults. {ex.Message}");
+                Log.Player.Warn(
+                    DebugLogCategory.RuleUi,
+                    LogPath.Any,
+                    "SettingsLoadFailed",
+                    "path=" + path + " | error=" + ex.Message,
+                    "Settings.LoadOrCreate");
                 return new ModSettings();
             }
         }
@@ -62,8 +67,10 @@ namespace PickyParking.Settings
             if (settings.SupportedParkingLotPrefabs == null)
             {
                 settings.SupportedParkingLotPrefabs = new List<PrefabKey>();
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: initialized SupportedParkingLotPrefabs.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsPrefabsInitialized");
+                }
             }
 
             bool normalizedHue = NormalizeHueValues(settings);
@@ -87,28 +94,36 @@ namespace PickyParking.Settings
 
             if (cleaned.Count != settings.SupportedParkingLotPrefabs.Count)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: removed invalid or duplicate prefabs.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsPrefabsNormalized", "count=" + cleaned.Count);
+                }
             }
 
             if (normalizedHue)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped overlay hue values.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsHueClamped");
+                }
             }
 
             bool normalizedReevaluation = NormalizeReevaluationValues(settings);
             if (normalizedReevaluation)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.None,"[Settings] Normalized settings: clamped reevaluation limits.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsReevaluationClamped");
+                }
             }
 
             bool normalizedVanillaRadius = NormalizeVanillaSearchRadius(settings);
             if (normalizedVanillaRadius)
             {
-                if (Log.IsVerboseEnabled)
-                    Log.Info(DebugLogCategory.None, "[Settings] Clamped vanilla search radius.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsVanillaRadiusClamped");
+                }
             }
 
             settings.SupportedParkingLotPrefabs = cleaned;

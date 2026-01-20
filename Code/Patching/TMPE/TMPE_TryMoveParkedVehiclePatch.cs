@@ -17,14 +17,20 @@ namespace PickyParking.Patching.TMPE
             Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping TryMoveParkedVehicle patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] TryMoveParkedVehicle not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -34,7 +40,10 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_TryMoveParkedVehiclePatch), nameof(Finalizer))
             );
 
-            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched TryMoveParkedVehicle (context injection).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchApplied", "type=AdvancedParkingManager | method=" + TargetMethodName + " | behavior=ContextInjection");
+            }
         }
 
         private static void Prefix([HarmonyArgument(1)] ref VehicleParked parkedVehicle, ref bool __state)

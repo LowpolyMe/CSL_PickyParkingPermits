@@ -17,7 +17,10 @@ namespace PickyParking.Patching.Game
             MethodInfo method = FindTargetMethod();
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Enforcement, "[Vanilla] PassengerCarAI.FindParkingSpaceBuilding (outer) not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "PatchSkippedMissingMethod", "type=PassengerCarAI | method=" + TargetMethodName + " | overload=Outer");
+                }
                 return;
             }
 
@@ -26,9 +29,11 @@ namespace PickyParking.Patching.Game
                 prefix: new HarmonyMethod(typeof(PassengerCarAI_FindParkingSpaceBuildingRadiusPatch), nameof(Prefix))
             );
 
-            Log.Info(DebugLogCategory.Enforcement, "[Vanilla] Patched PassengerCarAI.FindParkingSpaceBuilding (vanilla radius override).");
-            if (Log.IsVerboseEnabled)
-                Log.Info(DebugLogCategory.None, "[Vanilla] Radius patch applied.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "PatchApplied", "type=PassengerCarAI | method=" + TargetMethodName + " | behavior=RadiusOverride");
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Vanilla, "VanillaRadiusPatchApplied");
+            }
         }
 
         private static MethodInfo FindTargetMethod()

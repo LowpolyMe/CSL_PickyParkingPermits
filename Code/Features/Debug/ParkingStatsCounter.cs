@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using PickyParking.Logging;
@@ -43,9 +44,9 @@ namespace PickyParking.Features.Debug
         private static long _reevalReleased;
 
         public static bool ShouldLog =>
-            Log.IsVerboseEnabled;
+            Log.Dev.IsEnabled(DebugLogCategory.ParkingStats);
 
-        private static bool ShouldCount => Log.IsVerboseEnabled;
+        private static bool ShouldCount => Log.Dev.IsEnabled(DebugLogCategory.ParkingStats);
 
         public static void ResetAll()
         {
@@ -269,75 +270,78 @@ namespace PickyParking.Features.Debug
 
         public static void LogAndReset(float windowSeconds)
         {
-            var snapshot = SnapshotAndReset();
-            var sb = new StringBuilder(256);
+            if (!Log.Dev.IsEnabled(DebugLogCategory.ParkingStats))
+                return;
 
-            sb.Append("[Daily Statistics]");
-            //TODO add in-game date DD/MM/YY
-            sb.Append(" ctxPush=");
+            var snapshot = SnapshotAndReset();
+            StringBuilder sb = new StringBuilder(256);
+
+            sb.Append("windowSeconds=");
+            sb.Append(windowSeconds.ToString("F1", CultureInfo.InvariantCulture));
+            sb.Append(" | ctxPush=");
             sb.Append(snapshot.ContextPushTotal);
-            sb.Append(" ctxPop=");
+            sb.Append(" | ctxPop=");
             sb.Append(snapshot.ContextPopTotal);
-            sb.Append(" ctxVehicleOnly=");
+            sb.Append(" | ctxVehicleOnly=");
             sb.Append(snapshot.ContextVehicleOnly);
-            sb.Append(" ctxCitizenOnly=");
+            sb.Append(" | ctxCitizenOnly=");
             sb.Append(snapshot.ContextCitizenOnly);
-            sb.Append(" ctxBoth=");
+            sb.Append(" | ctxBoth=");
             sb.Append(snapshot.ContextVehicleAndCitizen);
-            sb.Append(" ctxNoIds=");
+            sb.Append(" | ctxNoIds=");
             sb.Append(snapshot.ContextNoIds);
 
-            sb.Append(" tmpeFind=");
+            sb.Append(" | tmpeFind=");
             sb.Append(snapshot.TmpeFindParkingForCitizen);
-            sb.Append(" tmpePark=");
+            sb.Append(" | tmpePark=");
             sb.Append(snapshot.TmpeParkPassengerCar);
-            sb.Append(" tmpeMove=");
+            sb.Append(" | tmpeMove=");
             sb.Append(snapshot.TmpeTryMoveParkedVehicle);
-            sb.Append(" tmpeSpawn=");
+            sb.Append(" | tmpeSpawn=");
             sb.Append(snapshot.TmpeTrySpawnParkedPassengerCar);
 
-            sb.Append(" candChecks=");
+            sb.Append(" | candChecks=");
             sb.Append(snapshot.CandidateChecks);
-            sb.Append(" candDenied=");
+            sb.Append(" | candDenied=");
             sb.Append(snapshot.CandidateDenied);
-            sb.Append(" candAllowed=");
+            sb.Append(" | candAllowed=");
             sb.Append(snapshot.CandidateAllowed);
-            sb.Append(" propNoCtxDenied=");
+            sb.Append(" | propNoCtxDenied=");
             sb.Append(snapshot.PropSearchNoContextDenied);
-            sb.Append(" propDenied=");
+            sb.Append(" | propDenied=");
             sb.Append(snapshot.PropSearchDenied);
 
-            sb.Append(" evalCitizen=");
+            sb.Append(" | evalCitizen=");
             sb.Append(snapshot.EvalCitizenCalls);
-            sb.Append(" evalVehicle=");
+            sb.Append(" | evalVehicle=");
             sb.Append(snapshot.EvalVehicleCalls);
-            sb.Append(" denyNoCitizenCtx=");
+            sb.Append(" | denyNoCitizenCtx=");
             sb.Append(snapshot.DenyNoCitizenContext);
-            sb.Append(" denyNoDriverCtx=");
+            sb.Append(" | denyNoDriverCtx=");
             sb.Append(snapshot.DenyNoDriverContext);
 
-            sb.Append(" createBlocked=");
+            sb.Append(" | createBlocked=");
             sb.Append(snapshot.CreateBlocked);
-            sb.Append(" createBypassTmpe=");
+            sb.Append(" | createBypassTmpe=");
             sb.Append(snapshot.CreateBypassTmpe);
-            sb.Append(" createNoCtx=");
+            sb.Append(" | createNoCtx=");
             sb.Append(snapshot.CreateCheckNoContext);
-            sb.Append(" createNoOwner=");
+            sb.Append(" | createNoOwner=");
             sb.Append(snapshot.CreateCheckNoOwner);
-            sb.Append(" createNoRule=");
+            sb.Append(" | createNoRule=");
             sb.Append(snapshot.CreateCheckNoRuleBuilding);
-            sb.Append(" vanillaFlip=");
+            sb.Append(" | vanillaFlip=");
             sb.Append(snapshot.VanillaFallbackFlipped);
-            sb.Append(" invisiblesFixed=");
+            sb.Append(" | invisiblesFixed=");
             sb.Append(snapshot.InvisiblesFixed);
-            sb.Append(" reevalQueued=");
+            sb.Append(" | reevalQueued=");
             sb.Append(snapshot.ReevalDeniedQueued);
-            sb.Append(" reevalMoved=");
+            sb.Append(" | reevalMoved=");
             sb.Append(snapshot.ReevalMoved);
-            sb.Append(" reevalReleased=");
+            sb.Append(" | reevalReleased=");
             sb.Append(snapshot.ReevalReleased);
 
-            Log.Info(DebugLogCategory.None, sb.ToString());
+            Log.Dev.Info(DebugLogCategory.ParkingStats, LogPath.Any, "DailyStats", sb.ToString());
         }
 
         private static Snapshot SnapshotAndReset()

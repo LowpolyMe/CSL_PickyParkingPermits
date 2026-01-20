@@ -51,19 +51,23 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
         public static void Apply(Harmony harmony)
         {
-            var type = Type.GetType(TargetTypeName, throwOnError: false);
+            Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping FindParkingSpaceForCitizen diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo method = FindTargetMethod(type);
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] FindParkingSpaceForCitizen overload not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -73,8 +77,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 postfix: new HarmonyMethod(typeof(TMPE_FindParkingSpaceForCitizenDiagnosticsPatch), nameof(Postfix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched FindParkingSpaceForCitizen (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsPatchApplied", "method=" + TargetMethodName);
+            }
         }
 
         private static MethodInfo FindTargetMethod(Type advancedParkingManagerType)
@@ -139,16 +145,19 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             [HarmonyArgument(6)] ushort vehicleId,
             [HarmonyArgument(7)] bool allowTourists)
         {
-            if (__result && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+            if (__result && Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
             {
                 if (TryGetExtParkingLocation(extDriverInstanceObj, out string location, out ushort locationId))
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] FindParkingSpaceForCitizen succeeded. " +
-                        $"vehicleId={vehicleId} citizenId={driverInstance.m_citizen} " +
-                        $"targetBuildingId={driverInstance.m_targetBuilding} " +
-                        $"parkingLocation={location} parkingLocationId={locationId}"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "FindParkingSpaceForCitizenSucceeded",
+                        "vehicleId=" + vehicleId +
+                        " | citizenId=" + driverInstance.m_citizen +
+                        " | targetBuildingId=" + driverInstance.m_targetBuilding +
+                        " | parkingLocation=" + location +
+                        " | parkingLocationId=" + locationId);
                 }
 
                 if (vehicleId != 0)
@@ -163,7 +172,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (__result)
                 return;
 
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             TryGetDriverTourist(ref driverInstance, out bool driverIsTourist);
@@ -178,26 +187,51 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 if (shouldLogDetail)
                 {
                     string allDeniedNote = isAllDenied ? " allCandidatesDenied=true" : string.Empty;
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] FindParkingSpaceForCitizen failed (no parking found). " +
-                        $"vehicleId={snapshot.VehicleId} citizenId={snapshot.CitizenId} isVisitor={snapshot.IsVisitor} " +
-                        $"source={snapshot.Source ?? "NULL"} candidates={snapshot.CandidateChecks} " +
-                        $"denied={snapshot.DeniedCount} allowed={snapshot.AllowedCount} " +
-                        $"last=({snapshot.LastReason ?? "NULL"} bld={snapshot.LastBuildingId} prefab={snapshot.LastPrefab ?? "NULL"} name={snapshot.LastBuildingName ?? "NULL"})" +
-                        allDeniedNote +
-                        (isCandidateZero
-                            ? $" endPos=({endPos.x:F1},{endPos.y:F1},{endPos.z:F1}) homeId={homeId} goingHome={goingHome} vehicleArg={vehicleId} allowTourists={allowTourists}{FormatDriverInfo(ref driverInstance)}"
-                        : string.Empty));
+                    string fields =
+                        "vehicleId=" + snapshot.VehicleId +
+                        " | citizenId=" + snapshot.CitizenId +
+                        " | isVisitor=" + snapshot.IsVisitor +
+                        " | source=" + (snapshot.Source ?? "NULL") +
+                        " | candidates=" + snapshot.CandidateChecks +
+                        " | denied=" + snapshot.DeniedCount +
+                        " | allowed=" + snapshot.AllowedCount +
+                        " | lastReason=" + (snapshot.LastReason ?? "NULL") +
+                        " | lastBuildingId=" + snapshot.LastBuildingId +
+                        " | lastPrefab=" + (snapshot.LastPrefab ?? "NULL") +
+                        " | lastBuildingName=" + (snapshot.LastBuildingName ?? "NULL");
+                    if (isAllDenied)
+                        fields = fields + " | allCandidatesDenied=true";
+                    if (isCandidateZero)
+                    {
+                        fields = fields +
+                                 " | endPosX=" + endPos.x.ToString("F1") +
+                                 " | endPosY=" + endPos.y.ToString("F1") +
+                                 " | endPosZ=" + endPos.z.ToString("F1") +
+                                 " | homeId=" + homeId +
+                                 " | goingHome=" + goingHome +
+                                 " | vehicleArg=" + vehicleId +
+                                 " | allowTourists=" + allowTourists +
+                                 FormatDriverInfo(ref driverInstance);
+                    }
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "FindParkingSpaceForCitizenFailed", fields);
                 }
                 else if (isAllowedButFailed)
                 {
-                    Log.Info(DebugLogCategory.Tmpe,
-                        "[TMPE] FindParkingSpaceForCitizen failed after allowed candidates. " +
-                        $"vehicleId={snapshot.VehicleId} citizenId={snapshot.CitizenId} isVisitor={snapshot.IsVisitor} " +
-                        $"source={snapshot.Source ?? "NULL"} candidates={snapshot.CandidateChecks} " +
-                        $"denied={snapshot.DeniedCount} allowed={snapshot.AllowedCount} " +
-                        $"last=({snapshot.LastReason ?? "NULL"} bld={snapshot.LastBuildingId} prefab={snapshot.LastPrefab ?? "NULL"} name={snapshot.LastBuildingName ?? "NULL"})"
-                    );
+                    Log.Dev.Info(
+                        DebugLogCategory.Tmpe,
+                        LogPath.TMPE,
+                        "FindParkingSpaceForCitizenFailedAfterAllowed",
+                        "vehicleId=" + snapshot.VehicleId +
+                        " | citizenId=" + snapshot.CitizenId +
+                        " | isVisitor=" + snapshot.IsVisitor +
+                        " | source=" + (snapshot.Source ?? "NULL") +
+                        " | candidates=" + snapshot.CandidateChecks +
+                        " | denied=" + snapshot.DeniedCount +
+                        " | allowed=" + snapshot.AllowedCount +
+                        " | lastReason=" + (snapshot.LastReason ?? "NULL") +
+                        " | lastBuildingId=" + snapshot.LastBuildingId +
+                        " | lastPrefab=" + (snapshot.LastPrefab ?? "NULL") +
+                        " | lastBuildingName=" + (snapshot.LastBuildingName ?? "NULL"));
                 }
                 MaybeLogSummary();
                 return;
@@ -212,15 +246,21 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             {
                 uint citizenId = driverInstance.m_citizen;
                 if (citizenId == 0u)
-                    return " driverCitizen=0";
+                    return " | driverCitizen=0";
 
                 ref Citizen citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
                 bool isTourist = (citizen.m_flags & Citizen.Flags.Tourist) != 0;
-                return $" driverCitizen={citizenId} driverTourist={isTourist} driverHome={citizen.m_homeBuilding} driverWork={citizen.m_workBuilding} instSrc={driverInstance.m_sourceBuilding} instDst={driverInstance.m_targetBuilding} instFlags={driverInstance.m_flags}";
+                return " | driverCitizen=" + citizenId +
+                       " | driverTourist=" + isTourist +
+                       " | driverHome=" + citizen.m_homeBuilding +
+                       " | driverWork=" + citizen.m_workBuilding +
+                       " | instSrc=" + driverInstance.m_sourceBuilding +
+                       " | instDst=" + driverInstance.m_targetBuilding +
+                       " | instFlags=" + driverInstance.m_flags;
             }
             catch
             {
-                return " driverCitizen=ERR";
+                return " | driverCitizen=ERR";
             }
         }
 
@@ -273,12 +313,18 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             if (now < _nextSummaryTime)
                 return;
 
-            if (_failCount > 0 && Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
+            if (_failCount > 0 && Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
             {
-                Log.Info(DebugLogCategory.Tmpe,
-                    "[TMPE] Parking search failures (summary) " +
-                    $"total={_failCount} cand0={_failCandidatesZero} allDenied={_failAllDenied} allowed>0={_failAllowedButFailed} " +
-                    $"nonTouristCand0={_failNonTouristCandidatesZero} nonTouristAllDenied={_failNonTouristAllDenied}");
+                Log.Dev.Info(
+                    DebugLogCategory.Tmpe,
+                    LogPath.TMPE,
+                    "FindParkingSpaceForCitizenFailureSummary",
+                    "total=" + _failCount +
+                    " | candidatesZero=" + _failCandidatesZero +
+                    " | allDenied=" + _failAllDenied +
+                    " | allowedPositive=" + _failAllowedButFailed +
+                    " | nonTouristCandidatesZero=" + _failNonTouristCandidatesZero +
+                    " | nonTouristAllDenied=" + _failNonTouristAllDenied);
             }
 
             _failCount = 0;
@@ -292,7 +338,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
         private static void MaybeLogFailedAttempts(object extDriverInstanceObj, ref CitizenInstance driverInstance, ushort vehicleId)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (extDriverInstanceObj == null)
@@ -309,11 +355,15 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             uint citizenId = driverInstance.m_citizen;
             string pathModeText = pathMode != null ? pathMode.ToString() : "NULL";
-            Log.Info(DebugLogCategory.Tmpe,
-                "[TMPE] Parking attempts changed " +
-                $"instanceId={instanceId} citizenId={citizenId} vehicleId={vehicleId} " +
-                $"failedAttempts={failedAttempts} pathMode={pathModeText}"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.Tmpe,
+                LogPath.TMPE,
+                "ParkingAttemptsChanged",
+                "instanceId=" + instanceId +
+                " | citizenId=" + citizenId +
+                " | vehicleId=" + vehicleId +
+                " | failedAttempts=" + failedAttempts +
+                " | pathMode=" + pathModeText);
         }
 
         private static bool TryGetExtInstanceFields(
@@ -395,7 +445,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
         private static void LogMissingExtFields(Type type)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsTmpeDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
                 return;
 
             if (!_extInstanceFieldWarned.Add(type))
@@ -414,7 +464,11 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 }
             }
 
-            Log.Info(DebugLogCategory.Tmpe, $"[TMPE] ExtCitizenInstance fields missing or unreadable. type={type.FullName} fields=[{sb}]");
+            Log.Dev.Info(
+                DebugLogCategory.Tmpe,
+                LogPath.TMPE,
+                "ExtCitizenInstanceFieldsMissing",
+                "type=" + type.FullName + " | fields=[" + sb + "]");
         }
     }
 }

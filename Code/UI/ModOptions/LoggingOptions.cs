@@ -86,21 +86,6 @@ namespace PickyParking.UI.ModOptions
                 settings.EnabledDebugLogCategories = SetFlag(settings.EnabledDebugLogCategories, DebugLogCategory.Tmpe, isChecked);
                 HandleDebugLoggingChanged("OptionsUI: TMPE diagnostics", settings, saveSettings, services);
             });*/
-            debugGroup.AddTextfield(
-                "Building id for lot inspection logs",
-                settings.DebugBuildingId.ToString(),
-                _ => { },
-                text =>
-                {
-                    if (!ushort.TryParse(text, out var buildingId))
-                    {
-                        Log.Warn(DebugLogCategory.None, "[Settings] Invalid building id for lot inspection logs: " + (text ?? "NULL"));
-                        return;
-                    }
-
-                    settings.DebugBuildingId = buildingId;
-                    HandleDebugLoggingChanged("OptionsUI: Lot inspection building id", settings, saveSettings, services);
-                });
         }
 
         private static bool IsSingleFlag(DebugLogCategory category)
@@ -115,7 +100,10 @@ namespace PickyParking.UI.ModOptions
             SaveSettings(saveSettings);
             ReloadSettings("OptionsUI: Verbose logging", services);
             ApplyLoggingSettings(settings, services);
-            Log.Info(DebugLogCategory.RuleUi, isChecked ? "[Settings] Verbose logging enabled." : "[Settings] Verbose logging disabled.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "VerboseLoggingToggled", "enabled=" + isChecked);
+            }
         }
 
         private static void HandleDebugLoggingChanged(string reason, ModSettings settings, Action saveSettings, UiServices services)

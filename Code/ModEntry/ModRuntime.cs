@@ -51,11 +51,12 @@ namespace PickyParking.ModEntry
             ParkingDebugSettings.DisableTMPECandidateBlocking = settings.DisableTMPECandidateBlocking;
             ParkingDebugSettings.DisableClearKnownParkingOnDenied = settings.DisableClearKnownParkingOnDenied;
             ParkingDebugSettings.DisableParkingEnforcement = settings.DisableParkingEnforcement;
-            ParkingDebugSettings.BuildingDebugId = settings.DebugBuildingId;
             ParkingDebugSettings.EnableLotInspectionLogs = settings.IsDebugLogCategoryEnabled(DebugLogCategory.LotInspection);
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[Settings] Patch settings applied.");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SettingsApplied");
+            }
 
             if (Current != null && Current.ParkingBackendState != null)
                 Current.ParkingBackendState.Refresh();
@@ -77,12 +78,18 @@ namespace PickyParking.ModEntry
                 {
                     var storage = new SavegameRulesStorage();
                     storage.LoadIntoFromBytes(rulesRepo, levelContext.RulesBytes);
-                    if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                        Log.Info(DebugLogCategory.RuleUi, $"[Persistence] Applied savegame building rules ({levelContext.RulesBytes.Length} bytes).");
+                    if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                    {
+                        Log.Dev.Info(
+                            DebugLogCategory.RuleUi,
+                            LogPath.Any,
+                            "SavegameRulesApplied",
+                            "byteCount=" + levelContext.RulesBytes.Length);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Log.AlwaysWarn("[Persistence] Failed to apply savegame building rules: " + ex);
+                    Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "SavegameRulesApplyFailed", "error=" + ex);
                 }
                 finally
                 {

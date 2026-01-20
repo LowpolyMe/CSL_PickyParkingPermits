@@ -83,13 +83,22 @@ namespace PickyParking.GameAdapters
             context = default;
             if (vehicleId == 0) return false;
 
+            bool logLotInspection = Log.Dev.IsEnabled(DebugLogCategory.LotInspection) &&
+                                    ParkingDebugSettings.SelectedBuildingId != 0;
+
             ref Vehicle vehicle =
                 ref Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleId];
 
             if ((vehicle.m_flags & Vehicle.Flags.Created) == 0)
             {
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] TryGetDriverInfo failed: vehicle not Created vehicleId={vehicleId} flags={vehicle.m_flags}");
+                if (logLotInspection)
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.LotInspection,
+                        LogPath.Any,
+                        "DriverInfoMissingVehicle",
+                        "vehicleId=" + vehicleId + " | flags=" + vehicle.m_flags);
+                }
                 return false;
             }
 
@@ -97,8 +106,14 @@ namespace PickyParking.GameAdapters
             VehicleAI ai = info?.m_vehicleAI;
             if (ai == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] TryGetDriverInfo failed: vehicle AI missing vehicleId={vehicleId}");
+                if (logLotInspection)
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.LotInspection,
+                        LogPath.Any,
+                        "DriverInfoMissingVehicleAi",
+                        "vehicleId=" + vehicleId);
+                }
                 return false;
             }
 
@@ -106,11 +121,14 @@ namespace PickyParking.GameAdapters
             uint citizenId = owner.Citizen;
             if (citizenId == 0)
             {
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection,
-                        "[LotInspection] TryGetDriverInfo failed: owner citizenId=0 " +
-                        $"vehicleId={vehicleId} citizenUnits={vehicle.m_citizenUnits}"
-                    );
+                if (logLotInspection)
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.LotInspection,
+                        LogPath.Any,
+                        "DriverInfoMissingCitizen",
+                        "vehicleId=" + vehicleId + " | citizenUnits=" + vehicle.m_citizenUnits);
+                }
                 return false;
             }
 
@@ -134,8 +152,11 @@ namespace PickyParking.GameAdapters
             context = default;
             if (citizenId == 0)
             {
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, "[LotInspection] TryGetCitizenInfo failed: citizenId=0");
+                if (Log.Dev.IsEnabled(DebugLogCategory.LotInspection) &&
+                    ParkingDebugSettings.SelectedBuildingId != 0)
+                {
+                    Log.Dev.Info(DebugLogCategory.LotInspection, LogPath.Any, "CitizenInfoMissingCitizenId");
+                }
                 return false;
             }
 

@@ -71,29 +71,36 @@ namespace PickyParking.Features.ParkingPolicing
 
         private static void LogPrefixOnce(ushort ignoreParked, float maxDistance)
         {
-            if (!Log.IsVerboseEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 return;
 
             if (Interlocked.Exchange(ref _prefixLogged, 1) != 0)
                 return;
 
             string source = ParkingSearchContext.Source ?? "NULL";
-            Log.Info(DebugLogCategory.None,
-                "[Vanilla] Radius patch prefix hit source=" + source +
-                " ignoreParked=" + ignoreParked +
-                " maxDistance=" + maxDistance);
+            Log.Dev.Info(
+                DebugLogCategory.Enforcement,
+                LogPath.Vanilla,
+                "VanillaRadiusPrefixHit",
+                "source=" + source +
+                " | ignoreParked=" + ignoreParked +
+                " | maxDistance=" + maxDistance.ToString("F2"));
         }
 
         private static void LogAppliedRadius(int meters, string source)
         {
-            if (!Log.IsVerboseEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 return;
 
             if (_lastLoggedRadius == meters)
                 return;
 
             _lastLoggedRadius = meters;
-            Log.Info(DebugLogCategory.None, "[Vanilla] Applied search radius override meters=" + meters + " src=" + (source ?? "NULL"));
+            Log.Dev.Info(
+                DebugLogCategory.Enforcement,
+                LogPath.Vanilla,
+                "VanillaRadiusApplied",
+                "meters=" + meters + " | source=" + (source ?? "NULL"));
         }
 
         private static bool IsEligibleSource(string source)
@@ -106,26 +113,34 @@ namespace PickyParking.Features.ParkingPolicing
 
         private static void LogSkipNonParkVehicle(string source, ushort ignoreParked)
         {
-            if (!Log.IsVerboseEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 return;
 
             if (_skipNonParkVehicleLogged != 0)
                 return;
 
             _skipNonParkVehicleLogged = 1;
-            Log.Info(DebugLogCategory.None, "[Vanilla] Skipped radius override (non-arrival or roadside search). source=" + (source ?? "NULL") + " ignoreParked=" + ignoreParked);
+            Log.Dev.Info(
+                DebugLogCategory.Enforcement,
+                LogPath.Vanilla,
+                "VanillaRadiusSkippedNonArrival",
+                "source=" + (source ?? "NULL") + " | ignoreParked=" + ignoreParked);
         }
 
         private static void LogSkipIgnoreParked(string source, ushort ignoreParked)
         {
-            if (!Log.IsVerboseEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 return;
 
             if (_skipIgnoreParkedLogged != 0)
                 return;
 
             _skipIgnoreParkedLogged = 1;
-            Log.Info(DebugLogCategory.None, "[Vanilla] Skipped radius override (relocation search uses vanilla radius). source=" + (source ?? "NULL") + " ignoreParked=" + ignoreParked);
+            Log.Dev.Info(
+                DebugLogCategory.Enforcement,
+                LogPath.Vanilla,
+                "VanillaRadiusSkippedRelocation",
+                "source=" + (source ?? "NULL") + " | ignoreParked=" + ignoreParked);
         }
 
         private static void LogVanillaBypassIfTmpeActive(ParkingBackendState backendState)
@@ -137,9 +152,15 @@ namespace PickyParking.Features.ParkingPolicing
                 && backendState.ActiveBackend != ParkingBackendKind.TmpeBasic)
                 return;
 
-            Log.AlwaysWarnOnce(
-                "VanillaBypass.TmpeAdvanced",
-                "[BackendSelection] event=VanillaBackendBypassed reason=TmpeAdvancedActive");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Warn(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "VanillaBackendBypassed",
+                    "reason=TmpeActive | activeBackend=" + backendState.ActiveBackend,
+                    "VanillaBypass.TmpeActive");
+            }
         }
     }
 }

@@ -17,8 +17,10 @@ namespace PickyParking.Patching.Diagnostics.Game
             MethodInfo method = FindTargetMethod();
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] ReleaseVehicle not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "DiagnosticsSkippedMissingMethod", "type=VehicleManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -27,8 +29,10 @@ namespace PickyParking.Patching.Diagnostics.Game
                 prefix: new HarmonyMethod(typeof(VehicleManager_ReleaseVehicleDiagnosticsPatch), nameof(Prefix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] Patched ReleaseVehicle (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "DiagnosticsPatchApplied", "type=VehicleManager | method=" + TargetMethodName);
+            }
         }
 
         private static MethodInfo FindTargetMethod()
@@ -59,7 +63,7 @@ namespace PickyParking.Patching.Diagnostics.Game
 
         private static void Prefix(object[] __args)
         {
-            if (!Log.IsVerboseEnabled || !Log.IsEnforcementDebugEnabled)
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 return;
 
             try
@@ -91,7 +95,7 @@ namespace PickyParking.Patching.Diagnostics.Game
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[Diagnostics] ReleaseVehicle prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Enforcement, LogPath.Any, "ReleaseVehicleDiagnosticsPrefixException", ex);
             }
         }
 

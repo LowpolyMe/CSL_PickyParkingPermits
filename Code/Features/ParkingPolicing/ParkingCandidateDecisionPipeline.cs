@@ -38,8 +38,10 @@ namespace PickyParking.Features.ParkingPolicing
                 return true;
             }
 
-            if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled)
-                Log.Info(DebugLogCategory.DecisionPipeline, "[Decision] No context candidateBuildingId=" + buildingId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+            {
+                Log.Dev.Info(DebugLogCategory.DecisionPipeline, LogPath.Any, "DecisionContextMissing", "buildingId=" + buildingId);
+            }
 
             denied = false;
             reason = DecisionReason.Allowed_Unrestricted;

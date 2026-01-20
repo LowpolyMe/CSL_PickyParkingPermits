@@ -20,7 +20,10 @@ namespace PickyParking.Patching.TMPE
             Type type = Type.GetType(TargetTypeName, false);
             if (type == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager not found; skipping backend refresh patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingType", "type=AbstractFeatureManager");
+                }
                 return;
             }
 
@@ -29,7 +32,10 @@ namespace PickyParking.Patching.TMPE
 
             if (enableMethod == null && disableMethod == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager toggle methods not found; skipping backend refresh patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AbstractFeatureManager | method=Toggle");
+                }
                 return;
             }
 
@@ -42,7 +48,10 @@ namespace PickyParking.Patching.TMPE
             }
             else
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager.OnEnableFeature not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AbstractFeatureManager | method=" + EnableMethodName);
+                }
             }
 
             if (disableMethod != null)
@@ -54,10 +63,16 @@ namespace PickyParking.Patching.TMPE
             }
             else
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] AbstractFeatureManager.OnDisableFeature not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=AbstractFeatureManager | method=" + DisableMethodName);
+                }
             }
 
-            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched AbstractFeatureManager toggles (backend refresh).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchApplied", "type=AbstractFeatureManager | behavior=BackendRefresh");
+            }
         }
 
         private static MethodInfo FindToggleMethod(Type type, string methodName)

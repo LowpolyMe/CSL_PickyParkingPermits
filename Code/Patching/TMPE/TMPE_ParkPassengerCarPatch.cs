@@ -18,14 +18,20 @@ namespace PickyParking.Patching.TMPE
             Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] VehicleBehaviorManager not found; skipping ParkPassengerCar patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingType", "type=VehicleBehaviorManager");
+                }
                 return;
             }
 
             MethodInfo method = AccessTools.Method(type, TargetMethodName);
             if (method == null)
             {
-                Log.Info(DebugLogCategory.Tmpe, "[TMPE] ParkPassengerCar not found; skipping patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchSkippedMissingMethod", "type=VehicleBehaviorManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -36,7 +42,10 @@ namespace PickyParking.Patching.TMPE
                 finalizer: new HarmonyMethod(typeof(TMPE_ParkPassengerCarPatch), nameof(Finalizer))
             );
 
-            Log.Info(DebugLogCategory.Tmpe, "[TMPE] Patched ParkPassengerCar (context injection).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "PatchApplied", "type=VehicleBehaviorManager | method=" + TargetMethodName + " | behavior=ContextInjection");
+            }
         }
 
         private static void Prefix([HarmonyArgument(0)] ushort vehicleId, [HarmonyArgument(3)] uint driverCitizenId, ref bool __state)
@@ -98,24 +107,37 @@ namespace PickyParking.Patching.TMPE
             }
             catch (ArgumentException ex)
             {
-                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                LogClearKnownParkingLocationFailed(ex);
             }
             catch (FieldAccessException ex)
             {
-                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                LogClearKnownParkingLocationFailed(ex);
             }
             catch (InvalidOperationException ex)
             {
-                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                LogClearKnownParkingLocationFailed(ex);
             }
             catch (TargetException ex)
             {
-                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                LogClearKnownParkingLocationFailed(ex);
             }
             catch (TargetInvocationException ex)
             {
-                Log.AlwaysWarnOnce("TMPE.ClearKnownParkingLocation", "[TMPE] Failed to clear known parking location: " + ex);
+                LogClearKnownParkingLocationFailed(ex);
             }
+        }
+
+        private static void LogClearKnownParkingLocationFailed(Exception ex)
+        {
+            if (!Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                return;
+
+            Log.Dev.Warn(
+                DebugLogCategory.Tmpe,
+                LogPath.TMPE,
+                "ClearKnownParkingLocationFailed",
+                "error=" + ex,
+                "TMPE.ClearKnownParkingLocation");
         }
     }
 }

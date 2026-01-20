@@ -86,16 +86,26 @@ namespace PickyParking.Features.ParkingPolicing
                 return false;
             }
 
-            if (Log.IsEnforcementDebugEnabled && ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation requested for buildingId=" +
-                         buildingId + "\n" + Environment.StackTrace);
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement) && ParkingDebugSettings.IsSelectedBuilding(buildingId))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "ReevaluationRequested",
+                    "buildingId=" + buildingId,
+                    null,
+                    null,
+                    true);
+            }
 
             if (!_pendingSet.Add(buildingId))
                 return false;
 
             _pendingBuildings.Enqueue(buildingId);
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation queued buildingId=" + buildingId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "ReevaluationQueued", "buildingId=" + buildingId);
+            }
             Schedule();
             return true;
         }
@@ -141,8 +151,10 @@ namespace PickyParking.Features.ParkingPolicing
             if (_disposed) return;
             if (_scheduled) return;
             _scheduled = true;
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation scheduled");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "ReevaluationScheduled");
+            }
             SimThread.Dispatch(Step);
         }
 
@@ -176,11 +188,17 @@ namespace PickyParking.Features.ParkingPolicing
                 ref finalizationsThisTick);
             RelocateDeniedVehicles(maxRelocations, ref relocationsThisTick);
 
-            if (Log.IsVerboseEnabled && ParkingDebugSettings.BuildingDebugId == logBuildingId)
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation tick eval=" + evaluationsThisTick +
-                         " relocate=" + relocationsThisTick +
-                         " finalize=" + finalizationsThisTick +
-                         " buildingId=" + logBuildingId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement) && ParkingDebugSettings.IsSelectedBuilding(logBuildingId))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "ReevaluationTick",
+                    "buildingId=" + logBuildingId +
+                    " | evaluations=" + evaluationsThisTick +
+                    " | relocations=" + relocationsThisTick +
+                    " | finalizations=" + finalizationsThisTick);
+            }
             if (_activeIndex >= _parkedBuffer.Count && _deniedQueue.Count == 0)
                 FinishActiveBuilding();
             if (HasPendingWork || _deniedQueue.Count > 0)
@@ -228,15 +246,18 @@ namespace PickyParking.Features.ParkingPolicing
                 }
 
                 ParkingPermissionEvaluator.Result eval = _evaluator.EvaluateCitizen(ownerCitizenId, _activeBuilding);
-                if (Log.IsVerboseEnabled && Log.IsDecisionDebugEnabled &&
-                    ParkingDebugSettings.BuildingDebugId != 0 &&
-                    ParkingDebugSettings.BuildingDebugId == _activeBuilding)
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline) &&
+                    ParkingDebugSettings.IsSelectedBuilding(_activeBuilding))
                 {
-                    Log.Info(DebugLogCategory.DecisionPipeline, "[Policy] Reevaluation decision parkedId=" + parkedId
-                             + " citizenId=" + ownerCitizenId
-                             + " allowed=" + eval.Allowed
-                             + " reason=" + eval.Reason
-                             + " buildingId=" + _activeBuilding);
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "ReevaluationDecision",
+                        "parkedId=" + parkedId +
+                        " | citizenId=" + ownerCitizenId +
+                        " | allowed=" + eval.Allowed +
+                        " | reason=" + eval.Reason +
+                        " | buildingId=" + _activeBuilding);
                 }
                 if (eval.Allowed)
                 {
@@ -246,11 +267,15 @@ namespace PickyParking.Features.ParkingPolicing
                 }
 
                 _activeDeniedCount++;
-                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
                 {
-                    Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation: vehicle denied (queue relocate/release) parkedId=" + parkedId
-                             + " citizenId=" + ownerCitizenId
-                             + " reason=" + eval.Reason);
+                    Log.Dev.Info(
+                        DebugLogCategory.Enforcement,
+                        LogPath.Any,
+                        "ReevaluationDeniedQueued",
+                        "parkedId=" + parkedId +
+                        " | citizenId=" + ownerCitizenId +
+                        " | reason=" + eval.Reason);
                 }
 
                 _deniedQueue.Enqueue(new DeniedParkedVehicle(parkedId, ownerCitizenId, homeId, parkedPos));
@@ -377,16 +402,20 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (!_rules.TryGet(next, out _))
                 {
-                    if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                        Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation skipped (rule missing) buildingId=" + next);
+                    if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                    {
+                        Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "ReevaluationSkippedRuleMissing", "buildingId=" + next);
+                    }
                     _pendingSet.Remove(next);
                     continue;
                 }
 
                 if (!IsBuildingSupported(next))
                 {
-                    if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                        Log.Info(DebugLogCategory.Enforcement, "[RuleCleanup] Reevaluation skipped (prefab unsupported) buildingId=" + next);
+                    if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                    {
+                        Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "ReevaluationSkippedPrefabUnsupported", "buildingId=" + next);
+                    }
                     CleanupRuleIfUnsupported(next);
                     _pendingSet.Remove(next);
                     continue;
@@ -400,15 +429,23 @@ namespace PickyParking.Features.ParkingPolicing
 
                 if (_parkedBuffer.Count == 0)
                 {
-                    if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                        Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation skipped (no parked vehicles) buildingId=" + next);
+                    if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                    {
+                        Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "ReevaluationSkippedNoParkedVehicles", "buildingId=" + next);
+                    }
                     _pendingSet.Remove(next);
                     _activeBuilding = 0;
                     continue;
                 }
 
-                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation start buildingId=" + _activeBuilding + " parkedCount=" + _parkedBuffer.Count);
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.Enforcement,
+                        LogPath.Any,
+                        "ReevaluationStart",
+                        "buildingId=" + _activeBuilding + " | parkedCount=" + _parkedBuffer.Count);
+                }
 
                 return true;
             }
@@ -421,15 +458,19 @@ namespace PickyParking.Features.ParkingPolicing
             if (_activeBuilding == 0)
                 return;
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
             {
-                Log.Info(DebugLogCategory.Enforcement, "[Reevaluation] Reevaluation done buildingId=" + _activeBuilding
-                         + " parkedCount=" + _activeParkedCount
-                         + " allowed=" + _activeAllowedCount
-                         + " denied=" + _activeDeniedCount
-                         + " moved=" + _activeMovedCount
-                         + " released=" + _activeReleasedCount
-                         + " fixed=" + _activeFixedCount);
+                Log.Dev.Info(
+                    DebugLogCategory.Enforcement,
+                    LogPath.Any,
+                    "ReevaluationDone",
+                    "buildingId=" + _activeBuilding +
+                    " | parkedCount=" + _activeParkedCount +
+                    " | allowed=" + _activeAllowedCount +
+                    " | denied=" + _activeDeniedCount +
+                    " | moved=" + _activeMovedCount +
+                    " | released=" + _activeReleasedCount +
+                    " | fixed=" + _activeFixedCount);
             }
 
             _pendingSet.Remove(_activeBuilding);

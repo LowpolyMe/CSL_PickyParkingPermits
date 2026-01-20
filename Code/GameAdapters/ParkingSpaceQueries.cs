@@ -68,6 +68,9 @@ namespace PickyParking.GameAdapters
             outPositions.Clear();
             if (buildingId == 0) return false;
 
+            bool logSelectedBuilding = Log.Dev.IsEnabled(DebugLogCategory.LotInspection) &&
+                                       ParkingDebugSettings.IsSelectedBuilding(buildingId);
+
             var bm = Singleton<BuildingManager>.instance;
             ref Building building = ref bm.m_buildings.m_buffer[buildingId];
             if ((building.m_flags & Building.Flags.Created) == 0)
@@ -80,23 +83,35 @@ namespace PickyParking.GameAdapters
             if (buildingInfo == null)
             {
                 _parkingSpaceCache.Remove(buildingId);
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: building info null buildingId={buildingId}");
+                if (logSelectedBuilding)
+                {
+                    Log.Dev.Info(DebugLogCategory.LotInspection, LogPath.Any, "ParkingSpacesMissingBuildingInfo", "buildingId=" + buildingId);
+                }
                 return false;
             }
             if (buildingInfo.m_props == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: building props null buildingId={buildingId} prefab={buildingInfo.name}");
+                if (logSelectedBuilding)
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.LotInspection,
+                        LogPath.Any,
+                        "ParkingSpacesMissingProps",
+                        "buildingId=" + buildingId + " | prefab=" + buildingInfo.name);
+                }
                 return false;
             }
 
             if ((buildingInfo.m_hasParkingSpaces & VehicleInfo.VehicleType.Car) == VehicleInfo.VehicleType.None)
             {
-                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
+                if (logSelectedBuilding &&
                     ShouldLogForBuilding(buildingId, buildingInfo))
                 {
-                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: m_hasParkingSpaces=0 buildingId={buildingId} prefab={buildingInfo.name}");
+                    Log.Dev.Info(
+                        DebugLogCategory.LotInspection,
+                        LogPath.Any,
+                        "ParkingSpacesMissingFlag",
+                        "buildingId=" + buildingId + " | prefab=" + buildingInfo.name);
                 }
                 return false;
             }
@@ -153,8 +168,14 @@ namespace PickyParking.GameAdapters
                 }
             }
 
-            if (outPositions.Count == 0 && Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking spaces missing: no parking space props buildingId={buildingId} prefab={buildingInfo.name}");
+            if (outPositions.Count == 0 && logSelectedBuilding)
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.LotInspection,
+                    LogPath.Any,
+                    "ParkingSpacesMissingSpaceProps",
+                    "buildingId=" + buildingId + " | prefab=" + buildingInfo.name);
+            }
 
             if (outPositions.Count > 0)
                 CacheParkingSpaces(buildingId, ref building, buildingInfo, outPositions);
@@ -208,6 +229,9 @@ namespace PickyParking.GameAdapters
         {
             totalSpaces = 0;
             occupiedSpaces = 0;
+
+            bool logSelectedBuilding = Log.Dev.IsEnabled(DebugLogCategory.LotInspection) &&
+                                       ParkingDebugSettings.IsSelectedBuilding(buildingId);
 
             if (allowTmpeLookup &&
                 outParkedVehicleIds == null &&
@@ -274,8 +298,7 @@ namespace PickyParking.GameAdapters
                                 if (dxp * dxp + dzp * dzp <= maxSnapDistSqr)
                                 {
                                     uniqueParked.Add(parkedId);
-                                    if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
-                                        ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+                                    if (logSelectedBuilding)
                                     {
                                         if (loggedGridVehicles == null)
                                             loggedGridVehicles = new HashSet<ushort>();
@@ -295,8 +318,17 @@ namespace PickyParking.GameAdapters
 
                             if (++safety > ParkedGridSafetyLimit)
                             {
-                                if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                                    Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parked grid safety limit hit buildingId={buildingId} space=({spacePos.x:F1},{spacePos.y:F1},{spacePos.z:F1})");
+                                if (logSelectedBuilding)
+                                {
+                                    Log.Dev.Info(
+                                        DebugLogCategory.LotInspection,
+                                        LogPath.Any,
+                                        "ParkedGridSafetyLimitHit",
+                                        "buildingId=" + buildingId +
+                                        " | spaceX=" + spacePos.x.ToString("F1") +
+                                        " | spaceY=" + spacePos.y.ToString("F1") +
+                                        " | spaceZ=" + spacePos.z.ToString("F1"));
+                                }
                                 break;
                             }
                         }
@@ -314,20 +346,28 @@ namespace PickyParking.GameAdapters
             if (outParkedVehicleIds == null)
                 _foundParkedVehicleIds.Clear();
 
-            if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
+            if (logSelectedBuilding &&
                 totalSpaces > 0 && occupiedSpaces == totalSpaces && ShouldLogForBuilding(buildingId, null))
             {
-                Log.Info(DebugLogCategory.LotInspection, $"[LotInspection] Parking space stats show no free spaces buildingId={buildingId} total={totalSpaces} maxSnapDistance={maxSnapDistance}");
+                Log.Dev.Info(
+                    DebugLogCategory.LotInspection,
+                    LogPath.Any,
+                    "ParkingSpaceStatsNoFreeSpaces",
+                    "buildingId=" + buildingId +
+                    " | totalSpaces=" + totalSpaces +
+                    " | maxSnapDistance=" + maxSnapDistance);
             }
 
-            if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
-                ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (logSelectedBuilding)
             {
-                Log.Info(DebugLogCategory.LotInspection,
-                    "[LotInspection] Building debug grid occupancy " +
-                    $"buildingId={buildingId} spaces={totalSpaces} occupied={occupiedSpaces} " +
-                    $"maxSnapDistance={maxSnapDistance:F2}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.LotInspection,
+                    LogPath.Any,
+                    "BuildingGridOccupancy",
+                    "buildingId=" + buildingId +
+                    " | spaces=" + totalSpaces +
+                    " | occupied=" + occupiedSpaces +
+                    " | maxSnapDistance=" + maxSnapDistance.ToString("F2"));
                 LogIndustryStats(buildingId, maxSnapDistance, totalSpaces, occupiedSpaces);
             }
 
@@ -372,8 +412,8 @@ namespace PickyParking.GameAdapters
             Matrix4x4 buildingMatrix = default;
             _uniqueSpaceKeys.Clear();
 
-            bool logTmpeSpaceDetails = Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
-                                      ParkingDebugSettings.IsBuildingDebugEnabled(buildingId);
+            bool logTmpeSpaceDetails = Log.Dev.IsEnabled(DebugLogCategory.LotInspection) &&
+                                       ParkingDebugSettings.IsSelectedBuilding(buildingId);
             List<string> blockedSamples = null;
             List<string> freeSamples = null;
             HashSet<ushort> loggedParkedVehicles = null;
@@ -450,8 +490,10 @@ namespace PickyParking.GameAdapters
                     }
                     catch (Exception e)
                     {
-                        if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled)
-                            Log.Warn(DebugLogCategory.LotInspection, "[LotInspection] TMPE occupancy check failed: " + e);
+                        if (logTmpeSpaceDetails)
+                        {
+                            Log.Dev.Exception(DebugLogCategory.LotInspection, LogPath.TMPE, "TmpeOccupancyCheckFailed", e);
+                        }
                         return false;
                     }
 
@@ -569,14 +611,16 @@ namespace PickyParking.GameAdapters
 
             occupiedSpaces = totalSpaces - tmpeFreeSpaces;
 
-            if (Log.IsVerboseEnabled && Log.IsLotDebugEnabled &&
-                ParkingDebugSettings.IsBuildingDebugEnabled(buildingId))
+            if (logTmpeSpaceDetails)
             {
-                Log.Info(DebugLogCategory.LotInspection,
-                    "[LotInspection] Building debug TMPE occupancy " +
-                    $"buildingId={buildingId} spaces={totalSpaces} occupied={occupiedSpaces} " +
-                    $"epsilon={TmpeSpaceMatchEpsilon:F2}"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.LotInspection,
+                    LogPath.TMPE,
+                    "TmpeOccupancySummary",
+                    "buildingId=" + buildingId +
+                    " | spaces=" + totalSpaces +
+                    " | occupied=" + occupiedSpaces +
+                    " | epsilon=" + TmpeSpaceMatchEpsilon.ToString("F2"));
             }
 
             if (logTmpeSpaceDetails)
@@ -589,12 +633,17 @@ namespace PickyParking.GameAdapters
                     ? string.Join(", ", freeSamples.ToArray())
                     : "n/a";
 
-                Log.Info(DebugLogCategory.LotInspection,
-                    "[LotInspection] TMPE space detail " +
-                    $"buildingId={buildingId} total={totalSpaces} free={freeSpaces} occupied={occupiedSpaces} " +
-                    $"epsilon={TmpeSpaceMatchEpsilon:F2} " +
-                    $"blockedSample=[{blockedSample}] freeSample=[{freeSample}]"
-                );
+                Log.Dev.Info(
+                    DebugLogCategory.LotInspection,
+                    LogPath.TMPE,
+                    "TmpeSpaceDetail",
+                    "buildingId=" + buildingId +
+                    " | total=" + totalSpaces +
+                    " | free=" + freeSpaces +
+                    " | occupied=" + occupiedSpaces +
+                    " | epsilon=" + TmpeSpaceMatchEpsilon.ToString("F2") +
+                    " | blockedSample=[" + blockedSample + "]" +
+                    " | freeSample=[" + freeSample + "]");
             }
 
             return totalSpaces > 0;
@@ -612,16 +661,25 @@ namespace PickyParking.GameAdapters
             string prefabName = pv.Info != null ? pv.Info.name : "UNKNOWN";
             Vector3 pos = pv.m_position;
 
-            Log.Info(DebugLogCategory.LotInspection,
-                "[LotInspection] TMPE parked vehicle " +
-                $"buildingId={buildingId} parkedId={parkedVehicleId} prefab={prefabName} " +
-                $"flags={pv.m_flags} ownerCitizen={pv.m_ownerCitizen} " +
-                $"pos=({pos.x:F1},{pos.y:F1},{pos.z:F1})"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.LotInspection,
+                LogPath.TMPE,
+                "TmpeParkedVehicle",
+                "buildingId=" + buildingId +
+                " | parkedId=" + parkedVehicleId +
+                " | prefab=" + prefabName +
+                " | flags=" + pv.m_flags +
+                " | ownerCitizen=" + pv.m_ownerCitizen +
+                " | posX=" + pos.x.ToString("F1") +
+                " | posY=" + pos.y.ToString("F1") +
+                " | posZ=" + pos.z.ToString("F1"));
         }
 
         private static bool ShouldLogForBuilding(ushort buildingId, BuildingInfo info)
         {
+            if (!ParkingDebugSettings.IsSelectedBuilding(buildingId))
+                return false;
+
             var context = ParkingRuntimeContext.Current;
             if (context == null || context.SupportedParkingLotRegistry == null)
                 return false;
@@ -638,6 +696,12 @@ namespace PickyParking.GameAdapters
 
         private void LogIndustryStats(ushort buildingId, float maxSnapDistance, int totalSpaces, int occupiedSpaces)
         {
+            if (!ParkingDebugSettings.IsSelectedBuilding(buildingId))
+                return;
+
+            if (!Log.Dev.IsEnabled(DebugLogCategory.LotInspection))
+                return;
+
             _debugUniquePositions.Clear();
 
             for (int i = 0; i < _parkingSpacePositions.Count; i++)
@@ -659,11 +723,16 @@ namespace PickyParking.GameAdapters
                 if (i + 1 < sampleCount) sample += ", ";
             }
 
-            Log.Info(DebugLogCategory.LotInspection,
-                "[LotInspection] Building debug space dump " +
-                $"buildingId={buildingId} spaces={totalSpaces} unique={uniqueCount} occupied={occupiedSpaces} " +
-                $"maxSnapDistance={maxSnapDistance} sample=[{sample}]"
-            );
+            Log.Dev.Info(
+                DebugLogCategory.LotInspection,
+                LogPath.Any,
+                "BuildingSpaceDump",
+                "buildingId=" + buildingId +
+                " | spaces=" + totalSpaces +
+                " | unique=" + uniqueCount +
+                " | occupied=" + occupiedSpaces +
+                " | maxSnapDistance=" + maxSnapDistance +
+                " | sample=[" + sample + "]");
         }
 
         private struct PositionKey : IEquatable<PositionKey>

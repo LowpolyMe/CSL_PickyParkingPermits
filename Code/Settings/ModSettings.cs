@@ -18,7 +18,6 @@ namespace PickyParking.Settings
         public bool DisableTMPECandidateBlocking { get; set; }
         public bool DisableClearKnownParkingOnDenied { get; set; }
         public bool DisableParkingEnforcement { get; set; }
-        public ushort DebugBuildingId { get; set; }
         public float ResidentsRadiusHue { get; set; }
         public float WorkSchoolRadiusHue { get; set; }
         public bool EnableParkingRuleSweeps { get; set; }
@@ -35,7 +34,6 @@ namespace PickyParking.Settings
             DisableTMPECandidateBlocking = false;
             DisableClearKnownParkingOnDenied = false;
             DisableParkingEnforcement = false;
-            DebugBuildingId = 0;
             ResidentsRadiusHue = 0.35f;
             WorkSchoolRadiusHue = 0.1f;
             EnableParkingRuleSweeps = true;
@@ -65,7 +63,6 @@ namespace PickyParking.Settings
             DisableTMPECandidateBlocking = reloaded.DisableTMPECandidateBlocking;
             DisableClearKnownParkingOnDenied = reloaded.DisableClearKnownParkingOnDenied;
             DisableParkingEnforcement = reloaded.DisableParkingEnforcement;
-            DebugBuildingId = reloaded.DebugBuildingId;
             ResidentsRadiusHue = reloaded.ResidentsRadiusHue;
             WorkSchoolRadiusHue = reloaded.WorkSchoolRadiusHue;
             EnableParkingRuleSweeps = reloaded.EnableParkingRuleSweeps;
@@ -84,15 +81,5 @@ namespace PickyParking.Settings
             return (EnabledDebugLogCategories & category) != 0;
         }
 
-        public bool IsLotInspectionDebugEnabledForBuilding(ushort buildingId)
-        {
-            if (!IsDebugLogCategoryEnabled(DebugLogCategory.LotInspection))
-                return false;
-
-            if (DebugBuildingId == 0)
-                return false;
-
-            return buildingId == DebugBuildingId;
-        }
     }
 }

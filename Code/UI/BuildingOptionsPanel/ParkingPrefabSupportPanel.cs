@@ -172,11 +172,13 @@ namespace PickyParking.UI.BuildingOptionsPanel
             }
             else
             {
-                Log.AlwaysWarn("[SupportedPrefabs] Settings controller missing; prefab add not persisted.");
+                Log.Player.Warn(DebugLogCategory.RuleUi, LogPath.Any, "SupportedPrefabAddNotPersisted", "prefab=" + _prefabKey);
             }
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[SupportedPrefabs] Added supported prefab " + _prefabKey);
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SupportedPrefabAdded", "prefab=" + _prefabKey);
+            }
         }
     }
 }

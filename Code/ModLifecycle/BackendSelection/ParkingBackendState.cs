@@ -89,15 +89,13 @@ namespace PickyParking.ModLifecycle.BackendSelection
                 ActiveBackend = ParkingBackendKind.Vanilla;
             Reason = reason;
 
-            if (Log.IsVerboseEnabled)
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
             {
-                Log.Info(
-                    DebugLogCategory.None,
-                    "[BackendSelection] " +
-                    "backend=" + ActiveBackend +
-                    " tmpeDetected=" + IsTmpeDetected +
-                    " tmpeAdvanced=" + IsTmpeAdvancedParkingActive +
-                    " reason=" + (Reason ?? "UNKNOWN"));
+                string fields = "backend=" + ActiveBackend
+                    + " | tmpeDetected=" + IsTmpeDetected
+                    + " | tmpeAdvanced=" + IsTmpeAdvancedParkingActive
+                    + " | reason=" + (Reason ?? "UNKNOWN");
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.Any, "BackendSelection", fields);
             }
         }
 

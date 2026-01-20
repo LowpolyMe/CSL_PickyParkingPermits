@@ -15,8 +15,10 @@ namespace PickyParking.Patching.Diagnostics.Game
             var method = AccessTools.Method(typeof(VehicleManager), TargetMethodName, new[] { typeof(ushort) });
             if (method == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                    Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] ReleaseParkedVehicle not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+                {
+                    Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "DiagnosticsSkippedMissingMethod", "type=VehicleManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -25,8 +27,10 @@ namespace PickyParking.Patching.Diagnostics.Game
                 prefix: new HarmonyMethod(typeof(VehicleManager_ReleaseParkedVehicleDiagnosticsPatch), nameof(Prefix))
             );
 
-            if (Log.IsVerboseEnabled && Log.IsEnforcementDebugEnabled)
-                Log.Info(DebugLogCategory.Enforcement, "[Diagnostics] Patched ReleaseParkedVehicle (diagnostics).");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Enforcement))
+            {
+                Log.Dev.Info(DebugLogCategory.Enforcement, LogPath.Any, "DiagnosticsPatchApplied", "type=VehicleManager | method=" + TargetMethodName);
+            }
         }
 
         private static void Prefix(ushort parked)

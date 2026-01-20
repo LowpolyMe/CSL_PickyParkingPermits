@@ -1,3 +1,4 @@
+using PickyParking.Features.Debug;
 using PickyParking.Logging;
 
 namespace PickyParking.ModLifecycle
@@ -18,7 +19,8 @@ namespace PickyParking.ModLifecycle
         {
             IsActive = false;
             InactiveReason = reason;
-            Log.AlwaysWarn("[Runtime] Feature gate inactive: " + (reason ?? "UNKNOWN"));
+            string reasonText = reason ?? "UNKNOWN";
+            Log.Player.Warn(DebugLogCategory.Enforcement, LogPath.Any, "FeatureGateInactive", "reason=" + reasonText);
         }
     }
 }

@@ -4,6 +4,7 @@ using PickyParking.GameAdapters;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Features.Debug;
 using PickyParking.Settings;
+using PickyParking.Logging;
 
 namespace PickyParking.Features.ParkingPolicing
 {
@@ -53,8 +54,14 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (!_game.TryGetDriverInfo(vehicleId, out var driverContext))
             {
-                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
-                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] Evaluate denied: no driver context vehicleId={vehicleId} buildingId={candidateBuildingId}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "EvaluateDeniedNoDriverContext",
+                        "vehicleId=" + vehicleId + " | buildingId=" + candidateBuildingId);
+                }
                 ParkingStatsCounter.IncrementDeniedNoDriverContext();
                 return new Result(false, DecisionReason.Denied_NoDriverContext);
             }
@@ -77,8 +84,14 @@ namespace PickyParking.Features.ParkingPolicing
 
             if (!_game.TryGetCitizenInfo(citizenId, out var citizenContext))
             {
-                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
-                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] EvaluateCitizen denied: no citizen context citizenId={citizenId} buildingId={candidateBuildingId}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "EvaluateCitizenDeniedNoContext",
+                        "citizenId=" + citizenId + " | buildingId=" + candidateBuildingId);
+                }
                 ParkingStatsCounter.IncrementDeniedNoCitizenContext();
                 return new Result(false, DecisionReason.Denied_NoCitizenContext);
             }
@@ -101,16 +114,28 @@ namespace PickyParking.Features.ParkingPolicing
             if (!_rules.TryGet(candidateBuildingId, out rule))
             {
                 failOpenReason = DecisionReason.Allowed_FailOpen_NoRuleConfigured;
-                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
-                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] Fail-open: no rule configured buildingId={candidateBuildingId}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "FailOpenNoRuleConfigured",
+                        "buildingId=" + candidateBuildingId);
+                }
                 return false;
             }
 
             if (!_game.TryGetBuildingPosition(candidateBuildingId, out lotPos))
             {
                 failOpenReason = DecisionReason.Allowed_FailOpen_TryGetBuildingPosition;
-                if (PickyParking.Logging.Log.IsVerboseEnabled && PickyParking.Logging.Log.IsDecisionDebugEnabled)
-                    PickyParking.Logging.Log.Info(DebugLogCategory.DecisionPipeline, $"[Policy] Fail-open: TryGetBuildingPosition failed buildingId={candidateBuildingId}");
+                if (Log.Dev.IsEnabled(DebugLogCategory.DecisionPipeline))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.DecisionPipeline,
+                        LogPath.Any,
+                        "FailOpenBuildingPositionMissing",
+                        "buildingId=" + candidateBuildingId);
+                }
                 return false;
             }
 

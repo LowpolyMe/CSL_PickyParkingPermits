@@ -280,8 +280,14 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             UpdateParkingSpaceStats();
             UpdateApplyButtonState();
 
-            if (hasStoredRule && Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRulesPanel] Refreshed panel for building " + _state.BuildingId + ": " + _editor.FormatRule(storedRule));
+            if (hasStoredRule && Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.RuleUi,
+                    LogPath.Any,
+                    "RulesPanelRefreshed",
+                    "buildingId=" + _state.BuildingId + " | rule=" + _editor.FormatRule(storedRule));
+            }
         }
 
         private void ApplyRuleToUi(ParkingRulesConfigDefinition rule)

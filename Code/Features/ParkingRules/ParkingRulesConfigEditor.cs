@@ -53,8 +53,13 @@ namespace PickyParking.Features.ParkingRules
             if (buildingId == 0 || _parkingRulesRepository == null)
                 return;
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] RemoveRule (" + reason + ") building=" + buildingId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                string fields = "buildingId=" + buildingId;
+                if (!string.IsNullOrEmpty(reason))
+                    fields = fields + " | reason=" + reason;
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "RuleRemoved", fields);
+            }
 
             SimThread.Dispatch(() => _parkingRulesRepository.Remove(buildingId));
         }
@@ -64,8 +69,14 @@ namespace PickyParking.Features.ParkingRules
             if (buildingId == 0 || _parkingRulesRepository == null)
                 return;
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] CommitPendingChanges building=" + buildingId + " rule=" + FormatRule(rule));
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(
+                    DebugLogCategory.RuleUi,
+                    LogPath.Any,
+                    "RuleCommitted",
+                    "buildingId=" + buildingId + " | rule=" + FormatRule(rule));
+            }
 
             SimThread.Dispatch(() => _parkingRulesRepository.Set(buildingId, rule));
         }
@@ -94,8 +105,13 @@ namespace PickyParking.Features.ParkingRules
             _hasPendingReevaluation = true;
             _pendingReevaluationBuildingId = buildingId;
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] ApplyNow (" + reason + ") building=" + buildingId + " rule=" + FormatRule(rule) + " reevaluate=deferred");
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                string fields = "buildingId=" + buildingId + " | rule=" + FormatRule(rule) + " | reevaluate=deferred";
+                if (!string.IsNullOrEmpty(reason))
+                    fields = fields + " | reason=" + reason;
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "RuleApplyNow", fields);
+            }
 
             SimThread.Dispatch(() => _parkingRulesRepository.Set(buildingId, rule));
         }
@@ -104,29 +120,41 @@ namespace PickyParking.Features.ParkingRules
         {
             if (!_hasPendingReevaluation)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation skipped (none pending) for building " + buildingId);
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "ReevaluationSkippedNonePending", "buildingId=" + buildingId);
+                }
                 return;
             }
 
             if (_pendingReevaluationBuildingId != buildingId)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation skipped (pending for " + _pendingReevaluationBuildingId + ") for building " + buildingId);
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(
+                        DebugLogCategory.RuleUi,
+                        LogPath.Any,
+                        "ReevaluationSkippedOtherPending",
+                        "buildingId=" + buildingId + " | pendingBuildingId=" + _pendingReevaluationBuildingId);
+                }
                 return;
             }
 
             if (_reevaluation == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                    Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation skipped (service missing) for building " + buildingId);
+                if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+                {
+                    Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "ReevaluationSkippedServiceMissing", "buildingId=" + buildingId);
+                }
                 return;
             }
 
             _hasPendingReevaluation = false;
 
-            if (Log.IsVerboseEnabled && Log.IsRuleUiDebugEnabled)
-                Log.Info(DebugLogCategory.RuleUi, "[ParkingRules] Reevaluation requested for building " + buildingId);
+            if (Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
+            {
+                Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "ReevaluationRequested", "buildingId=" + buildingId);
+            }
 
             SimThread.Dispatch(() => { _reevaluation.RequestForBuilding(buildingId); });
         }

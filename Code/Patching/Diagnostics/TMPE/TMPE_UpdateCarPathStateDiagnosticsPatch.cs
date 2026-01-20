@@ -21,16 +21,20 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             Type type = Type.GetType(TargetTypeName, throwOnError: false);
             if (type == null)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] AdvancedParkingManager not found; skipping UpdateCarPathState diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingType", "type=AdvancedParkingManager");
+                }
                 return;
             }
 
             MethodInfo[] methods = FindTargetMethods(type);
             if (methods == null || methods.Length == 0)
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                    Log.Info(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState overload not found; skipping diagnostics patch.");
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+                {
+                    Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsSkippedMissingMethod", "type=AdvancedParkingManager | method=" + TargetMethodName);
+                }
                 return;
             }
 
@@ -43,8 +47,10 @@ namespace PickyParking.Patching.Diagnostics.TMPE
                 );
             }
 
-            if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled)
-                Log.Info(DebugLogCategory.Tmpe, $"[TMPE] Patched UpdateCarPathState (diagnostics). count={methods.Length}");
+            if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe))
+            {
+                Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "DiagnosticsPatchApplied", "method=" + TargetMethodName + " | count=" + methods.Length);
+            }
         }
 
         private static MethodInfo[] FindTargetMethods(Type advancedParkingManagerType)
@@ -89,11 +95,11 @@ namespace PickyParking.Patching.Diagnostics.TMPE
 
             try
             {
-                if (Log.IsVerboseEnabled && Log.IsTmpeDebugEnabled && _prefixLogCount < MaxPrefixLogs)
+                if (Log.Dev.IsEnabled(DebugLogCategory.Tmpe) && _prefixLogCount < MaxPrefixLogs)
                 {
                     if (ParkingPathModeTracker.TryDescribeUpdateArgs(vehicleId, extDriverInstance, pathStateObj, out string desc))
                     {
-                        Log.Info(DebugLogCategory.Tmpe, "[TMPE] UpdateCarPathState prefix hit. " + desc);
+                        Log.Dev.Info(DebugLogCategory.Tmpe, LogPath.TMPE, "UpdateCarPathStatePrefixHit", "details=" + desc);
                     }
                     _prefixLogCount++;
                 }
@@ -103,7 +109,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] UpdateCarPathState diagnostics prefix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "UpdateCarPathStateDiagnosticsPrefixException", ex);
             }
         }
 
@@ -121,7 +127,7 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             }
             catch (Exception ex)
             {
-                Log.AlwaysError("[TMPE] UpdateCarPathState diagnostics postfix exception\n" + ex);
+                Log.Dev.Exception(DebugLogCategory.Tmpe, LogPath.TMPE, "UpdateCarPathStateDiagnosticsPostfixException", ex);
             }
         }
     }
