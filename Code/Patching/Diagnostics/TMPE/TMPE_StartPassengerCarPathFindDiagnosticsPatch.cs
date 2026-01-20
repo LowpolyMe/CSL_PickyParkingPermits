@@ -127,6 +127,8 @@ namespace PickyParking.Patching.Diagnostics.TMPE
             __state = default;
             if (!SimThread.IsSimulationThread())
                 return;
+            if (!IsDecisionLoggingEnabled())
+                return;
             try
             {
                 __state.VehicleId = vehicleId;
