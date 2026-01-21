@@ -245,9 +245,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 return;
 
             RestrictionsToggleButton.text = enabled ? "Restrictions: On" : "Restrictions: Off";
-            Color32 color = enabled ? _theme.EnabledColor : _theme.DisabledColor;
-            RestrictionsToggleButton.color = color;
-            RestrictionsToggleButton.textColor = color;
+            RestrictionsToggleButton.color = Color.white;
         }
 
         public void SetRestrictionsContentVisible(bool visible)
@@ -685,7 +683,6 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             button.isEnabled = false;
             button.tooltip = spec.Tooltip;
             button.disabledColor = _theme.FooterButtonDisabledColor;
-
             icon = AttachFooterIcon(button, spec.SpriteName, spec.Tooltip);
 
             button.eventClicked += (_, __) => spec.Handler?.Invoke();
@@ -755,10 +752,10 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             newButton.atlas = UIView.GetAView().defaultAtlas;
             if (useDefaultSprites)
             {
-                newButton.normalBgSprite = "LevelBarBackground";
-                newButton.hoveredBgSprite = "LevelBarForeground";
-                newButton.pressedBgSprite = "LevelBarForeground";
-                newButton.disabledBgSprite = "LevelBarDisabled";
+                newButton.normalBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsNormalBgSprite;
+                newButton.hoveredBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsHoveredBgSprite;
+                newButton.pressedBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsPressedBgSprite;
+                newButton.disabledBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsDisabledBgSprite;
             }
 
             newButton.playAudioEvents = true;

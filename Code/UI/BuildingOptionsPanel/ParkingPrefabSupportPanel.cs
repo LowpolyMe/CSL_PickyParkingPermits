@@ -106,6 +106,7 @@ namespace PickyParking.UI.BuildingOptionsPanel
                 BuildingOptionsPanelUiValues.PanelTheme.HorizontalPadding,
                 (row.height - _actionButton.height) * 0.5f);
             _actionButton.atlas = UIView.GetAView().defaultAtlas;
+            _actionButton.playAudioEvents = true;
             _actionButton.normalBgSprite = "LevelBarBackground";
             _actionButton.hoveredBgSprite = "LevelBarForeground";
             _actionButton.pressedBgSprite = "LevelBarForeground";
@@ -131,8 +132,9 @@ namespace PickyParking.UI.BuildingOptionsPanel
 
             _messageLabel.text = "Add Picky Parking to Asset " + prefabName + "?";
             _actionButton.text = "Add Picky Parking to asset";
-
+            
             _actionButton.isEnabled = _buildingId != 0;
+            UpdateActionButtonVisuals();
         }
 
         private void HandleActionClicked()
@@ -179,6 +181,17 @@ namespace PickyParking.UI.BuildingOptionsPanel
             {
                 Log.Dev.Info(DebugLogCategory.RuleUi, LogPath.Any, "SupportedPrefabAdded", "prefab=" + _prefabKey);
             }
+        }
+
+        private void UpdateActionButtonVisuals()
+        {
+            if (_actionButton == null)
+                return;
+
+            _actionButton.color = Color.white;
+            _actionButton.textColor = _actionButton.isEnabled
+                ? BuildingOptionsPanelUiValues.PanelTheme.EnabledColor
+                : BuildingOptionsPanelUiValues.PanelTheme.DisabledColor;
         }
     }
 }

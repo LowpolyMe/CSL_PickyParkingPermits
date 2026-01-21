@@ -65,6 +65,12 @@ namespace PickyParking.UI.BuildingOptionsPanel
             public static readonly Color32 DisabledColor = new Color32(150, 150, 150, 255);
             public static readonly Color32 ValueLabelColor = new Color32(185, 221, 254, 255);
             public static readonly Color32 SliderTrackColor = new Color32(150, 150, 150, 255);
+            
+            
+            public const string ButtonsNormalBgSprite = "LevelBarBackground";
+            public const string ButtonsHoveredBgSprite = "LevelBarForeground";
+            public const string ButtonsPressedBgSprite = "LevelBarForeground";
+            public const string ButtonsDisabledBgSprite = "LevelBarDisabled";
         }
         
 

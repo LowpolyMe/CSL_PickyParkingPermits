@@ -3,15 +3,9 @@ using ColossalFramework.UI;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
-using PickyParking.UI.BuildingOptionsPanel;
-using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
-    
-    
-    
-    
     public sealed class ParkingRulesConfigPanel : UIPanel
     {
         private ParkingRulesConfigPanelState _state;
@@ -462,12 +456,45 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             bool actionAvailable = canOperate && restrictionsEnabled;
 
             _ui.UpdateApplyButtonState(hasUnappliedChanges);
-            bool copyEnabled = !hasUnappliedChanges && actionAvailable;
+            bool copyEnabled = CalculateCopyButtonState(actionAvailable);
             bool pasteEnabled = _state.HasClipboardRule && actionAvailable;
             bool resetEnabled = hasUnappliedChanges && _state.HasStoredRule && actionAvailable;
             _ui.UpdateCopyButtonState(copyEnabled);
             _ui.UpdatePasteButtonState(pasteEnabled);
             _ui.UpdateResetButtonState(resetEnabled);
+        }
+
+        private bool CalculateCopyButtonState(bool actionAvailable)
+        {
+            if (!actionAvailable)
+                return false;
+
+            if (!_state.HasClipboardRule)
+                return true;
+
+            return !AreRulesEqual(BuildInput(), _state.ClipboardRule);
+        }
+
+        private static bool AreRulesEqual(
+            ParkingRulesConfigDefinition current,
+            ParkingRulesConfigDefinition clipboard)
+        {
+            if (current.ResidentsWithinRadiusOnly != clipboard.ResidentsWithinRadiusOnly)
+                return false;
+
+            if (current.ResidentsRadiusMeters != clipboard.ResidentsRadiusMeters)
+                return false;
+
+            if (current.WorkSchoolWithinRadiusOnly != clipboard.WorkSchoolWithinRadiusOnly)
+                return false;
+
+            if (current.WorkSchoolRadiusMeters != clipboard.WorkSchoolRadiusMeters)
+                return false;
+
+            if (current.VisitorsAllowed != clipboard.VisitorsAllowed)
+                return false;
+
+            return true;
         }
 
         private bool IsPanelVisibleForStats()
