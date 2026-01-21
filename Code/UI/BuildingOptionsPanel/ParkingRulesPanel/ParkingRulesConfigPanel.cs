@@ -462,10 +462,12 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             bool actionAvailable = canOperate && restrictionsEnabled;
 
             _ui.UpdateApplyButtonState(hasUnappliedChanges);
-            _ui.UpdateCopyButtonState(!hasUnappliedChanges && actionAvailable);
-            _ui.UpdatePasteButtonState(_state.HasClipboardRule, _state.HasClipboardRule && actionAvailable);
-            bool resetVisible = hasUnappliedChanges && _state.HasStoredRule;
-            _ui.UpdateResetButtonState(resetVisible, resetVisible && actionAvailable);
+            bool copyEnabled = !hasUnappliedChanges && actionAvailable;
+            bool pasteEnabled = _state.HasClipboardRule && actionAvailable;
+            bool resetEnabled = hasUnappliedChanges && _state.HasStoredRule && actionAvailable;
+            _ui.UpdateCopyButtonState(copyEnabled);
+            _ui.UpdatePasteButtonState(pasteEnabled);
+            _ui.UpdateResetButtonState(resetEnabled);
         }
 
         private bool IsPanelVisibleForStats()

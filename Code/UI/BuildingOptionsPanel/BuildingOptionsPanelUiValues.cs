@@ -51,12 +51,18 @@ namespace PickyParking.UI.BuildingOptionsPanel
             public const float EnabledOpacity = 1f;
             public const float DisabledOpacity = 0.7f;
             
+            public const float FooterIconEnabledAlpha = 0.6f;
+            public const float FooterIconHoverAlpha = 0.8f;
+            public const float FooterIconPressedAlpha = 1f;
+            public const float FooterIconDisabledAlpha = 0.3f;
+            public static readonly Color32 FooterButtonDisabledColor = new Color32(150, 150, 150, 255);
+
             public const float DefaultResidentsHue = 0.35f;
             public const float DefaultWorkSchoolHue = 0.1f;
 
             public static readonly Color ThumbColor = Color.white;
             public static readonly Color32 EnabledColor = new Color32(255, 255, 255, 255);
-            public static readonly Color32 DisabledColor = new Color32(140, 140, 140, 255);
+            public static readonly Color32 DisabledColor = new Color32(150, 150, 150, 255);
             public static readonly Color32 ValueLabelColor = new Color32(185, 221, 254, 255);
             public static readonly Color32 SliderTrackColor = new Color32(150, 150, 150, 255);
         }

@@ -30,6 +30,11 @@ namespace PickyParking.UI.BuildingOptionsPanel
         public float PanelExtraHeight => BuildingOptionsPanelUiValues.PanelTheme.PanelExtraHeight;
         public float EnabledOpacity => BuildingOptionsPanelUiValues.PanelTheme.EnabledOpacity;
         public float DisabledOpacity => BuildingOptionsPanelUiValues.PanelTheme.DisabledOpacity;
+        public float FooterIconEnabledAlpha => BuildingOptionsPanelUiValues.PanelTheme.FooterIconEnabledAlpha;
+        public float FooterIconHoverAlpha => BuildingOptionsPanelUiValues.PanelTheme.FooterIconHoverAlpha;
+        public float FooterIconPressedAlpha => BuildingOptionsPanelUiValues.PanelTheme.FooterIconPressedAlpha;
+        public float FooterIconDisabledAlpha => BuildingOptionsPanelUiValues.PanelTheme.FooterIconDisabledAlpha;
+        public Color FooterButtonDisabledColor => BuildingOptionsPanelUiValues.PanelTheme.FooterButtonDisabledColor;
         public float DefaultResidentsHue => BuildingOptionsPanelUiValues.PanelTheme.DefaultResidentsHue;
         public float DefaultWorkSchoolHue => BuildingOptionsPanelUiValues.PanelTheme.DefaultWorkSchoolHue;
         public Color ThumbColor => BuildingOptionsPanelUiValues.PanelTheme.ThumbColor;

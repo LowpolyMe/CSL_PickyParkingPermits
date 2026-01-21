@@ -25,6 +25,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             public Action OnCopyRule { get; set; }
             public Action OnPasteRule { get; set; }
             public Action OnResetChanges { get; set; }
+            
         }
 
         private struct PanelLayout
@@ -79,6 +80,11 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         public UIButton CopyButton { get; private set; }
         public UIButton PasteButton { get; private set; }
         public UIButton ResetButton { get; private set; }
+
+        private UISprite _copyIcon;
+        private UISprite _pasteIcon;
+        private UISprite _resetIcon;
+        private UISprite _applyIcon;
 
         public static ParkingRulesConfigPanelUi Create(
             ParkingRulesConfigPanel panel,
@@ -278,35 +284,35 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 return;
 
             ApplyButton.isEnabled = hasUnappliedChanges;
-            ApplyButton.text = hasUnappliedChanges ? "Apply" : "Applied";
+            ApplyButton.tooltip = hasUnappliedChanges ? "Apply" : "Applied";
+            SetFooterIconAlpha(_applyIcon, hasUnappliedChanges ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
         }
 
-        public void UpdateCopyButtonState(bool show)
+        public void UpdateCopyButtonState(bool enabled)
         {
             if (CopyButton == null)
                 return;
 
-            CopyButton.isVisible = show;
-            CopyButton.isEnabled = show;
+            CopyButton.isEnabled = enabled;
+            SetFooterIconAlpha(_copyIcon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
         }
 
-        public void UpdatePasteButtonState(bool hasClipboardRule, bool canApply)
+        public void UpdatePasteButtonState(bool enabled)
         {
             if (PasteButton == null)
                 return;
 
-            bool visible = hasClipboardRule;
-            PasteButton.isVisible = visible;
-            PasteButton.isEnabled = visible && canApply;
+            PasteButton.isEnabled = enabled;
+            SetFooterIconAlpha(_pasteIcon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
         }
 
-        public void UpdateResetButtonState(bool show, bool canReset)
+        public void UpdateResetButtonState(bool enabled)
         {
             if (ResetButton == null)
                 return;
 
-            ResetButton.isVisible = show;
-            ResetButton.isEnabled = show && canReset;
+            ResetButton.isEnabled = enabled;
+            SetFooterIconAlpha(_resetIcon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
         }
 
         private PanelLayout BuildLayout()
@@ -551,6 +557,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             button.normalBgSprite = "OptionBase";
             button.hoveredBgSprite = "OptionBaseHovered";
             button.pressedBgSprite = "OptionBasePressed";
+            button.tooltip = args.FallbackText;
 
             UISprite icon = TryAttachIcon(button, args.IconSpriteName, args.FallbackText);
             if (icon != null)
@@ -616,54 +623,128 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         private void CreateFooterButtons(UIPanel footerRow, PanelLayout layout)
         {
-            if (footerRow == null)
-                return;
+            if (footerRow == null) return;
 
             const int buttonCount = 4;
-            float buttonSpacing = layout.HorizontalPadding;
+            float spacing = layout.HorizontalPadding;
             float height = Mathf.Max(_theme.MinButtonHeight, footerRow.height - layout.VerticalPadding * 2f);
-            float availableWidth = Mathf.Max(0f, footerRow.width - buttonSpacing * (buttonCount + 1));
+            float availableWidth = Mathf.Max(0f, footerRow.width - spacing * (buttonCount + 1));
             float buttonWidth = buttonCount > 0 ? availableWidth / buttonCount : 0f;
             float baselineY = (footerRow.height - height) * 0.5f;
 
-            float x = buttonSpacing;
+            float x = spacing;
 
-            CopyButton = CreateButton(footerRow, true, "Copy");
-            CopyButton.textScale = _theme.ToggleTextScale;
-            CopyButton.size = new Vector2(buttonWidth, height);
-            CopyButton.pivot = UIPivotPoint.TopLeft;
-            CopyButton.relativePosition = new Vector3(x, baselineY);
-            CopyButton.isVisible = false;
-            CopyButton.isEnabled = false;
-            CopyButton.eventClicked += (_, __) => _onCopyRule?.Invoke();
-            x += buttonWidth + buttonSpacing;
+            CopyButton  = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+                new FooterButtonSpec("Copy",  ParkingRulesIconAtlasUiValues.CopySpriteName,  _theme.ToggleTextScale, _onCopyRule),
+                out _copyIcon);
 
-            PasteButton = CreateButton(footerRow, true, "Paste");
-            PasteButton.textScale = _theme.ToggleTextScale;
-            PasteButton.size = new Vector2(buttonWidth, height);
-            PasteButton.pivot = UIPivotPoint.TopLeft;
-            PasteButton.relativePosition = new Vector3(x, baselineY);
-            PasteButton.isVisible = false;
-            PasteButton.isEnabled = false;
-            PasteButton.eventClicked += (_, __) => _onPasteRule?.Invoke();
-            x += buttonWidth + buttonSpacing;
+            PasteButton = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+                new FooterButtonSpec("Paste", ParkingRulesIconAtlasUiValues.PasteSpriteName, _theme.ToggleTextScale, _onPasteRule),
+                out _pasteIcon);
 
-            ResetButton = CreateButton(footerRow, true, "Reset");
-            ResetButton.textScale = _theme.ToggleTextScale;
-            ResetButton.size = new Vector2(buttonWidth, height);
-            ResetButton.pivot = UIPivotPoint.TopLeft;
-            ResetButton.relativePosition = new Vector3(x, baselineY);
-            ResetButton.isVisible = false;
-            ResetButton.isEnabled = false;
-            ResetButton.eventClicked += (_, __) => _onResetChanges?.Invoke();
-            x += buttonWidth + buttonSpacing;
+            ResetButton = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+                new FooterButtonSpec("Reset", ParkingRulesIconAtlasUiValues.ResetSpriteName, _theme.ToggleTextScale, _onResetChanges),
+                out _resetIcon);
 
-            ApplyButton = CreateButton(footerRow, true, "Apply");
-            ApplyButton.textScale = _theme.ApplyButtonTextScale;
-            ApplyButton.size = new Vector2(buttonWidth, height);
-            ApplyButton.pivot = UIPivotPoint.TopLeft;
-            ApplyButton.relativePosition = new Vector3(x, baselineY);
-            ApplyButton.eventClicked += (_, __) => _onApplyChanges?.Invoke();
+            ApplyButton = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+                new FooterButtonSpec("Apply", ParkingRulesIconAtlasUiValues.ApplySpriteName, _theme.ApplyButtonTextScale, _onApplyChanges),
+                out _applyIcon);
+        }
+        
+        private readonly struct FooterButtonSpec
+        {
+            public FooterButtonSpec(string tooltip, string spriteName, float textScale, Action handler)
+            {
+                Tooltip = tooltip;
+                SpriteName = spriteName;
+                TextScale = textScale;
+                Handler = handler;
+            }
+
+            public string Tooltip { get; }
+            public string SpriteName { get; }
+            public float TextScale { get; }
+            public Action Handler { get; }
+        }
+
+        private UIButton CreateFooterButton(
+            UIPanel parent,
+            ref float x,
+            float buttonWidth,
+            float height,
+            float baselineY,
+            float spacing,
+            FooterButtonSpec spec,
+            out UISprite icon)
+        {
+            var button = CreateButton(parent, true, spec.Tooltip);
+            button.textScale = spec.TextScale;
+            button.size = new Vector2(buttonWidth, height);
+            button.pivot = UIPivotPoint.TopLeft;
+            button.relativePosition = new Vector3(x, baselineY);
+            button.isEnabled = false;
+            button.tooltip = spec.Tooltip;
+            button.disabledColor = _theme.FooterButtonDisabledColor;
+
+            icon = AttachFooterIcon(button, spec.SpriteName, spec.Tooltip);
+
+            button.eventClicked += (_, __) => spec.Handler?.Invoke();
+
+            x += buttonWidth + spacing;
+            return button;
+        }
+
+        private UISprite AttachFooterIcon(UIButton button, string spriteName, string fallbackText)
+        {
+            var icon = TryAttachIcon(button, spriteName, fallbackText);
+            if (icon == null)
+                return null;
+
+            icon.isInteractive = false;
+            icon.zOrder = 20;
+            icon.BringToFront();
+            ConfigureFooterIconBehavior(button, icon);
+            SetFooterIconAlpha(icon, button.isEnabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
+            return icon;
+        }
+
+        private void ConfigureFooterIconBehavior(UIButton button, UISprite icon)
+        {
+            if (button == null || icon == null)
+                return;
+
+            button.eventMouseEnter += (_, __) =>
+            {
+                if (!button.isEnabled)
+                    return;
+                SetFooterIconAlpha(icon, _theme.FooterIconHoverAlpha);
+            };
+            button.eventMouseLeave += (_, __) =>
+            {
+                if (!button.isEnabled)
+                    return;
+                SetFooterIconAlpha(icon, _theme.FooterIconEnabledAlpha);
+            };
+            button.eventMouseDown += (_, __) =>
+            {
+                if (!button.isEnabled)
+                    return;
+                SetFooterIconAlpha(icon, _theme.FooterIconPressedAlpha);
+            };
+            button.eventMouseUp += (_, __) =>
+            {
+                if (!button.isEnabled)
+                    return;
+                SetFooterIconAlpha(icon, _theme.FooterIconHoverAlpha);
+            };
+        }
+
+        private void SetFooterIconAlpha(UISprite icon, float alpha)
+        {
+            if (icon == null)
+                return;
+
+            icon.opacity = Mathf.Clamp01(alpha);
         }
 
         private static UIButton CreateButton(UIPanel parent,bool useDefaultSprites, string text ="")
