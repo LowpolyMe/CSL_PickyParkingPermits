@@ -23,7 +23,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             public Action OnToggleVisitors { get; set; }
             public Action OnApplyChanges { get; set; }
             public Action OnCopyRule { get; set; }
-            public Action OnApplyCopiedRule { get; set; }
+            public Action OnPasteRule { get; set; }
+            public Action OnResetChanges { get; set; }
         }
 
         private struct PanelLayout
@@ -65,7 +66,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         private readonly Action _onToggleVisitors;
         private readonly Action _onApplyChanges;
         private readonly Action _onCopyRule;
-        private readonly Action _onApplyCopiedRule;
+        private readonly Action _onPasteRule;
+        private readonly Action _onResetChanges;
 
         public UIButton RestrictionsToggleButton { get; private set; }
         public ParkingRulesSliderRow ResidentsRow { get; private set; }
@@ -75,7 +77,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         public UILabel ParkingSpacesLabel { get; private set; }
         public UIButton ApplyButton { get; private set; }
         public UIButton CopyButton { get; private set; }
-        public UIButton ApplyCopiedButton { get; private set; }
+        public UIButton PasteButton { get; private set; }
+        public UIButton ResetButton { get; private set; }
 
         public static ParkingRulesConfigPanelUi Create(
             ParkingRulesConfigPanel panel,
@@ -88,7 +91,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             Action onToggleVisitors,
             Action onApplyChanges,
             Action onCopyRule,
-            Action onApplyCopiedRule)
+            Action onPasteRule,
+            Action onResetChanges)
         {
             var args = new ParkingRulesConfigPanelUiArgs
             {
@@ -102,7 +106,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 OnToggleVisitors = onToggleVisitors,
                 OnApplyChanges = onApplyChanges,
                 OnCopyRule = onCopyRule,
-                OnApplyCopiedRule = onApplyCopiedRule
+                OnPasteRule = onPasteRule,
+                OnResetChanges = onResetChanges
             };
 
             return new ParkingRulesConfigPanelUi(args);
@@ -122,7 +127,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             _onToggleVisitors = args.OnToggleVisitors;
             _onApplyChanges = args.OnApplyChanges;
             _onCopyRule = args.OnCopyRule;
-            _onApplyCopiedRule = args.OnApplyCopiedRule;
+            _onPasteRule = args.OnPasteRule;
+            _onResetChanges = args.OnResetChanges;
         }
 
         public void ConfigurePanel()
@@ -284,14 +290,23 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             CopyButton.isEnabled = show;
         }
 
-        public void UpdateApplyCopiedButtonState(bool hasClipboardRule, bool canApply)
+        public void UpdatePasteButtonState(bool hasClipboardRule, bool canApply)
         {
-            if (ApplyCopiedButton == null)
+            if (PasteButton == null)
                 return;
 
             bool visible = hasClipboardRule;
-            ApplyCopiedButton.isVisible = visible;
-            ApplyCopiedButton.isEnabled = visible && canApply;
+            PasteButton.isVisible = visible;
+            PasteButton.isEnabled = visible && canApply;
+        }
+
+        public void UpdateResetButtonState(bool show, bool canReset)
+        {
+            if (ResetButton == null)
+                return;
+
+            ResetButton.isVisible = show;
+            ResetButton.isEnabled = show && canReset;
         }
 
         private PanelLayout BuildLayout()
@@ -604,39 +619,50 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (footerRow == null)
                 return;
 
+            const int buttonCount = 4;
             float buttonSpacing = layout.HorizontalPadding;
             float height = Mathf.Max(_theme.MinButtonHeight, footerRow.height - layout.VerticalPadding * 2f);
-            float availableWidth = Mathf.Max(0f, footerRow.width - buttonSpacing * 4f);
-            float buttonWidth = availableWidth > 0f ? availableWidth / 3f : 0f;
+            float availableWidth = Mathf.Max(0f, footerRow.width - buttonSpacing * (buttonCount + 1));
+            float buttonWidth = buttonCount > 0 ? availableWidth / buttonCount : 0f;
             float baselineY = (footerRow.height - height) * 0.5f;
 
-            float copyX = buttonSpacing;
-            float applyCopiedX = copyX + buttonWidth + buttonSpacing;
-            float applyX = applyCopiedX + buttonWidth + buttonSpacing;
+            float x = buttonSpacing;
 
             CopyButton = CreateButton(footerRow, true, "Copy");
             CopyButton.textScale = _theme.ToggleTextScale;
             CopyButton.size = new Vector2(buttonWidth, height);
             CopyButton.pivot = UIPivotPoint.TopLeft;
-            CopyButton.relativePosition = new Vector3(copyX, baselineY);
+            CopyButton.relativePosition = new Vector3(x, baselineY);
             CopyButton.isVisible = false;
             CopyButton.isEnabled = false;
             CopyButton.eventClicked += (_, __) => _onCopyRule?.Invoke();
+            x += buttonWidth + buttonSpacing;
 
-            ApplyCopiedButton = CreateButton(footerRow, true, "Apply copied");
-            ApplyCopiedButton.textScale = _theme.ToggleTextScale;
-            ApplyCopiedButton.size = new Vector2(buttonWidth, height);
-            ApplyCopiedButton.pivot = UIPivotPoint.TopLeft;
-            ApplyCopiedButton.relativePosition = new Vector3(applyCopiedX, baselineY);
-            ApplyCopiedButton.isVisible = false;
-            ApplyCopiedButton.isEnabled = false;
-            ApplyCopiedButton.eventClicked += (_, __) => _onApplyCopiedRule?.Invoke();
+            PasteButton = CreateButton(footerRow, true, "Paste");
+            PasteButton.textScale = _theme.ToggleTextScale;
+            PasteButton.size = new Vector2(buttonWidth, height);
+            PasteButton.pivot = UIPivotPoint.TopLeft;
+            PasteButton.relativePosition = new Vector3(x, baselineY);
+            PasteButton.isVisible = false;
+            PasteButton.isEnabled = false;
+            PasteButton.eventClicked += (_, __) => _onPasteRule?.Invoke();
+            x += buttonWidth + buttonSpacing;
+
+            ResetButton = CreateButton(footerRow, true, "Reset");
+            ResetButton.textScale = _theme.ToggleTextScale;
+            ResetButton.size = new Vector2(buttonWidth, height);
+            ResetButton.pivot = UIPivotPoint.TopLeft;
+            ResetButton.relativePosition = new Vector3(x, baselineY);
+            ResetButton.isVisible = false;
+            ResetButton.isEnabled = false;
+            ResetButton.eventClicked += (_, __) => _onResetChanges?.Invoke();
+            x += buttonWidth + buttonSpacing;
 
             ApplyButton = CreateButton(footerRow, true, "Apply");
             ApplyButton.textScale = _theme.ApplyButtonTextScale;
             ApplyButton.size = new Vector2(buttonWidth, height);
             ApplyButton.pivot = UIPivotPoint.TopLeft;
-            ApplyButton.relativePosition = new Vector3(applyX, baselineY);
+            ApplyButton.relativePosition = new Vector3(x, baselineY);
             ApplyButton.eventClicked += (_, __) => _onApplyChanges?.Invoke();
         }
 

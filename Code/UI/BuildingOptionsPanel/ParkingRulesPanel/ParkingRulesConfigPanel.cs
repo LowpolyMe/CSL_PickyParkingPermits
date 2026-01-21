@@ -46,7 +46,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 ToggleVisitorsRow,
                 ApplyChangesFromButton,
                 HandleCopyRule,
-                HandleApplyCopiedRule);
+                HandlePasteRule,
+                HandleResetChanges);
             _ui.ConfigurePanel();
             _ui.BuildUi();
         }
@@ -361,7 +362,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             RefreshFooterButtons();
         }
 
-        private void HandleApplyCopiedRule()
+        private void HandlePasteRule()
         {
             if (!_state.HasClipboardRule)
                 return;
@@ -372,6 +373,20 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             ApplyRuleToUi(_state.ClipboardRule);
             MarkDirty();
             UpdatePreviewRule();
+        }
+
+        private void HandleResetChanges()
+        {
+            if (!_state.HasStoredRule)
+                return;
+
+            if (!CanOperateOnBuilding() || !_state.RestrictionsEnabled)
+                return;
+
+            ApplyRuleToUi(_state.BaselineRule);
+            _state.ClearDirty();
+            UpdatePreviewRule();
+            RefreshFooterButtons();
         }
 
         private void RequestPendingReevaluationIfAny(ushort buildingId)
@@ -448,7 +463,9 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
             _ui.UpdateApplyButtonState(hasUnappliedChanges);
             _ui.UpdateCopyButtonState(!hasUnappliedChanges && actionAvailable);
-            _ui.UpdateApplyCopiedButtonState(_state.HasClipboardRule, _state.HasClipboardRule && actionAvailable);
+            _ui.UpdatePasteButtonState(_state.HasClipboardRule, _state.HasClipboardRule && actionAvailable);
+            bool resetVisible = hasUnappliedChanges && _state.HasStoredRule;
+            _ui.UpdateResetButtonState(resetVisible, resetVisible && actionAvailable);
         }
 
         private bool IsPanelVisibleForStats()
