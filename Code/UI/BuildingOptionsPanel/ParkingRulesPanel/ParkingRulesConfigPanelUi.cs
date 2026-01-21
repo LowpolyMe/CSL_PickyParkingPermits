@@ -4,8 +4,7 @@ using ColossalFramework.UI;
 using PickyParking.Features.Debug;
 using PickyParking.Features.ParkingRules;
 using PickyParking.Logging;
-using PickyParking.UI.BuildingOptionsPanel;
-using PickyParking.Settings;
+
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
@@ -355,8 +354,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         private void CreateRestrictionsToggleRow(PanelLayout layout)
         {
-            UIPanel row = CreateRowContainer("RestrictionsToggleRow", layout.RowPanelHeight);
-            UIButton toggle = CreateButton(row, true, string.Empty);
+            UIPanel row = _theme.CreateRowContainer(_panel, "RestrictionsToggleRow", layout.RowPanelHeight);
+            UIButton toggle = _theme.CreateButton(row, true, string.Empty);
             toggle.textScale = _theme.RestrictionsToggleTextScale;
             float height = Mathf.Max(_theme.MinButtonHeight, layout.RowHeight - layout.VerticalPadding * 2f);
             toggle.size = new Vector2(row.width - layout.HorizontalPadding * 2f, height);
@@ -364,10 +363,6 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             toggle.relativePosition = new Vector3(
                 layout.HorizontalPadding,
                 (row.height - toggle.height) * 0.5f);
-            toggle.atlas = UIView.GetAView().defaultAtlas;
-            toggle.normalBgSprite = "LevelBarBackground";
-            toggle.hoveredBgSprite = "LevelBarForeground";
-            toggle.pressedBgSprite = "LevelBarForeground";
             toggle.eventClicked += (_, __) => _onToggleRestrictions();
 
             RestrictionsToggleButton = toggle;
@@ -376,19 +371,19 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
         private void CreateRows(PanelLayout layout)
         {
             ResidentsRow = CreateSliderRow(
-                CreateRowContainer("ResidentsRow", layout.RowPanelHeight),
+                _theme.CreateRowContainer(_panel, "ResidentsRow", layout.RowPanelHeight),
                 ParkingRulesIconAtlasUiValues.ResidentsSpriteName,
                 "R",
                 layout.ResidentsFillColor,
                 layout);
             WorkSchoolRow = CreateSliderRow(
-                CreateRowContainer("WorkSchoolRow", layout.RowPanelHeight),
+                _theme.CreateRowContainer(_panel, "WorkSchoolRow", layout.RowPanelHeight),
                 ParkingRulesIconAtlasUiValues.WorkSchoolSpriteName,
                 "W",
                 layout.WorkSchoolFillColor,
                 layout);
             VisitorsRow = CreateToggleRow(
-                CreateRowContainer("VisitorsRow", layout.RowPanelHeight),
+                _theme.CreateRowContainer(_panel, "VisitorsRow", layout.RowPanelHeight),
                 ParkingRulesIconAtlasUiValues.VisitorsSpriteName,
                 "V",
                 layout);
@@ -396,7 +391,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         private void CreateFooter(PanelLayout layout)
         {
-            FooterRow = CreateRowContainer("FooterRow", layout.RowPanelHeight);
+            FooterRow = _theme.CreateRowContainer(_panel, "FooterRow", layout.RowPanelHeight);
             CreateFooterButtons(FooterRow, layout);
         }
 
@@ -545,7 +540,11 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         private ToggleButtonWithIconResult CreateToggleButtonWithIcon(ToggleButtonWithIconArgs args)
         {
-            UIButton button = CreateButton(args.RowPanel, false, args.FallbackText);
+            UIButton button = _theme.CreateButton(
+                args.RowPanel,
+                false,
+                text: args.FallbackText,
+                tooltip: args.FallbackText);
             button.textScale = _theme.ToggleTextScale;
             button.size = new Vector2(args.Layout.IconSize, args.Layout.IconSize);
             button.pivot = UIPivotPoint.TopLeft;
@@ -555,7 +554,6 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             button.normalBgSprite = "OptionBase";
             button.hoveredBgSprite = "OptionBaseHovered";
             button.pressedBgSprite = "OptionBasePressed";
-            button.tooltip = args.FallbackText;
 
             UISprite icon = TryAttachIcon(button, args.IconSpriteName, args.FallbackText);
             if (icon != null)
@@ -580,43 +578,32 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             };
         }
 
-        private UIPanel CreateRowContainer(string name, float rowHeight)
-        {
-            UIPanel rowPanel = _panel.AddUIComponent<UIPanel>();
-            rowPanel.name = name;
-            rowPanel.width = _panel.width;
-            rowPanel.height = rowHeight;
-            rowPanel.autoLayout = false;
-            return rowPanel;
-        }
-
         private void CreateHeaderRow(PanelLayout layout)
         {
-            UIPanel headerRow = CreateRowContainer("HeaderRow", layout.RowPanelHeight);
-            UILabel title = headerRow.AddUIComponent<UILabel>();
-            title.text = "Picky Parking Restrictions";
-            title.textScale = _theme.HeaderTextScale;
-            title.textColor = _theme.EnabledColor;
-            title.autoSize = false;
-            title.size = new Vector2(headerRow.width, layout.RowHeight);
-            title.textAlignment = UIHorizontalAlignment.Center;
-            title.verticalAlignment = UIVerticalAlignment.Middle;
-            title.relativePosition = new Vector3(0f, layout.VerticalPadding);
+            UIPanel headerRow = _theme.CreateRowContainer(_panel, "HeaderRow", layout.RowPanelHeight);
+            _theme.CreateLabel(
+                headerRow,
+                "Picky Parking Restrictions",
+                new Vector2(headerRow.width, layout.RowHeight),
+                _theme.HeaderTextScale,
+                _theme.EnabledColor,
+                UIHorizontalAlignment.Center,
+                UIVerticalAlignment.Middle,
+                new Vector3(0f, layout.VerticalPadding));
         }
 
         private void CreateParkingStatsRow(PanelLayout layout)
         {
-            UIPanel statsRow = CreateRowContainer("ParkingStatsRow", layout.RowPanelHeight);
-            UILabel stats = statsRow.AddUIComponent<UILabel>();
-            stats.text = "Spaces: n/a";
-            stats.textScale = _theme.ParkingStatsTextScale;
-            stats.textColor = _theme.EnabledColor;
-            stats.autoSize = false;
-            stats.size = new Vector2(statsRow.width, layout.RowHeight);
-            stats.textAlignment = UIHorizontalAlignment.Center;
-            stats.verticalAlignment = UIVerticalAlignment.Middle;
-            stats.relativePosition = new Vector3(0f, layout.VerticalPadding);
-            ParkingSpacesLabel = stats;
+            UIPanel statsRow = _theme.CreateRowContainer(_panel, "ParkingStatsRow", layout.RowPanelHeight);
+            ParkingSpacesLabel = _theme.CreateLabel(
+                statsRow,
+                "Spaces: n/a",
+                new Vector2(statsRow.width, layout.RowHeight),
+                _theme.ParkingStatsTextScale,
+                _theme.EnabledColor,
+                UIHorizontalAlignment.Center,
+                UIVerticalAlignment.Middle,
+                new Vector3(0f, layout.VerticalPadding));
         }
 
         private void CreateFooterButtons(UIPanel footerRow, PanelLayout layout)
@@ -675,14 +662,17 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             FooterButtonSpec spec,
             out UISprite icon)
         {
-            var button = CreateButton(parent, true, spec.Tooltip);
+            var button = _theme.CreateButton(
+                parent,
+                true,
+                text: string.Empty,
+                tooltip: spec.Tooltip);
             button.textScale = spec.TextScale;
             button.size = new Vector2(buttonWidth, height);
             button.pivot = UIPivotPoint.TopLeft;
             button.relativePosition = new Vector3(x, baselineY);
             button.isEnabled = false;
-            button.tooltip = spec.Tooltip;
-            button.disabledColor = _theme.FooterButtonDisabledColor;
+            button.disabledColor = _theme.DisabledColor;
             icon = AttachFooterIcon(button, spec.SpriteName, spec.Tooltip);
 
             button.eventClicked += (_, __) => spec.Handler?.Invoke();
@@ -742,25 +732,6 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 return;
 
             icon.opacity = Mathf.Clamp01(alpha);
-        }
-
-        private static UIButton CreateButton(UIPanel parent,bool useDefaultSprites, string text ="")
-        {
-            UIButton newButton = parent.AddUIComponent<UIButton>();
-            if (!string.IsNullOrEmpty(text))
-                newButton.text = text;
-            newButton.atlas = UIView.GetAView().defaultAtlas;
-            if (useDefaultSprites)
-            {
-                newButton.normalBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsNormalBgSprite;
-                newButton.hoveredBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsHoveredBgSprite;
-                newButton.pressedBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsPressedBgSprite;
-                newButton.disabledBgSprite = BuildingOptionsPanelUiValues.PanelTheme.ButtonsDisabledBgSprite;
-            }
-
-            newButton.playAudioEvents = true;
-            newButton.pressedColor = new Color32(210, 210, 210, 255);
-            return newButton;
         }
 
         private float GetRowDisplayValue(ParkingRulesSliderRow row)

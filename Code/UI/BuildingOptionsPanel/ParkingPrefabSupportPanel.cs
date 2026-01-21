@@ -17,10 +17,12 @@ namespace PickyParking.UI.BuildingOptionsPanel
         private UILabel _messageLabel;
         private UIButton _actionButton;
         private UiServices _services;
+        private ParkingPanelTheme _theme;
 
         public void Initialize(UiServices services)
         {
             _services = services;
+            _theme = new ParkingPanelTheme(services);
         }
 
         public override void Start()
@@ -65,62 +67,49 @@ namespace PickyParking.UI.BuildingOptionsPanel
 
         private void CreateHeaderRow()
         {
-            UIPanel row = CreateRowContainer("HeaderRow");
-            UILabel title = row.AddUIComponent<UILabel>();
-            title.text = "Picky Parking";
-            title.textScale = 1f;
-            title.textColor = new Color32(255, 255, 255, 255);
-            title.autoSize = false;
-            title.size = new Vector2(row.width, BuildingOptionsPanelUiValues.PanelTheme.RowHeight);
-            title.textAlignment = UIHorizontalAlignment.Center;
-            title.verticalAlignment = UIVerticalAlignment.Middle;
-            title.relativePosition = new Vector3(0f, BuildingOptionsPanelUiValues.PanelTheme.VerticalPadding);
+            UIPanel row = _theme.CreateRowContainer(this, "HeaderRow");
+            _theme.CreateLabel(
+                row,
+                "Picky Parking",
+                new Vector2(row.width, _theme.RowHeight),
+                1f,
+                new Color32(255, 255, 255, 255),
+                UIHorizontalAlignment.Center,
+                UIVerticalAlignment.Middle,
+                new Vector3(0f, _theme.VerticalPadding));
         }
 
         private void CreateMessageRow()
         {
-            UIPanel row = CreateRowContainer("MessageRow");
-            _messageLabel = row.AddUIComponent<UILabel>();
-            _messageLabel.textScale = 0.8f;
-            _messageLabel.textColor = new Color32(200, 200, 200, 255);
-            _messageLabel.autoSize = false;
-            _messageLabel.size = new Vector2(row.width - BuildingOptionsPanelUiValues.PanelTheme.HorizontalPadding * 2f, BuildingOptionsPanelUiValues.PanelTheme.RowHeight);
-            _messageLabel.textAlignment = UIHorizontalAlignment.Center;
-            _messageLabel.verticalAlignment = UIVerticalAlignment.Middle;
-            _messageLabel.relativePosition = new Vector3(
-                BuildingOptionsPanelUiValues.PanelTheme.HorizontalPadding,
-                BuildingOptionsPanelUiValues.PanelTheme.VerticalPadding);
-            _messageLabel.wordWrap = true;
+            UIPanel row = _theme.CreateRowContainer(this, "MessageRow");
+            _messageLabel = _theme.CreateLabel(
+                row,
+                string.Empty,
+                new Vector2(row.width - _theme.HorizontalPadding * 2f, _theme.RowHeight),
+                0.8f,
+                new Color32(200, 200, 200, 255),
+                UIHorizontalAlignment.Center,
+                UIVerticalAlignment.Middle,
+                new Vector3(_theme.HorizontalPadding, _theme.VerticalPadding),
+                wordWrap: true);
         }
 
         private void CreateActionRow()
         {
-            UIPanel row = CreateRowContainer("ActionRow");
-            _actionButton = row.AddUIComponent<UIButton>();
+            UIPanel row = _theme.CreateRowContainer(this, "ActionRow");
+            _actionButton = _theme.CreateButton(row, useDefaultSprites: false, text: string.Empty);
             _actionButton.textScale = 0.9f;
             _actionButton.size = new Vector2(
-                row.width - BuildingOptionsPanelUiValues.PanelTheme.HorizontalPadding * 2f,
-                BuildingOptionsPanelUiValues.PanelTheme.RowHeight - BuildingOptionsPanelUiValues.PanelTheme.VerticalPadding * 2f);
+                row.width - _theme.HorizontalPadding * 2f,
+                _theme.RowHeight - _theme.VerticalPadding * 2f);
             _actionButton.pivot = UIPivotPoint.TopLeft;
             _actionButton.relativePosition = new Vector3(
-                BuildingOptionsPanelUiValues.PanelTheme.HorizontalPadding,
+                _theme.HorizontalPadding,
                 (row.height - _actionButton.height) * 0.5f);
-            _actionButton.atlas = UIView.GetAView().defaultAtlas;
-            _actionButton.playAudioEvents = true;
             _actionButton.normalBgSprite = "LevelBarBackground";
             _actionButton.hoveredBgSprite = "LevelBarForeground";
             _actionButton.pressedBgSprite = "LevelBarForeground";
             _actionButton.eventClicked += (_, __) => HandleActionClicked();
-        }
-
-        private UIPanel CreateRowContainer(string name)
-        {
-            UIPanel row = AddUIComponent<UIPanel>();
-            row.name = name;
-            row.width = width;
-            row.height = BuildingOptionsPanelUiValues.PanelTheme.RowHeight + BuildingOptionsPanelUiValues.PanelTheme.VerticalPadding * 2f;
-            row.autoLayout = false;
-            return row;
         }
 
         private void Refresh()
@@ -190,8 +179,8 @@ namespace PickyParking.UI.BuildingOptionsPanel
 
             _actionButton.color = Color.white;
             _actionButton.textColor = _actionButton.isEnabled
-                ? BuildingOptionsPanelUiValues.PanelTheme.EnabledColor
-                : BuildingOptionsPanelUiValues.PanelTheme.DisabledColor;
+                ? _theme.EnabledColor
+                : _theme.DisabledColor;
         }
     }
 }

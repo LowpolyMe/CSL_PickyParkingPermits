@@ -55,7 +55,6 @@ namespace PickyParking.UI.BuildingOptionsPanel
             public const float FooterIconHoverAlpha = 0.8f;
             public const float FooterIconPressedAlpha = 1f;
             public const float FooterIconDisabledAlpha = 0.3f;
-            public static readonly Color32 FooterButtonDisabledColor = new Color32(150, 150, 150, 255);
 
             public const float DefaultResidentsHue = 0.35f;
             public const float DefaultWorkSchoolHue = 0.1f;
