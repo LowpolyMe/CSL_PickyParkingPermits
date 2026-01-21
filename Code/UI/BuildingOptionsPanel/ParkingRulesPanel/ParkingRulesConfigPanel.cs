@@ -44,7 +44,9 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 ToggleSliderRow,
                 HandleSliderValueChanged,
                 ToggleVisitorsRow,
-                ApplyChangesFromButton);
+                ApplyChangesFromButton,
+                HandleCopyRule,
+                HandleApplyCopiedRule);
             _ui.ConfigurePanel();
             _ui.BuildUi();
         }
@@ -84,7 +86,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 return;
 
             _state.ClearDirty();
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
 
             if (!CanOperateOnBuilding())
                 return;
@@ -233,13 +235,13 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             ClearPreview();
             ApplyRuleToUi(_state.BaselineRule);
             _state.ClearDirty();
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
         }
 
         private void MarkDirty()
         {
             _state.MarkDirty();
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
         }
 
         private bool CanOperateOnBuilding()
@@ -278,7 +280,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             UpdateRestrictionsVisibility();
             UpdatePreviewRule();
             UpdateParkingSpaceStats();
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
 
             if (hasStoredRule && Log.Dev.IsEnabled(DebugLogCategory.RuleUi))
             {
@@ -331,7 +333,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             _state.BeginApplying();
             _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), reason);
             _state.ClearDirty();
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
         }
 
         private void ApplyChangesFromButton()
@@ -347,7 +349,29 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             _editor.ApplyRuleNow(_state.BuildingId, input, "ApplyButton");
             _editor.RequestPendingReevaluationIfAny(_state.BuildingId);
             _state.CommitApplied(input);
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
+        }
+
+        private void HandleCopyRule()
+        {
+            if (!CanOperateOnBuilding() || !_state.RestrictionsEnabled)
+                return;
+
+            _state.StoreClipboardRule(BuildInput());
+            RefreshFooterButtons();
+        }
+
+        private void HandleApplyCopiedRule()
+        {
+            if (!_state.HasClipboardRule)
+                return;
+
+            if (!CanOperateOnBuilding() || !_state.RestrictionsEnabled)
+                return;
+
+            ApplyRuleToUi(_state.ClipboardRule);
+            MarkDirty();
+            UpdatePreviewRule();
         }
 
         private void RequestPendingReevaluationIfAny(ushort buildingId)
@@ -379,7 +403,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             {
                 ClearPreview();
                 _editor.RemoveRule(_state.BuildingId, "RestrictionsToggleOff");
-                UpdateApplyButtonState();
+                RefreshFooterButtons();
                 return;
             }
 
@@ -400,7 +424,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 ApplyRuleToUi(_state.BaselineRule);
             }
             UpdatePreviewRule();
-            UpdateApplyButtonState();
+            RefreshFooterButtons();
         }
 
         private void UpdateRestrictionsVisibility()
@@ -412,12 +436,19 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             _ui.UpdateRestrictionsToggleVisuals(_state.RestrictionsEnabled);
         }
 
-        private void UpdateApplyButtonState()
+        private void RefreshFooterButtons()
         {
             if (_ui == null)
                 return;
 
-            _ui.UpdateApplyButtonState(_state.HasUnappliedChanges);
+            bool hasUnappliedChanges = _state.HasUnappliedChanges;
+            bool canOperate = CanOperateOnBuilding();
+            bool restrictionsEnabled = _state.RestrictionsEnabled;
+            bool actionAvailable = canOperate && restrictionsEnabled;
+
+            _ui.UpdateApplyButtonState(hasUnappliedChanges);
+            _ui.UpdateCopyButtonState(!hasUnappliedChanges && actionAvailable);
+            _ui.UpdateApplyCopiedButtonState(_state.HasClipboardRule, _state.HasClipboardRule && actionAvailable);
         }
 
         private bool IsPanelVisibleForStats()
@@ -532,6 +563,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             private bool _isPrefabSupported;
             private float _nextParkingStatsUpdateTime;
             private PanelMode _mode;
+            private ParkingRulesConfigDefinition _clipboardRule;
+            private bool _hasClipboardRule;
 
             public ushort BuildingId => _buildingId;
             public bool IsDirty => _isDirty;
@@ -543,6 +576,8 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             public bool IsPrefabSupported => _isPrefabSupported;
             public float NextParkingStatsUpdateTime => _nextParkingStatsUpdateTime;
             public PanelMode Mode => _mode;
+            public bool HasClipboardRule => _hasClipboardRule;
+            public ParkingRulesConfigDefinition ClipboardRule => _clipboardRule;
 
             public void BindBuilding(ushort buildingId)
             {
@@ -587,6 +622,17 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 _restrictionsEnabled = restrictionsEnabled;
                 _hasStoredRule = hasStoredRule;
                 ClearDirty();
+            }
+
+            public void StoreClipboardRule(ParkingRulesConfigDefinition rule)
+            {
+                _clipboardRule = rule;
+                _hasClipboardRule = true;
+            }
+
+            public void ClearClipboardRule()
+            {
+                _hasClipboardRule = false;
             }
 
             public void EnableRestrictions()
