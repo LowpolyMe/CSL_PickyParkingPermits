@@ -252,14 +252,18 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 
         public void SetRestrictionsContentVisible(bool visible)
         {
-            if (ResidentsRow != null && ResidentsRow.RowPanel != null)
-                ResidentsRow.RowPanel.isVisible = visible;
-            if (WorkSchoolRow != null && WorkSchoolRow.RowPanel != null)
-                WorkSchoolRow.RowPanel.isVisible = visible;
-            if (VisitorsRow != null && VisitorsRow.RowPanel != null)
-                VisitorsRow.RowPanel.isVisible = visible;
-            if (FooterRow != null)
-                FooterRow.isVisible = visible;
+            SetRowPanelVisibility(ResidentsRow != null ? ResidentsRow.RowPanel : null, visible);
+            SetRowPanelVisibility(WorkSchoolRow != null ? WorkSchoolRow.RowPanel : null, visible);
+            SetRowPanelVisibility(VisitorsRow != null ? VisitorsRow.RowPanel : null, visible);
+            SetRowPanelVisibility(FooterRow, visible);
+        }
+
+        private static void SetRowPanelVisibility(UIPanel rowPanel, bool visible)
+        {
+            if (rowPanel == null)
+                return;
+
+            rowPanel.isVisible = visible;
         }
 
         public void UpdateParkingSpacesText(int totalSpaces, int freeSpaces)
@@ -283,36 +287,32 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (ApplyButton == null)
                 return;
 
-            ApplyButton.isEnabled = hasUnappliedChanges;
             ApplyButton.tooltip = hasUnappliedChanges ? "Apply" : "Applied";
-            SetFooterIconAlpha(_applyIcon, hasUnappliedChanges ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
+            UpdateFooterButtonState(ApplyButton, _applyIcon, hasUnappliedChanges);
         }
 
         public void UpdateCopyButtonState(bool enabled)
         {
-            if (CopyButton == null)
-                return;
-
-            CopyButton.isEnabled = enabled;
-            SetFooterIconAlpha(_copyIcon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
+            UpdateFooterButtonState(CopyButton, _copyIcon, enabled);
         }
 
         public void UpdatePasteButtonState(bool enabled)
         {
-            if (PasteButton == null)
-                return;
-
-            PasteButton.isEnabled = enabled;
-            SetFooterIconAlpha(_pasteIcon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
+            UpdateFooterButtonState(PasteButton, _pasteIcon, enabled);
         }
 
         public void UpdateResetButtonState(bool enabled)
         {
-            if (ResetButton == null)
+            UpdateFooterButtonState(ResetButton, _resetIcon, enabled);
+        }
+
+        private void UpdateFooterButtonState(UIButton button, UISprite icon, bool enabled)
+        {
+            if (button == null)
                 return;
 
-            ResetButton.isEnabled = enabled;
-            SetFooterIconAlpha(_resetIcon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
+            button.isEnabled = enabled;
+            SetFooterIconAlpha(icon, enabled ? _theme.FooterIconEnabledAlpha : _theme.FooterIconDisabledAlpha);
         }
 
         private PanelLayout BuildLayout()
