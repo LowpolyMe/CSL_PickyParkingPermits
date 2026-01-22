@@ -305,8 +305,8 @@ namespace PickyParking.UI.ModOptions
             label.autoSize = false;
             label.autoHeight = true;
             label.wordWrap = true;
-            label.textScale = 0.8f;
-            label.text = "<i>" + text + "</i>";
+            label.textScale = ModOptionsUiValues.OptionsPanel.InfoTextScale;
+            label.text = text;
             float width = panel.width - 20f;
             if (width < 100f)
                 width = ModOptionsUiValues.OptionsPanel.DefaultWidth - 20f;

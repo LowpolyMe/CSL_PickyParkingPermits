@@ -8,6 +8,8 @@ namespace PickyParking.UI.ModOptions
         {
             public const float WidthOffset = 50f;
             public const float DefaultWidth = 600f;
+            public const float DefaultTextScale = 0.8f;
+            public const float InfoTextScale = 0.8f;
         }
 
         internal static class SupportedPrefabList
