@@ -55,7 +55,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             if (!_state.IsReadyForStatsUpdate(Time.unscaledTime))
                 return;
 
-            _state.ScheduleNextStatsUpdate(Time.unscaledTime + BuildingOptionsPanelUiValues.RulesPanel.ParkingStatsUpdateIntervalSeconds);
+            _state.ScheduleNextStatsUpdate(Time.unscaledTime + BuildingOptionsPanelUiValues.PanelTheme.ParkingStatsUpdateIntervalSeconds);
             UpdateParkingSpaceStats();
         }
 
@@ -217,7 +217,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             }
             else if (value <= 0f)
                 return 0f;
-            if (value >= BuildingOptionsPanelUiValues.RulesPanel.SliderAllThreshold)
+            if (value >= BuildingOptionsPanelUiValues.SliderTheme.SliderAllThreshold)
                 return 1f;
             return value;
         }
@@ -420,9 +420,9 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             {
                 var baselineRule = new ParkingRulesConfigDefinition(
                     residentsWithinRadiusOnly: true,
-                    residentsRadiusMeters: BuildingOptionsPanelUiValues.RulesPanel.DefaultNewRuleRadiusMeters,
+                    residentsRadiusMeters: BuildingOptionsPanelUiValues.PanelTheme.DefaultNewRuleRadiusMeters,
                     workSchoolWithinRadiusOnly: true,
-                    workSchoolRadiusMeters: BuildingOptionsPanelUiValues.RulesPanel.DefaultNewRuleRadiusMeters,
+                    workSchoolRadiusMeters: BuildingOptionsPanelUiValues.PanelTheme.DefaultNewRuleRadiusMeters,
                     visitorsAllowed: true);
                 ApplyRuleToUi(baselineRule);
                 _editor.ApplyRuleNow(_state.BuildingId, BuildInput(), "DefaultsOnEnable");
