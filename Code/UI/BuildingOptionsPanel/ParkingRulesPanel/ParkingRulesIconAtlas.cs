@@ -3,8 +3,6 @@ using PickyParking.Features.Debug;
 using UnityEngine;
 using PickyParking.Logging;
 using PickyParking.UI.ModResources;
-using PickyParking.UI.BuildingOptionsPanel;
-using PickyParking.Settings;
 
 namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
 {
@@ -43,13 +41,15 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             };
 
             int iconWidth = texture.width / 4;
-            int iconHeight = texture.height;
+            int iconHeight = texture.height / 2;
+            int topRowY = iconHeight;
+            int bottomRowY = 0;
 
             AddSprite(atlas, texture, new SpriteSpec
             {
                 Name = ParkingRulesIconAtlasUiValues.ResidentsSpriteName,
                 X = 0,
-                Y = 0,
+                Y = topRowY,
                 Width = iconWidth,
                 Height = iconHeight
             });
@@ -57,7 +57,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             {
                 Name = ParkingRulesIconAtlasUiValues.WorkSchoolSpriteName,
                 X = iconWidth,
-                Y = 0,
+                Y = topRowY,
                 Width = iconWidth,
                 Height = iconHeight
             });
@@ -65,7 +65,7 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             {
                 Name = ParkingRulesIconAtlasUiValues.VisitorsSpriteName,
                 X = iconWidth * 2,
-                Y = 0,
+                Y = topRowY,
                 Width = iconWidth,
                 Height = iconHeight
             });
@@ -73,7 +73,39 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             {
                 Name = ParkingRulesIconAtlasUiValues.CrossedOutSpriteName,
                 X = iconWidth * 3,
-                Y = 0,
+                Y = topRowY,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.CopySpriteName,
+                X = 0,
+                Y = bottomRowY,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.PasteSpriteName,
+                X = iconWidth,
+                Y = bottomRowY,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.ResetSpriteName,
+                X = iconWidth * 2,
+                Y = bottomRowY,
+                Width = iconWidth,
+                Height = iconHeight
+            });
+            AddSprite(atlas, texture, new SpriteSpec
+            {
+                Name = ParkingRulesIconAtlasUiValues.ApplySpriteName,
+                X = iconWidth * 3,
+                Y = bottomRowY,
                 Width = iconWidth,
                 Height = iconHeight
             });
