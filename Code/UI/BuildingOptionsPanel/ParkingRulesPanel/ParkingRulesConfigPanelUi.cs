@@ -616,22 +616,23 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             float availableWidth = Mathf.Max(0f, footerRow.width - spacing * (buttonCount + 1));
             float buttonWidth = buttonCount > 0 ? availableWidth / buttonCount : 0f;
             float baselineY = (footerRow.height - height) * 0.5f;
+            var buttonLayout = new FooterButtonLayout(buttonWidth, height, baselineY, spacing);
 
             float x = spacing;
 
-            CopyButton  = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+            CopyButton  = CreateFooterButton(footerRow, ref x, buttonLayout,
                 new FooterButtonSpec("Copy",  ParkingRulesIconAtlasUiValues.CopySpriteName,  _theme.ToggleTextScale, _onCopyRule),
                 out _copyIcon);
 
-            PasteButton = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+            PasteButton = CreateFooterButton(footerRow, ref x, buttonLayout,
                 new FooterButtonSpec("Paste", ParkingRulesIconAtlasUiValues.PasteSpriteName, _theme.ToggleTextScale, _onPasteRule),
                 out _pasteIcon);
 
-            ResetButton = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+            ResetButton = CreateFooterButton(footerRow, ref x, buttonLayout,
                 new FooterButtonSpec("Reset", ParkingRulesIconAtlasUiValues.ResetSpriteName, _theme.ToggleTextScale, _onResetChanges),
                 out _resetIcon);
 
-            ApplyButton = CreateFooterButton(footerRow, ref x, buttonWidth, height, baselineY, spacing,
+            ApplyButton = CreateFooterButton(footerRow, ref x, buttonLayout,
                 new FooterButtonSpec("Apply", ParkingRulesIconAtlasUiValues.ApplySpriteName, _theme.ApplyButtonTextScale, _onApplyChanges),
                 out _applyIcon);
         }
@@ -652,13 +653,26 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
             public Action Handler { get; }
         }
 
+        private readonly struct FooterButtonLayout
+        {
+            public FooterButtonLayout(float buttonWidth, float height, float baselineY, float spacing)
+            {
+                ButtonWidth = buttonWidth;
+                Height = height;
+                BaselineY = baselineY;
+                Spacing = spacing;
+            }
+
+            public float ButtonWidth { get; }
+            public float Height { get; }
+            public float BaselineY { get; }
+            public float Spacing { get; }
+        }
+
         private UIButton CreateFooterButton(
             UIPanel parent,
             ref float x,
-            float buttonWidth,
-            float height,
-            float baselineY,
-            float spacing,
+            FooterButtonLayout layout,
             FooterButtonSpec spec,
             out UISprite icon)
         {
@@ -668,16 +682,16 @@ namespace PickyParking.UI.BuildingOptionsPanel.ParkingRulesPanel
                 text: string.Empty,
                 tooltip: spec.Tooltip);
             button.textScale = spec.TextScale;
-            button.size = new Vector2(buttonWidth, height);
+            button.size = new Vector2(layout.ButtonWidth, layout.Height);
             button.pivot = UIPivotPoint.TopLeft;
-            button.relativePosition = new Vector3(x, baselineY);
+            button.relativePosition = new Vector3(x, layout.BaselineY);
             button.isEnabled = false;
             button.disabledColor = _theme.DisabledColor;
             icon = AttachFooterIcon(button, spec.SpriteName, spec.Tooltip);
 
             button.eventClicked += (_, __) => spec.Handler?.Invoke();
 
-            x += buttonWidth + spacing;
+            x += layout.ButtonWidth + layout.Spacing;
             return button;
         }
 
