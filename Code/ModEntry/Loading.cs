@@ -103,7 +103,6 @@ namespace PickyParking.ModEntry
             UnityEngine.Object.DontDestroyOnLoad(_runtimeObject);
 
             _runtimeObject.AddComponent<Logging.LogFlushPump>();
-            _runtimeObject.AddComponent<DebugHotkeyListener>();
             _runtimeObject.AddComponent<ParkingStatsTicker>();
             var attachPanel = _runtimeObject.AddComponent<AttachPanelToBuildingInfo>();
             attachPanel.Initialize(_uiServices);

@@ -26,7 +26,6 @@ namespace PickyParking.ModEntry
         public ParkingCandidateDecisionPipeline ParkingCandidateDecisionPipeline { get; private set; }
         public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; private set; }
         public ParkingRulePreviewState ParkingRulePreviewState { get; private set; }
-        public DebugHotkeyController DebugHotkeyController { get; private set; }
         public ParkingRulesConfigEditor ParkingRulesConfigEditor { get; private set; }
 
         private bool _disposed;
@@ -111,12 +110,6 @@ namespace PickyParking.ModEntry
             var candidateDecisionPipeline = new ParkingCandidateDecisionPipeline(evaluator);
             var reevaluation = new ParkedVehicleReevaluation(featureGate, rulesRepo, evaluator, gameAccess, registry, tmpe, settingsController, backendState);
             var previewState = new ParkingRulePreviewState();
-            var debugHotkeys = new DebugHotkeyController(
-                gameAccess,
-                registry,
-                settingsController,
-                rulesRepo,
-                reevaluation);
             var rulesController = new ParkingRulesConfigEditor(
                 rulesRepo,
                 previewState,
@@ -135,7 +128,6 @@ namespace PickyParking.ModEntry
                 candidateDecisionPipeline,
                 reevaluation,
                 previewState,
-                debugHotkeys,
                 rulesController);
 
             return new ModRuntime(dependencies);
@@ -185,7 +177,6 @@ namespace PickyParking.ModEntry
             ParkingCandidateDecisionPipeline = dependencies.ParkingCandidateDecisionPipeline;
             ParkedVehicleReevaluation = dependencies.ParkedVehicleReevaluation;
             ParkingRulePreviewState = dependencies.ParkingRulePreviewState;
-            DebugHotkeyController = dependencies.DebugHotkeyController;
             ParkingRulesConfigEditor = dependencies.ParkingRulesConfigEditor;
         }
         
@@ -204,7 +195,6 @@ namespace PickyParking.ModEntry
                 ParkingCandidateDecisionPipeline parkingCandidateDecisionPipeline,
                 ParkedVehicleReevaluation parkedVehicleReevaluation,
                 ParkingRulePreviewState parkingRulePreviewState,
-                DebugHotkeyController debugHotkeyController,
                 ParkingRulesConfigEditor parkingRulesConfigEditor)
             {
                 FeatureGate = featureGate ?? throw new ArgumentNullException(nameof(featureGate));
@@ -219,7 +209,6 @@ namespace PickyParking.ModEntry
                 ParkingCandidateDecisionPipeline = parkingCandidateDecisionPipeline ?? throw new ArgumentNullException(nameof(parkingCandidateDecisionPipeline));
                 ParkedVehicleReevaluation = parkedVehicleReevaluation ?? throw new ArgumentNullException(nameof(parkedVehicleReevaluation));
                 ParkingRulePreviewState = parkingRulePreviewState ?? throw new ArgumentNullException(nameof(parkingRulePreviewState));
-                DebugHotkeyController = debugHotkeyController ?? throw new ArgumentNullException(nameof(debugHotkeyController));
                 ParkingRulesConfigEditor = parkingRulesConfigEditor ?? throw new ArgumentNullException(nameof(parkingRulesConfigEditor));
             }
 
@@ -235,7 +224,6 @@ namespace PickyParking.ModEntry
             public ParkingCandidateDecisionPipeline ParkingCandidateDecisionPipeline { get; }
             public ParkedVehicleReevaluation ParkedVehicleReevaluation { get; }
             public ParkingRulePreviewState ParkingRulePreviewState { get; }
-            public DebugHotkeyController DebugHotkeyController { get; }
             public ParkingRulesConfigEditor ParkingRulesConfigEditor { get; }
         }
     }

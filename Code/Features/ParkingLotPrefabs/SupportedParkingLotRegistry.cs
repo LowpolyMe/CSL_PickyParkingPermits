@@ -4,8 +4,6 @@ using System.Linq;
 namespace PickyParking.Features.ParkingLotPrefabs
 {
     
-    
-    
     public sealed class SupportedParkingLotRegistry
     {
         private readonly HashSet<PrefabKey> _keys;

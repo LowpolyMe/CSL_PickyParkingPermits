@@ -19,7 +19,6 @@ namespace PickyParking.Features.ParkingPolicing
 
         public static bool TryGetCandidateDecision(ushort buildingId, out bool denied)
         {
-            //TODO don’t swallow lookup exceptions—log and degrade gracefully.
             denied = false;
 
             if (ParkingDebugSettings.DisableParkingEnforcement)
